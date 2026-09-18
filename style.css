@@ -653,6 +653,13 @@
 
  /* RESPONSIVE DESIGN */
  @media (max-width: 968px) {
+     .section-header h2 {
+         font-size: 1.6rem;
+     }
+
+     .section-header p {
+         font-size: 0.95rem;
+     }
 
      .about-section,
      .contact-grid,
