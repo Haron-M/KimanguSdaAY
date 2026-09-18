@@ -5,7 +5,7 @@ const navLinks = document.getElementById('navLinks');
 menuBtn.addEventListener('click', () => {
     navLinks.classList.toggle('active');
 });
-document.querySelector('.btn.btn-gold').addEventListener('click', () => {
+document.querySelectorAll('.btn.btn-gold').addEventListener('click', () => {
     window.location.href = 'auth.html?view=signup';
 }
 )
