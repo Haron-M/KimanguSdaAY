@@ -5,7 +5,10 @@ const navLinks = document.getElementById('navLinks');
 menuBtn.addEventListener('click', () => {
     navLinks.classList.toggle('active');
 });
-
+document.querySelector('.btn.btn-gold').addEventListener('click', () => {
+    window.location.href = 'auth.html?view=signup';
+}
+)
 // Close mobile menu when clicking a link
 document.querySelectorAll('.nav-links a').forEach(link => {
     link.addEventListener('click', () => {
@@ -96,8 +99,12 @@ const revealObserver = new IntersectionObserver((entries) => {
         }
     });
 }, {
-    threshold: 0.15,
+    threshold: 0.1,
     rootMargin: '0px 0px -50px 0px'
 });
 
 revealElements.forEach(el => revealObserver.observe(el));
+function showView(viewId) {
+    document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+}

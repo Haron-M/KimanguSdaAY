@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | Kimangu AY</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--primary-dark);
+            background: var(--white);
+            line-height: 1.6;
+        }
+
+        h1,
+        h2 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* HEADER BAR - now a top-level sibling, distinct from the form panel */
+        .auth-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background: var(--white);
+            box-shadow: 0 4px 20px rgba(10, 25, 47, 0.06);
+            position: relative;
+            z-index: 10;
+        }
+
+        .auth-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: calc(100vh - 73px);
+        }
+
+        /* LEFT PANEL - IMAGE */
+        .auth-visual {
+            position: relative;
+            background: linear-gradient(180deg, rgba(10, 25, 47, 0.55) 0%, rgba(10, 25, 47, 0.85) 100%),
+                url('kimangu-worship.jpg') center/cover no-repeat;
+            background-color: var(--primary-dark);
+            display: flex;
+            align-items: flex-end;
+            padding: 3rem;
+        }
+
+        .auth-visual::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(10, 25, 47, 0.5) 0%, rgba(10, 25, 47, 0.15) 40%, rgba(10, 25, 47, 0.9) 100%);
+        }
+
+        .auth-quote {
+            position: relative;
+            z-index: 2;
+            color: var(--white);
+            max-width: 480px;
+        }
+
+        .auth-quote p {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.7rem;
+            line-height: 1.35;
+            margin-bottom: 1rem;
+        }
+
+        .auth-quote span {
+            color: var(--accent-gold);
+            font-weight: 700;
+            font-size: 0.9rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-style: normal;
+        }
+
+        /* RIGHT PANEL - FORM */
+        .auth-form-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2.5rem 4rem;
+            overflow-y: auto;
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .auth-logo-img-wrap {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-dark);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .auth-logo-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.4);
+        }
+
+        .auth-logo-text h1 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            letter-spacing: 0.5px;
+        }
+
+        .auth-logo-text p {
+            font-size: 0.65rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .back-home {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-home:hover {
+            color: var(--accent-gold);
+        }
+
+        .auth-form-container {
+            max-width: 420px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .auth-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-gold);
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+        }
+
+        .auth-form-container h2 {
+            font-size: 2.1rem;
+            margin-bottom: 0.6rem;
+            color: var(--primary-dark);
+        }
+
+        .auth-subtext {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        .auth-subtext .highlight {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.3rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap i.left-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        .input-wrap input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: var(--white);
+        }
+
+        .input-wrap input:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.08);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+            cursor: pointer;
+            font-size: 0.9rem;
+            background: none;
+            border: none;
+        }
+
+        .btn-auth-submit {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition);
+            margin-top: 0.5rem;
+        }
+
+        .btn-auth-submit:hover {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .auth-switch {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            margin-top: 1.5rem;
+        }
+
+        .auth-switch a,
+        .auth-switch button {
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-decoration: none;
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: inherit;
+            cursor: pointer;
+        }
+
+        .auth-switch a:hover,
+        .auth-switch button:hover {
+            color: var(--accent-gold);
+        }
+
+        .demo-notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: var(--off-white);
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            margin-top: 1.8rem;
+            font-size: 0.82rem;
+            color: var(--text-gray);
+        }
+
+        .demo-notice i {
+            color: var(--primary-blue);
+            margin-top: 2px;
+        }
+
+        /* View switching */
+        .auth-view {
+            display: none;
+            animation: fadeSlide 0.4s ease;
+        }
+
+        .auth-view.active {
+            display: block;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .auth-wrapper {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .auth-visual {
+                display: none;
+            }
+
+            .auth-quote p {
+                font-size: 1.2rem;
+            }
+
+            .auth-form-panel {
+                padding: 2rem 1.5rem 3rem;
+            }
+
+            .auth-topbar {
+                padding: 0.8rem 5%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- DISTINCT HEADER BAR -->
+    <div class="auth-topbar">
+        <a href="index.html" class="auth-logo">
+            <div class="auth-logo-img-wrap">
+                <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
+                    alt="SDA Logo">
+            </div>
+            <div class="auth-logo-text">
+                <h1>KIMANGU AY</h1>
+                <p>Seventh-day Adventist</p>
+            </div>
+        </a>
+        <a href="index.html" class="back-home">&larr; Home</a>
+    </div>
+
+    <div class="auth-wrapper">
+        <!-- LEFT VISUAL PANEL -->
+        <div class="auth-visual">
+            <div class="auth-quote">
+                <p>"Let no one despise your youth, but be an example to the believers."</p>
+                <span>1 Timothy 4:12</span>
+            </div>
+        </div>
+
+        <!-- RIGHT FORM PANEL -->
+        <div class="auth-form-panel">
+            <div class="auth-form-container">
+
+                <!-- SIGN IN VIEW -->
+                <div class="auth-view active" id="signInView">
+                    <span class="auth-badge">Welcome Back</span>
+                    <h2>Sign in to your account</h2>
+                    <p class="auth-subtext">Enter any demo details to explore your <span class="highlight">member
+                            dashboard</span>.</p>
+
+                    <form onsubmit="handleAuthSubmit(event, 'signin')">
+                        <div class="form-group">
+                            <label>Phone number</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-phone left-icon"></i>
+                                <input type="tel" placeholder="e.g. 0712 345 678" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Password</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-lock left-icon"></i>
+                                <input type="password" id="signinPassword" placeholder="Enter your password" required>
+                                <button type="button" class="toggle-password"
+                                    onclick="togglePassword('signinPassword', this)">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-auth-submit">Sign In &rarr;</button>
+                    </form>
+
+                    <p class="auth-switch">New to Kimangu AY? <button onclick="showView('signUpView')">Create
+                            account</button></p>
+
+                    <div class="demo-notice">
+                        <i class="fa-regular fa-circle-check"></i>
+                        <span>This is a safe demonstration. Your details are not saved.</span>
+                    </div>
+                </div>
+
+                <!-- SIGN UP VIEW -->
+                <div class="auth-view" id="signUpView">
+                    <span class="auth-badge">Join the Community</span>
+                    <h2>Create your account</h2>
+                    <p class="auth-subtext">Register to explore the Kimangu AY member experience.</p>
+
+                    <form onsubmit="handleAuthSubmit(event, 'signup')">
+                        <div class="form-group">
+                            <label>Full name</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-user left-icon"></i>
+                                <input type="text" placeholder="Your full name" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phone number</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-phone left-icon"></i>
+                                <input type="tel" placeholder="e.g. 0712 345 678" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Password</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-lock left-icon"></i>
+                                <input type="password" id="signupPassword" placeholder="Enter your password" required>
+                                <button type="button" class="toggle-password"
+                                    onclick="togglePassword('signupPassword', this)">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Confirm password</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-lock left-icon"></i>
+                                <input type="password" id="confirmPassword" placeholder="Repeat your password" required>
+                                <button type="button" class="toggle-password"
+                                    onclick="togglePassword('confirmPassword', this)">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-auth-submit">Create account &rarr;</button>
+                    </form>
+
+                    <p class="auth-switch">Already have an account? <button onclick="showView('signInView')">Sign
+                            in</button></p>
+
+                    <div class="demo-notice">
+                        <i class="fa-regular fa-circle-check"></i>
+                        <span>This is a safe demonstration. Your details are not saved.</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showView(viewId) {
+            document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function handleAuthSubmit(e, type) {
+            e.preventDefault();
+            if (type === 'signup') {
+                const pass = document.getElementById('signupPassword').value;
+                const confirm = document.getElementById('confirmPassword').value;
+                if (pass !== confirm) {
+                    alert('Passwords do not match. Please try again.');
+                    return;
+                }
+                alert('Demo account created! (No data was saved.) Redirecting to sign in...');
+                showView('signInView');
+                e.target.reset();
+            } else {
+                alert('Demo sign-in successful! (No data was saved.)');
+                e.target.reset();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('view') === 'signup') {
+                showView('signUpView');
+            }
+        });
+    </script>
+
+</body>
+
+</html>
