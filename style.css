@@ -268,7 +268,8 @@
 
  /* SECTIONS GENERAL */
  section {
-     padding: 6rem 5%;
+     padding: 2rem 5%;
+     margin-top: -2px;
  }
 
  .section-header {
@@ -295,7 +296,7 @@
      grid-template-columns: 1fr 1fr;
      gap: 4rem;
      align-items: center;
-     padding-bottom: -10px;
+     margin-bottom: 0
  }
 
  .about-text h3 {
@@ -651,9 +652,43 @@
      margin: 0;
  }
 
+ .reveal {
+     opacity: 0;
+     transform: translateY(40px);
+     transition: opacity 0.8s ease, transform 0.8s ease;
+ }
+
+ .reveal.visible {
+     opacity: 1;
+     transform: translateY(0);
+ }
+
+ .reveal-left {
+     opacity: 0;
+     transform: translateX(-60px);
+     transition: opacity 0.8s ease, transform 0.8s ease;
+ }
+
+ .reveal-left.visible {
+     opacity: 1;
+     transform: translateX(0);
+ }
+
+ .reveal-right {
+     opacity: 0;
+     transform: translateX(60px);
+     transition: opacity 0.8s ease, transform 0.8s ease;
+ }
+
+ .reveal-right.visible {
+     opacity: 1;
+     transform: translateX(0);
+ }
+
  /* RESPONSIVE DESIGN */
  @media (max-width: 968px) {
      .section-header h2 {
+
          font-size: 1.6rem;
      }
 
@@ -700,7 +735,7 @@
      }
 
      .nav-links li:hover {
-         background: #e5e7eb;
+         background: hsl(206, 20%, 93%);
      }
 
      .nav-links li,
