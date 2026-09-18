@@ -678,6 +678,19 @@
          display: none;
      }
 
+     .hero {
+         height: 60vh;
+         min-height: 420px;
+     }
+
+     .hero-content h1 {
+         font-size: 2rem;
+     }
+
+     .hero-content p {
+         font-size: 0.95rem;
+     }
+
      .about-section {
          padding-bottom: 0.5rem;
      }
