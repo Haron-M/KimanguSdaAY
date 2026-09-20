@@ -10,10 +10,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="dashboard.css">
-
-    <style>
-
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -49,16 +46,16 @@
                 </a>
 
                 <p class="nav-group-label">Session</p>
-                <a href="index.html" class="sidebar-link logout-link">
+                <a href="#" class="sidebar-link logout-link" id="logoutLink">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </a>
             </nav>
 
             <div class="sidebar-profile">
-                <div class="profile-avatar">HJ</div>
+                <div class="profile-avatar" id="sidebarAvatar">--</div>
                 <div class="profile-info">
-                    <h4>Haron Jall</h4>
-                    <p>Kimangu AY Member</p>
+                    <h4 id="sidebarFullName">Loading...</h4>
+                    <p id="sidebarCategory">Kimangu AY Member</p>
                 </div>
             </div>
         </aside>
@@ -75,7 +72,7 @@
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <div class="welcome-text">
-                        <span>Welcome back, Haron 👋</span>
+                        <span id="welcomeName">Welcome back 👋</span>
                         <p>Here's what's happening in Kimangu AY today.</p>
                     </div>
                 </div>
@@ -125,7 +122,7 @@
                         </div>
                     </div>
 
-                    <div class="topbar-avatar">HJ</div>
+                    <div class="topbar-avatar" id="topbarAvatar">--</div>
                 </div>
             </header>
 
@@ -174,6 +171,55 @@
     </div>
 
     <script>
+        // ===================== SUPABASE SETUP =====================
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function getInitials(fullName) {
+            if (!fullName) return '--';
+            const parts = fullName.trim().split(/\s+/);
+            const first = parts[0] ? parts[0][0] : '';
+            const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+            return (first + last).toUpperCase();
+        }
+
+        async function loadUserProfile() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            // No one is logged in — send them back to sign in
+            if (!session) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            const userId = session.user.id;
+
+            const { data: profile, error } = await supabaseClient
+                .from('profiles')
+                .select('full_name, category, account_type')
+                .eq('id', userId)
+                .single();
+
+            if (error || !profile) {
+                console.error('Could not load profile:', error);
+                return;
+            }
+
+            const fullName = profile.full_name || 'Member';
+            const firstName = fullName.trim().split(/\s+/)[0];
+            const initials = getInitials(fullName);
+
+            document.getElementById('welcomeName').textContent = `Welcome back, ${firstName} 👋`;
+            document.getElementById('sidebarFullName').textContent = fullName;
+            document.getElementById('sidebarCategory').textContent =
+                profile.category ? profile.category.charAt(0).toUpperCase() + profile.category.slice(1) + ' Member' : 'Kimangu AY Member';
+            document.getElementById('sidebarAvatar').textContent = initials;
+            document.getElementById('topbarAvatar').textContent = initials;
+        }
+
+        loadUserProfile();
+
         // Notification dropdown toggle
         const notifBtn = document.getElementById('notifBtn');
         const notifDropdown = document.getElementById('notifDropdown');
@@ -202,6 +248,13 @@
         sidebarOverlay.addEventListener('click', () => {
             sidebar.classList.remove('active');
             sidebarOverlay.classList.remove('active');
+        });
+
+        // Logout
+        document.getElementById('logoutLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await supabaseClient.auth.signOut();
+            window.location.href = 'auth.html';
         });
     </script>
 
