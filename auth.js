@@ -32,7 +32,8 @@ function handleAuthSubmit(e, type) {
         showView('signInView');
         e.target.reset();
     } else {
-        alert('Demo sign-in successful! (No data was saved.)');
+        alert('sign-in successful!');
+        window.location.href = "dashboard.html"
         e.target.reset();
     }
 }

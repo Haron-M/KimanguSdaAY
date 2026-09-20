@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Kimangu AY</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="dashboard.css">
+
+    <style>
+
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-layout">
+
+        <!-- ===================== SIDEBAR ===================== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-logo-wrap">
+                    <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
+                        alt="SDA Logo">
+                </div>
+                <div class="sidebar-brand-text">
+                    <h1>KIMANGU AY</h1>
+                    <p>Seventh-day Adventist</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <p class="nav-group-label">Main</p>
+                <a href="#" class="sidebar-link active">
+                    <i class="fa-solid fa-table-columns"></i> Dashboard
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fa-solid fa-photo-film"></i> Media
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fa-solid fa-book-bible"></i> Resources
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fa-solid fa-user-gear"></i> Account
+                </a>
+
+                <p class="nav-group-label">Session</p>
+                <a href="index.html" class="sidebar-link logout-link">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </nav>
+
+            <div class="sidebar-profile">
+                <div class="profile-avatar">HJ</div>
+                <div class="profile-info">
+                    <h4>Haron Jall</h4>
+                    <p>Kimangu AY Member</p>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ===================== MAIN CONTENT ===================== -->
+        <div class="main-content">
+
+            <!-- TOPBAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="mobile-sidebar-toggle" id="sidebarToggle">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="welcome-text">
+                        <span>Welcome back, Haron 👋</span>
+                        <p>Here's what's happening in Kimangu AY today.</p>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="notif-wrap">
+                        <button class="notif-btn" id="notifBtn">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notif-badge">3</span>
+                        </button>
+
+                        <div class="notif-dropdown" id="notifDropdown">
+                            <div class="notif-dropdown-header">
+                                <h4>Notifications</h4>
+                                <span>Mark all read</span>
+                            </div>
+                            <div class="notif-list">
+                                <div class="notif-item unread">
+                                    <div class="notif-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                                    <div class="notif-content">
+                                        <p>New event added: <strong>AI Upskilling & Tech Sabbath</strong> on Oct 15.</p>
+                                        <span>10 minutes ago</span>
+                                    </div>
+                                </div>
+                                <div class="notif-item unread">
+                                    <div class="notif-icon"><i class="fa-solid fa-users"></i></div>
+                                    <div class="notif-content">
+                                        <p>3 new members joined Kimangu AY this week.</p>
+                                        <span>2 hours ago</span>
+                                    </div>
+                                </div>
+                                <div class="notif-item unread">
+                                    <div class="notif-icon"><i class="fa-solid fa-book-open"></i></div>
+                                    <div class="notif-content">
+                                        <p>New Bible Lab resource uploaded to the library.</p>
+                                        <span>Yesterday</span>
+                                    </div>
+                                </div>
+                                <div class="notif-item">
+                                    <div class="notif-icon"><i class="fa-solid fa-comment"></i></div>
+                                    <div class="notif-content">
+                                        <p>Your prayer request was received by the AY leadership team.</p>
+                                        <span>2 days ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topbar-avatar">HJ</div>
+                </div>
+            </header>
+
+            <!-- PAGE BODY -->
+            <main class="page-body">
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div>
+                            <h3>12</h3>
+                            <p>Events Attended</p>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div>
+                            <h3>4</h3>
+                            <p>Resources Saved</p>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-bookmark"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div>
+                            <h3>8</h3>
+                            <p>Media Watched</p>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-play"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div>
+                            <h3>2</h3>
+                            <p>Upcoming RSVPs</p>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+                    </div>
+                </div>
+
+                <div class="placeholder-card">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <h3>Your dashboard content goes here</h3>
+                    <p>Recent activity, upcoming events, and quick actions can be built out in this area.</p>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Notification dropdown toggle
+        const notifBtn = document.getElementById('notifBtn');
+        const notifDropdown = document.getElementById('notifDropdown');
+
+        notifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifDropdown.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+                notifDropdown.classList.remove('active');
+            }
+        });
+
+        // Mobile sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+    </script>
+
+</body>
+
+</html>
