@@ -5,10 +5,13 @@ const navLinks = document.getElementById('navLinks');
 menuBtn.addEventListener('click', () => {
     navLinks.classList.toggle('active');
 });
-document.querySelectorAll('.btn.btn-gold').addEventListener('click', () => {
-    window.location.href = 'auth.html?view=signup';
-}
-)
+document.querySelectorAll('.btn.btn-gold').forEach(button => {
+    button.addEventListener('click', () => {
+        window.location.href = 'auth.html?view=signup';
+    })
+})
+
+
 // Close mobile menu when clicking a link
 document.querySelectorAll('.nav-links a').forEach(link => {
     link.addEventListener('click', () => {
