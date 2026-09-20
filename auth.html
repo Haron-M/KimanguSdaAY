@@ -705,7 +705,7 @@
         // behind the scenes for Supabase Auth (users never see or type this).
         function phoneToEmail(phone) {
             const cleaned = phone.replace(/\D/g, '');
-            return `${cleaned}@kimanguay.com`;
+            return `${cleaned}@kimanguay.org`;
         }
 
         // ===================== ACCESS CODES =====================
@@ -748,25 +748,25 @@
                 return;
             }
 
-            const accountType = ACCESS_CODES[code];
-            if (!accountType) {
-                errorEl.textContent = 'Invalid code. Please check with your AY leader.';
-                codeBoxes.forEach(b => b.value = '');
-                codeBoxes[0].focus();
-                return;
-            }
-
             errorEl.textContent = '';
-            pendingAccountType = accountType; // 'admin' or 'regular'
-
-            // Brief pause with a loading state before moving to sign-up
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
 
             setTimeout(() => {
-                codeBoxes.forEach(b => b.value = '');
                 btn.disabled = false;
                 btn.innerHTML = 'Verify Code &rarr;';
+
+                const accountType = ACCESS_CODES[code];
+
+                if (!accountType) {
+                    errorEl.textContent = 'Invalid code. Please check with your AY leader.';
+                    codeBoxes.forEach(b => b.value = '');
+                    codeBoxes[0].focus();
+                    return;
+                }
+
+                pendingAccountType = accountType; // 'admin' or 'regular'
+                codeBoxes.forEach(b => b.value = '');
                 showView('signUpView');
             }, 1800);
         }
@@ -918,7 +918,7 @@
                 }
 
                 if (profile.account_type === 'admin') {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'admin-dashboard.html';
                 } else {
                     window.location.href = 'dashboard.html';
                 }
