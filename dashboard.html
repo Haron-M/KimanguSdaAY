@@ -11,6 +11,334 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="dashboard.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* ===================== DASHBOARD CONTENT SECTIONS ===================== */
+        .db-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .db-stat-card {
+            position: relative;
+            background: var(--white, #fff);
+            border-radius: 14px;
+            padding: 1.6rem;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+            border: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .db-stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            right: -30px;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        .db-stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: var(--primary-dark, #0a192f);
+            color: #f59e0b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .db-stat-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.9rem;
+            color: var(--primary-dark, #0a192f);
+            position: relative;
+            z-index: 1;
+        }
+
+        .db-stat-card p {
+            font-size: 0.85rem;
+            color: var(--text-gray, #64748b);
+            margin-top: 0.3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .db-section-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .db-card {
+            background: var(--white, #fff);
+            border-radius: 14px;
+            padding: 1.6rem;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+            border: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .db-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .db-card-header h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .db-card-pill {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary-dark, #0a192f);
+            background: rgba(245, 158, 11, 0.12);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            text-decoration: none;
+        }
+
+        .db-card-pill:hover {
+            background: #f59e0b;
+            color: #fff;
+        }
+
+        /* Verse of the day */
+        .verse-card {
+            background: var(--primary-dark, #0a192f);
+            color: #fff;
+            grid-column: span 2;
+        }
+
+        .verse-card .db-card-header h3 {
+            color: #f59e0b;
+        }
+
+        .verse-text {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.3rem;
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+        }
+
+        .verse-ref {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+
+        /* Announcements */
+        .announcement-item {
+            display: flex;
+            gap: 0.9rem;
+            padding: 0.9rem 0;
+            border-bottom: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .announcement-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .announcement-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(15, 43, 76, 0.08);
+            color: var(--primary-blue, #0f2b4c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .announcement-content p {
+            font-size: 0.9rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 0.2rem;
+            line-height: 1.4;
+        }
+
+        .announcement-content span {
+            font-size: 0.75rem;
+            color: var(--text-gray, #64748b);
+        }
+
+        /* Upcoming events */
+        .db-event-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.9rem 0;
+            border-bottom: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .db-event-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .db-event-date {
+            background: var(--off-white, #f8fafc);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            text-align: center;
+            padding: 0.4rem 0.7rem;
+            flex-shrink: 0;
+            min-width: 52px;
+        }
+
+        .db-event-date span {
+            display: block;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-gray, #64748b);
+            font-weight: 700;
+        }
+
+        .db-event-date strong {
+            font-size: 1.1rem;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .db-event-info h4 {
+            font-size: 0.9rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 0.15rem;
+        }
+
+        .db-event-info p {
+            font-size: 0.78rem;
+            color: var(--text-gray, #64748b);
+        }
+
+        /* Quick links */
+        .quicklinks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0 1.2rem;
+        }
+
+        .quicklinks-header h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .quicklinks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .quicklink-card {
+            background: var(--white, #fff);
+            border-radius: 14px;
+            padding: 1.4rem;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+            border: 1px solid var(--border-color, #e2e8f0);
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .quicklink-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(10, 25, 47, 0.1);
+        }
+
+        .quicklink-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .quicklink-icon.resources {
+            background: #8b5cf6;
+        }
+
+        .quicklink-icon.media {
+            background: #3b82f6;
+        }
+
+        .quicklink-card h4 {
+            font-size: 0.95rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 0.3rem;
+        }
+
+        .quicklink-card p {
+            font-size: 0.8rem;
+            color: var(--text-gray, #64748b);
+        }
+
+        @media (max-width: 768px) {
+            .db-section-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .verse-card {
+                grid-column: span 1;
+            }
+
+            .db-stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            .db-stat-card {
+                padding: 1.1rem;
+            }
+
+            .db-stat-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 0.95rem;
+                margin-bottom: 0.7rem;
+            }
+
+            .db-stat-card h3 {
+                font-size: 1.4rem;
+            }
+
+            .db-stat-card p {
+                font-size: 0.75rem;
+            }
+
+            .mobile-sidebar-toggle {
+                font-size: 1.4rem;
+                width: 42px;
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--off-white, #f8fafc);
+                border-radius: 10px;
+            }
+
+        }
+    </style>
 </head>
 
 <body>
@@ -129,41 +457,118 @@
             <!-- PAGE BODY -->
             <main class="page-body">
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div>
-                            <h3>12</h3>
-                            <p>Events Attended</p>
-                        </div>
-                        <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                <!-- TOP STAT CARDS -->
+                <div class="db-stats-grid">
+                    <div class="db-stat-card">
+                        <div class="db-stat-icon"><i class="fa-solid fa-wallet"></i></div>
+                        <h3 id="statBalance">KSh 0</h3>
+                        <p>Account Balance</p>
                     </div>
-                    <div class="stat-card">
-                        <div>
-                            <h3>4</h3>
-                            <p>Resources Saved</p>
-                        </div>
-                        <div class="stat-icon"><i class="fa-solid fa-bookmark"></i></div>
+                    <div class="db-stat-card">
+                        <div class="db-stat-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                        <h3 id="statContribution">KSh 0</h3>
+                        <p>My Total Contribution</p>
                     </div>
-                    <div class="stat-card">
-                        <div>
-                            <h3>8</h3>
-                            <p>Media Watched</p>
-                        </div>
-                        <div class="stat-icon"><i class="fa-solid fa-play"></i></div>
+                    <div class="db-stat-card">
+                        <div class="db-stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                        <h3 id="statSchedules">0</h3>
+                        <p>My Schedules</p>
                     </div>
-                    <div class="stat-card">
-                        <div>
-                            <h3>2</h3>
-                            <p>Upcoming RSVPs</p>
-                        </div>
-                        <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+                    <div class="db-stat-card">
+                        <div class="db-stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                        <h3 id="statEvents">0</h3>
+                        <p>Total Events</p>
                     </div>
                 </div>
 
-                <div class="placeholder-card">
-                    <i class="fa-solid fa-table-columns"></i>
-                    <h3>Your dashboard content goes here</h3>
-                    <p>Recent activity, upcoming events, and quick actions can be built out in this area.</p>
+                <!-- VERSE OF THE DAY -->
+                <div class="db-section-grid">
+                    <div class="db-card verse-card">
+                        <div class="db-card-header">
+                            <h3><i class="fa-solid fa-book-bible" style="margin-right:8px;"></i>Verse of the Day</h3>
+                        </div>
+                        <p class="verse-text">"Let no one despise your youth, but be an example to the believers in
+                            word, in conduct, in love, in spirit, in faith, in purity."</p>
+                        <span class="verse-ref">1 Timothy 4:12</span>
+                    </div>
+                </div>
+
+                <!-- ANNOUNCEMENTS + UPCOMING EVENTS -->
+                <div class="db-section-grid">
+                    <div class="db-card">
+                        <div class="db-card-header">
+                            <h3>Announcements</h3>
+                            <a href="#" class="db-card-pill">View all</a>
+                        </div>
+
+                        <div class="announcement-item">
+                            <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                            <div class="announcement-content">
+                                <p>Sabbath School curriculum for this quarter is now available in Resources.</p>
+                                <span>2 hours ago</span>
+                            </div>
+                        </div>
+                        <div class="announcement-item">
+                            <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                            <div class="announcement-content">
+                                <p>Choir practice moved to Thursday 5:00 PM this week only.</p>
+                                <span>1 day ago</span>
+                            </div>
+                        </div>
+                        <div class="announcement-item">
+                            <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                            <div class="announcement-content">
+                                <p>Tree planting volunteers should meet at the church gate by 7:30 AM.</p>
+                                <span>3 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="db-card">
+                        <div class="db-card-header">
+                            <h3>Upcoming Events</h3>
+                            <a href="#" class="db-card-pill">See all</a>
+                        </div>
+
+                        <div class="db-event-item">
+                            <div class="db-event-date"><span>Oct</span><strong>15</strong></div>
+                            <div class="db-event-info">
+                                <h4>AI Upskilling & Tech Sabbath</h4>
+                                <p>2:00 PM EAT</p>
+                            </div>
+                        </div>
+                        <div class="db-event-item">
+                            <div class="db-event-date"><span>Oct</span><strong>22</strong></div>
+                            <div class="db-event-info">
+                                <h4>Community Tree Planting Initiative</h4>
+                                <p>8:00 AM EAT</p>
+                            </div>
+                        </div>
+                        <div class="db-event-item">
+                            <div class="db-event-date"><span>Oct</span><strong>29</strong></div>
+                            <div class="db-event-info">
+                                <h4>AY Youth Choir Festival</h4>
+                                <p>3:00 PM EAT</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUICK LINKS -->
+                <div class="quicklinks-header">
+                    <h3>Quick Links</h3>
+                </div>
+                <div class="quicklinks-grid">
+                    <a href="#" class="quicklink-card">
+                        <div class="quicklink-icon resources"><i class="fa-solid fa-book-open"></i></div>
+                        <h4>Resources</h4>
+                        <p>Bible study guides, sermon notes and study materials.</p>
+                    </a>
+                    <a href="#" class="quicklink-card">
+                        <div class="quicklink-icon media"><i class="fa-solid fa-photo-film"></i></div>
+                        <h4>Media</h4>
+                        <p>Photos, sermon recordings and event highlights.</p>
+                    </a>
                 </div>
 
             </main>
