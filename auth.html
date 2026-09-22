@@ -913,12 +913,12 @@
                 btn.textContent = 'Sign In →';
 
                 if (profileError || !profile) {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'index.html';
                     return;
                 }
 
                 if (profile.account_type === 'admin') {
-                    window.location.href = 'admin-dashboard.html';
+                    window.location.href = 'dashboard.html';
                 } else {
                     window.location.href = 'dashboard.html';
                 }
