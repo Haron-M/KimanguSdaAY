@@ -396,51 +396,42 @@
             <nav class="sidebar-nav">
                 <p class="nav-group-label">Main</p>
                 <a href="dashboard.html" class="sidebar-link active">
-                    <i class="fa-solid fa-table-columns"></i> Dashboard
-                </a>
-                <a href="schedules.html" class="sidebar-link">
-                    <i class="fa-solid fa-calendar-day"></i> My Schedules
+                    <i class="fa-solid fa-house"></i> Home
                 </a>
                 <a href="media.html" class="sidebar-link">
-                    <i class="fa-solid fa-photo-film"></i> Media
+                    <i class="fa-solid fa-photo-film"></i> Media Center
                 </a>
                 <a href="resources.html" class="sidebar-link">
                     <i class="fa-solid fa-book-bible"></i> Resources
                 </a>
+                <a href="schedules.html" class="sidebar-link">
+                    <i class="fa-solid fa-calendar-day"></i> My Schedules
+                </a>
+                <a href="account.html" class="sidebar-link">
+                    <i class="fa-solid fa-user"></i> Accounts
+                </a>
+
+                <p class="nav-group-label">Management</p>
+                <div class="admin-block" id="adminNavGroup">
+                    <button type="button" class="sidebar-link admin-toggle" id="adminToggle">
+                        <i class="fa-solid fa-shield-halved"></i> Admin Panel
+                        <i class="fa-solid fa-chevron-right admin-chevron" id="adminChevron"></i>
+                    </button>
+                    <div class="admin-submenu" id="adminSubmenu">
+                        <a href="admin/members.html" class="sidebar-link sub-link">Members</a>
+                        <a href="admin/events.html" class="sidebar-link sub-link">Events</a>
+                        <a href="admin/announcements.html" class="sidebar-link sub-link">Announcements</a>
+                        <a href="admin/media.html" class="sidebar-link sub-link">Media</a>
+                        <a href="admin/resources.html" class="sidebar-link sub-link">Resources</a>
+                    </div>
+                </div>
                 <a href="treasury.html" class="sidebar-link">
                     <i class="fa-solid fa-coins"></i> Treasury Desk
                 </a>
-                <a href="account.html" class="sidebar-link">
-                    <i class="fa-solid fa-user-gear"></i> Account
-                </a>
-
-                <div id="adminNavGroup" style="display:none;">
-                    <button type="button" class="sidebar-link admin-toggle" id="adminToggle">
-                        <i class="fa-solid fa-user-shield"></i> Admin Panel
-                        <i class="fa-solid fa-chevron-down admin-chevron" id="adminChevron"></i>
-                    </button>
-                    <div class="admin-submenu" id="adminSubmenu">
-                        <a href="admin/members.html" class="sidebar-link sub-link">
-                            <i class="fa-solid fa-users"></i> Members
-                        </a>
-                        <a href="admin/events.html" class="sidebar-link sub-link">
-                            <i class="fa-solid fa-calendar-plus"></i> Events
-                        </a>
-                        <a href="admin/announcements.html" class="sidebar-link sub-link">
-                            <i class="fa-solid fa-bullhorn"></i> Announcements
-                        </a>
-                        <a href="admin/media.html" class="sidebar-link sub-link">
-                            <i class="fa-solid fa-video"></i> Media
-                        </a>
-                        <a href="admin/resources.html" class="sidebar-link sub-link">
-                            <i class="fa-solid fa-folder-open"></i> Resources
-                        </a>
-                    </div>
-                </div>
 
                 <p class="nav-group-label">Session</p>
                 <a href="#" class="sidebar-link logout-link" id="logoutLink">
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    <i class="fa-solid fa-right-from-bracket"></i> Log Out
                 </a>
             </nav>
 
