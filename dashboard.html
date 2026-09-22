@@ -338,7 +338,13 @@
             }
         }
 
-        /* Admin submenu */
+        /* Admin panel block - orange highlighted panel style */
+        .admin-block {
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0.3rem;
+        }
+
         .admin-toggle {
             width: 100%;
             background: none;
@@ -347,6 +353,19 @@
             font-family: inherit;
             text-align: left;
             justify-content: flex-start;
+            border-radius: 8px;
+            margin-bottom: 0;
+        }
+
+        .admin-toggle.open {
+            background: var(--accent-gold, #f59e0b);
+            color: var(--primary-dark, #0a192f);
+            font-weight: 700;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .admin-toggle.open i {
+            color: var(--primary-dark, #0a192f);
         }
 
         .admin-chevron {
@@ -356,22 +375,69 @@
         }
 
         .admin-toggle.open .admin-chevron {
-            transform: rotate(180deg);
+            transform: rotate(90deg);
         }
 
         .admin-submenu {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.35s ease;
+            background: rgba(245, 158, 11, 0.14);
+            border-radius: 0 0 8px 8px;
         }
 
         .admin-submenu.open {
             max-height: 300px;
+            padding: 0.3rem 0;
         }
 
         .sub-link {
-            padding-left: 2.2rem !important;
+            padding: 0.6rem 0.9rem 0.6rem 3rem !important;
             font-size: 0.85rem !important;
+            color: #fcd34d !important;
+            margin-bottom: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        .sub-link:hover {
+            background: rgba(245, 158, 11, 0.2) !important;
+            color: #fff !important;
+        }
+
+        /* Persistent shell: lock the full height chain so only the iframe
+           scrolls internally — sidebar and topbar never move or resize. */
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .dashboard-layout {
+            height: 100vh;
+        }
+
+        .sidebar {
+            height: 100vh;
+        }
+
+        .main-content {
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+
+        .iframe-content-wrap {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        #contentFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
         }
     </style>
 </head>
@@ -395,19 +461,23 @@
 
             <nav class="sidebar-nav">
                 <p class="nav-group-label">Main</p>
-                <a href="dashboard.html" class="sidebar-link active">
+                <a href="dashboard.html" class="sidebar-link active" data-page="pages/home.html" data-title="__HOME__">
                     <i class="fa-solid fa-house"></i> Home
                 </a>
-                <a href="media.html" class="sidebar-link">
+                <a href="media.html" class="sidebar-link" data-page="pages/media.html" data-title="Media"
+                    data-desc="Watch videos and listen to songs from Kimangu AY.">
                     <i class="fa-solid fa-photo-film"></i> Media Center
                 </a>
-                <a href="resources.html" class="sidebar-link">
+                <a href="resources.html" class="sidebar-link" data-page="pages/resources.html" data-title="Resources"
+                    data-desc="Lessons, study guides and documents for members.">
                     <i class="fa-solid fa-book-bible"></i> Resources
                 </a>
-                <a href="schedules.html" class="sidebar-link">
+                <a href="schedules.html" class="sidebar-link" data-page="pages/schedules.html" data-title="My Schedules"
+                    data-desc="Your personal event and duty schedule.">
                     <i class="fa-solid fa-calendar-day"></i> My Schedules
                 </a>
-                <a href="account.html" class="sidebar-link">
+                <a href="account.html" class="sidebar-link" data-page="pages/account.html" data-title="Accounts"
+                    data-desc="Manage your profile and account settings.">
                     <i class="fa-solid fa-user"></i> Accounts
                 </a>
 
@@ -418,14 +488,23 @@
                         <i class="fa-solid fa-chevron-right admin-chevron" id="adminChevron"></i>
                     </button>
                     <div class="admin-submenu" id="adminSubmenu">
-                        <a href="admin/members.html" class="sidebar-link sub-link">Members</a>
-                        <a href="admin/events.html" class="sidebar-link sub-link">Events</a>
-                        <a href="admin/announcements.html" class="sidebar-link sub-link">Announcements</a>
-                        <a href="admin/media.html" class="sidebar-link sub-link">Media</a>
-                        <a href="admin/resources.html" class="sidebar-link sub-link">Resources</a>
+                        <a href="admin/members.html" class="sidebar-link sub-link" data-page="pages/admin/members.html"
+                            data-title="Members"
+                            data-desc="All members who have registered on the platform.">Members</a>
+                        <a href="admin/events.html" class="sidebar-link sub-link" data-page="pages/admin/events.html"
+                            data-title="Events" data-desc="Create and manage upcoming events.">Events</a>
+                        <a href="admin/announcements.html" class="sidebar-link sub-link"
+                            data-page="pages/admin/announcements.html" data-title="Announcements"
+                            data-desc="Post updates for all members to see.">Announcements</a>
+                        <a href="admin/media.html" class="sidebar-link sub-link" data-page="pages/admin/media.html"
+                            data-title="Media" data-desc="Upload videos and songs for members.">Media</a>
+                        <a href="admin/resources.html" class="sidebar-link sub-link"
+                            data-page="pages/admin/resources.html" data-title="Resources"
+                            data-desc="Upload lessons, guides and documents for members.">Resources</a>
                     </div>
                 </div>
-                <a href="treasury.html" class="sidebar-link">
+                <a href="treasury.html" class="sidebar-link" data-page="pages/treasury.html" data-title="Treasury Desk"
+                    data-desc="Your contributions and account balance.">
                     <i class="fa-solid fa-coins"></i> Treasury Desk
                 </a>
 
@@ -511,87 +590,9 @@
             </header>
 
             <!-- PAGE BODY -->
-            <main class="page-body">
-
-                <!-- TOP STAT CARDS -->
-                <div class="db-stats-grid">
-                    <div class="db-stat-card">
-                        <div class="db-stat-icon"><i class="fa-solid fa-wallet"></i></div>
-                        <h3 id="statBalance">KSh 0</h3>
-                        <p>Account Balance</p>
-                    </div>
-                    <div class="db-stat-card">
-                        <div class="db-stat-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
-                        <h3 id="statContribution">KSh 0</h3>
-                        <p>My Total Contribution</p>
-                    </div>
-                    <div class="db-stat-card">
-                        <div class="db-stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
-                        <h3 id="statSchedules">0</h3>
-                        <p>My Schedules</p>
-                    </div>
-                    <div class="db-stat-card">
-                        <div class="db-stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
-                        <h3 id="statEvents">0</h3>
-                        <p>Total Events</p>
-                    </div>
-                </div>
-
-                <!-- VERSE OF THE DAY -->
-                <div class="db-section-grid">
-                    <div class="db-card verse-card">
-                        <div class="db-card-header">
-                            <h3><i class="fa-solid fa-book-bible" style="margin-right:8px;"></i>Verse of the Day</h3>
-                        </div>
-                        <p class="verse-text">"Let no one despise your youth, but be an example to the believers in
-                            word, in conduct, in love, in spirit, in faith, in purity."</p>
-                        <span class="verse-ref">1 Timothy 4:12</span>
-                    </div>
-                </div>
-
-                <!-- ANNOUNCEMENTS + UPCOMING EVENTS -->
-                <div class="db-section-grid">
-                    <div class="db-card">
-                        <div class="db-card-header">
-                            <h3>Announcements</h3>
-                            <a href="#" class="db-card-pill">View all</a>
-                        </div>
-
-                        <div id="announcementsList">
-                            <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading announcements...</p>
-                        </div>
-                    </div>
-
-                    <div class="db-card">
-                        <div class="db-card-header">
-                            <h3>Upcoming Events</h3>
-                            <a href="#" class="db-card-pill">See all</a>
-                        </div>
-
-                        <div id="upcomingEventsList">
-                            <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading events...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- QUICK LINKS -->
-                <div class="quicklinks-header">
-                    <h3>Quick Links</h3>
-                </div>
-                <div class="quicklinks-grid">
-                    <a href="#" class="quicklink-card">
-                        <div class="quicklink-icon resources"><i class="fa-solid fa-book-open"></i></div>
-                        <h4>Resources</h4>
-                        <p>Bible study guides, sermon notes and study materials.</p>
-                    </a>
-                    <a href="#" class="quicklink-card">
-                        <div class="quicklink-icon media"><i class="fa-solid fa-photo-film"></i></div>
-                        <h4>Media</h4>
-                        <p>Photos, sermon recordings and event highlights.</p>
-                    </a>
-                </div>
-
-            </main>
+            <div class="iframe-content-wrap">
+                <iframe id="contentFrame" src="pages/home.html" title="Page content"></iframe>
+            </div>
         </div>
     </div>
 
@@ -600,6 +601,8 @@
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let homeWelcomeText = 'Welcome back 👋';
 
         function getInitials(fullName) {
             if (!fullName) return '--';
@@ -635,20 +638,53 @@
             const firstName = fullName.trim().split(/\s+/)[0];
             const initials = getInitials(fullName);
 
-            document.getElementById('welcomeName').textContent = `Welcome back, ${firstName} 👋`;
+            homeWelcomeText = `Welcome back, ${firstName} 👋`;
+            document.getElementById('welcomeName').textContent = homeWelcomeText;
             document.getElementById('sidebarFullName').textContent = fullName;
             document.getElementById('sidebarCategory').textContent =
                 profile.category ? profile.category.charAt(0).toUpperCase() + profile.category.slice(1) + ' Member' : 'Kimangu AY Member';
             document.getElementById('sidebarAvatar').textContent = initials;
             document.getElementById('topbarAvatar').textContent = initials;
 
-            // Show Admin Panel nav only for admin accounts
-            if (profile.account_type === 'admin') {
-                document.getElementById('adminNavGroup').style.display = 'block';
-            }
+            // DEV MODE: Admin Panel is shown to everyone for testing.
+            // Before launch, wrap the Admin Panel nav block in a check for
+            // profile.account_type === 'admin' to restrict it properly.
         }
 
         loadUserProfile();
+
+        // ===================== PERSISTENT SHELL NAVIGATION =====================
+        // Clicking a sidebar link swaps only the iframe's content — the
+        // sidebar and topbar never reload.
+        const contentFrame = document.getElementById('contentFrame');
+        const welcomeNameEl = document.getElementById('welcomeName');
+        const welcomeDescEl = document.querySelector('.welcome-text p');
+
+        document.querySelectorAll('.sidebar-nav a.sidebar-link[data-page]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetPage = link.getAttribute('data-page');
+                const title = link.getAttribute('data-title');
+                const desc = link.getAttribute('data-desc');
+
+                contentFrame.src = targetPage;
+
+                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                if (title === '__HOME__') {
+                    welcomeNameEl.textContent = homeWelcomeText;
+                    welcomeDescEl.textContent = "Here's what's happening in Kimangu AY today.";
+                } else {
+                    if (title) welcomeNameEl.textContent = title;
+                    if (desc) welcomeDescEl.textContent = desc;
+                }
+
+                // Close the mobile sidebar after choosing a link
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        });
 
         // Admin submenu toggle
         const adminToggle = document.getElementById('adminToggle');
@@ -657,103 +693,6 @@
             adminToggle.classList.toggle('open');
             adminSubmenu.classList.toggle('open');
         });
-
-        // ===================== LOAD REAL EVENTS =====================
-        async function loadUpcomingEvents() {
-            const container = document.getElementById('upcomingEventsList');
-            const today = new Date().toISOString().split('T')[0];
-
-            const { data: events, error } = await supabaseClient
-                .from('events')
-                .select('*')
-                .gte('event_date', today)
-                .order('event_date', { ascending: true })
-                .limit(5);
-
-            if (error) {
-                console.error('Could not load events:', error);
-                return;
-            }
-
-            if (!events || events.length === 0) {
-                container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No upcoming events yet.</p>';
-                return;
-            }
-
-            container.innerHTML = events.map(ev => {
-                const d = new Date(ev.event_date + 'T00:00:00');
-                const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-                const day = d.getDate();
-                const timeLabel = ev.start_time ? formatTime(ev.start_time) : '';
-                return `
-                    <div class="db-event-item">
-                        <div class="db-event-date"><span>${month}</span><strong>${day}</strong></div>
-                        <div class="db-event-info">
-                            <h4>${escapeHtml(ev.title)}</h4>
-                            <p>${timeLabel}</p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // ===================== LOAD REAL ANNOUNCEMENTS =====================
-        async function loadAnnouncements() {
-            const container = document.getElementById('announcementsList');
-
-            const { data: items, error } = await supabaseClient
-                .from('announcements')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-            if (error) {
-                console.error('Could not load announcements:', error);
-                return;
-            }
-
-            if (!items || items.length === 0) {
-                container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No announcements yet.</p>';
-                return;
-            }
-
-            container.innerHTML = items.map(a => `
-                <div class="announcement-item">
-                    <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
-                    <div class="announcement-content">
-                        <p>${escapeHtml(a.title)} — ${escapeHtml(a.content)}</p>
-                        <span>${timeAgo(a.created_at)}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function formatTime(t) {
-            const [h, m] = t.split(':');
-            const hour = parseInt(h, 10);
-            const suffix = hour >= 12 ? 'PM' : 'AM';
-            const hour12 = ((hour + 11) % 12) + 1;
-            return `${hour12}:${m} ${suffix}`;
-        }
-
-        function timeAgo(dateStr) {
-            const diff = Date.now() - new Date(dateStr).getTime();
-            const mins = Math.floor(diff / 60000);
-            if (mins < 60) return `${mins} min${mins === 1 ? '' : 's'} ago`;
-            const hrs = Math.floor(mins / 60);
-            if (hrs < 24) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
-            const days = Math.floor(hrs / 24);
-            return `${days} day${days === 1 ? '' : 's'} ago`;
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str || '';
-            return div.innerHTML;
-        }
-
-        loadUpcomingEvents();
-        loadAnnouncements();
 
         // Notification dropdown toggle
         const notifBtn = document.getElementById('notifBtn');

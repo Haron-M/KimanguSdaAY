@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--primary-dark);
+            background: var(--off-white);
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .page-body {
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .page-body {
+                padding: 1.2rem;
+            }
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .admin-form-card,
+        .admin-list-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 1.6rem;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+            border: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .admin-form-card h3,
+        .admin-list-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .time-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+        }
+
+        .file-drop {
+            border: 1.5px dashed var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            padding: 1.2rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-gray, #64748b);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .file-drop i {
+            font-size: 1.3rem;
+            color: #f59e0b;
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+
+        .file-drop input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-preview-name {
+            font-size: 0.8rem;
+            color: var(--primary-dark, #0a192f);
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--primary-dark, #0a192f);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            background: #f59e0b;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .form-msg {
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            padding: 0.6rem 0.9rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .form-msg.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.1);
+            color: #15803d;
+        }
+
+        .form-msg.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .event-row {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color, #e2e8f0);
+            align-items: center;
+        }
+
+        .event-row:last-child {
+            border-bottom: none;
+        }
+
+        .event-row img {
+            width: 70px;
+            height: 70px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: var(--off-white, #f8fafc);
+        }
+
+        .event-row-info {
+            flex: 1;
+        }
+
+        .event-row-info h4 {
+            font-size: 0.95rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 0.2rem;
+        }
+
+        .event-row-info p {
+            font-size: 0.8rem;
+            color: var(--text-gray, #64748b);
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        @media (max-width: 900px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page-body">
+        <div class="admin-grid">
+            <div class="admin-form-card">
+                <h3>Create New Event</h3>
+                <div class="form-msg" id="formMsg"></div>
+
+                <form id="eventForm">
+                    <div class="form-group">
+                        <label>Event Image</label>
+                        <div class="file-drop" id="imageDrop">
+                            <i class="fa-solid fa-image"></i>
+                            Click to upload an image
+                            <input type="file" id="eventImage" accept="image/*">
+                        </div>
+                        <div class="file-preview-name" id="imageFileName"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Event Title</label>
+                        <input type="text" id="eventTitle" placeholder="e.g. AI Upskilling & Tech Sabbath" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="eventContent" placeholder="What is this event about?" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Event Date</label>
+                        <input type="date" id="eventDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Time</label>
+                        <div class="time-row">
+                            <input type="time" id="startTime" required>
+                            <input type="time" id="endTime" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="submitEventBtn">Publish Event</button>
+                </form>
+            </div>
+
+            <div class="admin-list-card">
+                <h3>All Events</h3>
+                <div id="eventsList">
+                    <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading events...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        document.getElementById('eventImage').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            document.getElementById('imageFileName').textContent = file ? file.name : '';
+        });
+
+        function showMsg(text, type) {
+            const el = document.getElementById('formMsg');
+            el.textContent = text;
+            el.className = `form-msg ${type}`;
+        }
+
+        document.getElementById('eventForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitEventBtn');
+            btn.disabled = true;
+            btn.textContent = 'Publishing...';
+            showMsg('', '');
+
+            try {
+                const title = document.getElementById('eventTitle').value.trim();
+                const content = document.getElementById('eventContent').value.trim();
+                const eventDate = document.getElementById('eventDate').value;
+                const startTime = document.getElementById('startTime').value;
+                const endTime = document.getElementById('endTime').value;
+                const imageFile = document.getElementById('eventImage').files[0];
+
+                let imageUrl = null;
+                if (imageFile) {
+                    const filePath = `${Date.now()}_${imageFile.name}`;
+                    const { error: uploadError } = await supabaseClient.storage.from('event-images').upload(filePath, imageFile);
+                    if (uploadError) throw new Error('Image upload failed: ' + uploadError.message);
+                    const { data: publicUrlData } = supabaseClient.storage.from('event-images').getPublicUrl(filePath);
+                    imageUrl = publicUrlData.publicUrl;
+                }
+
+                const { error: insertError } = await supabaseClient.from('events').insert({
+                    title, content, image_url: imageUrl, event_date: eventDate, start_time: startTime, end_time: endTime
+                });
+                if (insertError) throw new Error(insertError.message);
+
+                showMsg('Event published successfully!', 'success');
+                document.getElementById('eventForm').reset();
+                document.getElementById('imageFileName').textContent = '';
+                loadEvents();
+            } catch (err) {
+                showMsg(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Publish Event';
+            }
+        });
+
+        async function deleteEvent(id) {
+            if (!confirm('Delete this event?')) return;
+            const { error } = await supabaseClient.from('events').delete().eq('id', id);
+            if (error) { alert('Could not delete: ' + error.message); return; }
+            loadEvents();
+        }
+
+        async function loadEvents() {
+            const container = document.getElementById('eventsList');
+            const { data: events, error } = await supabaseClient.from('events').select('*').order('event_date', { ascending: true });
+            if (error) { container.innerHTML = `<p style="color:#dc2626; font-size:0.9rem;">${escapeHtml(error.message)}</p>`; return; }
+            if (!events || events.length === 0) { container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No events created yet.</p>'; return; }
+
+            container.innerHTML = events.map(ev => `
+        <div class="event-row">
+            <img src="${ev.image_url || 'https://via.placeholder.com/70?text=No+Image'}" alt="${escapeHtml(ev.title)}">
+            <div class="event-row-info">
+                <h4>${escapeHtml(ev.title)}</h4>
+                <p>${new Date(ev.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • ${ev.start_time || ''} - ${ev.end_time || ''}</p>
+            </div>
+            <button class="delete-btn" onclick="deleteEvent('${ev.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>
+    `).join('');
+        }
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.top.location.href = '../../auth.html'; return; }
+            loadEvents();
+        })();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resources</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--primary-dark);
+            background: var(--off-white);
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .page-body {
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .page-body {
+                padding: 1.2rem;
+            }
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 0.5rem 1.1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-color, #e2e8f0);
+            color: var(--text-gray, #64748b);
+            background: #fff;
+        }
+
+        .filter-tab.active {
+            background: var(--primary-dark, #0a192f);
+            color: #fff;
+            border-color: var(--primary-dark, #0a192f);
+        }
+
+        .resource-public-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .resource-public-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+            border: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .resource-public-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: rgba(139, 92, 246, 0.12);
+            color: #8b5cf6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .resource-public-card h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 0.4rem;
+        }
+
+        .resource-public-card p {
+            font-size: 0.85rem;
+            color: var(--text-gray, #64748b);
+            margin-bottom: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .resource-cat-pill {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            background: var(--off-white, #f8fafc);
+            color: var(--primary-dark, #0a192f);
+            padding: 0.25rem 0.7rem;
+            border-radius: 20px;
+            margin-bottom: 0.8rem;
+        }
+
+        .resource-download-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary-dark, #0a192f);
+            text-decoration: none;
+        }
+
+        .resource-download-link:hover {
+            color: #f59e0b;
+        }
+
+        .empty-msg {
+            color: var(--text-gray, #64748b);
+            font-size: 0.95rem;
+            text-align: center;
+            padding: 3rem;
+            grid-column: 1/-1;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page-body">
+        <div class="filter-tabs">
+            <div class="filter-tab active" data-filter="all" onclick="setFilter('all')">All</div>
+            <div class="filter-tab" data-filter="lesson" onclick="setFilter('lesson')">Lessons</div>
+            <div class="filter-tab" data-filter="bible_study_guide" onclick="setFilter('bible_study_guide')">Bible Study
+                Guides</div>
+            <div class="filter-tab" data-filter="sermon_notes" onclick="setFilter('sermon_notes')">Sermon Notes</div>
+            <div class="filter-tab" data-filter="other" onclick="setFilter('other')">Other</div>
+        </div>
+
+        <div class="resource-public-grid" id="resourcePublicGrid">
+            <p class="empty-msg">Loading resources...</p>
+        </div>
+    </main>
+    <script>
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const categoryLabels = { lesson: 'Lesson', bible_study_guide: 'Bible Study Guide', sermon_notes: 'Sermon Notes', other: 'Other' };
+        let allResources = [];
+        let currentFilter = 'all';
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function setFilter(cat) {
+            currentFilter = cat;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === cat));
+            renderResources();
+        }
+
+        function renderResources() {
+            const container = document.getElementById('resourcePublicGrid');
+            const items = currentFilter === 'all' ? allResources : allResources.filter(r => r.category === currentFilter);
+
+            if (items.length === 0) {
+                container.innerHTML = '<p class="empty-msg">No resources found in this category yet.</p>';
+                return;
+            }
+
+            container.innerHTML = items.map(r => `
+        <div class="resource-public-card">
+            <div class="resource-public-icon"><i class="fa-solid fa-file-lines"></i></div>
+            <span class="resource-cat-pill">${escapeHtml(categoryLabels[r.category] || r.category)}</span>
+            <h4>${escapeHtml(r.title)}</h4>
+            <p>${escapeHtml(r.description)}</p>
+            <a href="${r.file_url}" target="_blank" class="resource-download-link"><i class="fa-solid fa-download"></i> Download</a>
+        </div>
+    `).join('');
+        }
+
+        async function loadResources() {
+            const { data, error } = await supabaseClient.from('resources').select('*').order('created_at', { ascending: false });
+            if (error) {
+                document.getElementById('resourcePublicGrid').innerHTML = `<p class="empty-msg">Could not load resources: ${escapeHtml(error.message)}</p>`;
+                return;
+            }
+            allResources = data || [];
+            renderResources();
+        }
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.top.location.href = '../auth.html'; return; }
+            loadResources();
+        })();
+
+    </script>
+</body>
+
+</html>

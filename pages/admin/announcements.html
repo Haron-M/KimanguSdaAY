@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announcements</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--primary-dark);
+            background: var(--off-white);
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .page-body {
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .page-body {
+                padding: 1.2rem;
+            }
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .admin-form-card,
+        .admin-list-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 1.6rem;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+            border: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .admin-form-card h3,
+        .admin-list-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 130px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--primary-dark, #0a192f);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            background: #f59e0b;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .form-msg {
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            padding: 0.6rem 0.9rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .form-msg.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.1);
+            color: #15803d;
+        }
+
+        .form-msg.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .ann-row {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color, #e2e8f0);
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .ann-row:last-child {
+            border-bottom: none;
+        }
+
+        .ann-row h4 {
+            font-size: 0.95rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 0.3rem;
+        }
+
+        .ann-row p {
+            font-size: 0.85rem;
+            color: var(--text-gray, #64748b);
+            margin-bottom: 0.3rem;
+        }
+
+        .ann-row span {
+            font-size: 0.75rem;
+            color: var(--text-gray, #64748b);
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            cursor: pointer;
+            flex-shrink: 0;
+            align-self: flex-start;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        @media (max-width: 900px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page-body">
+        <div class="admin-grid">
+            <div class="admin-form-card">
+                <h3>New Announcement</h3>
+                <div class="form-msg" id="formMsg"></div>
+                <form id="annForm">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="annTitle" placeholder="e.g. Choir Practice Update" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Content</label>
+                        <textarea id="annContent" placeholder="Write the announcement..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit" id="submitAnnBtn">Post Announcement</button>
+                </form>
+            </div>
+
+            <div class="admin-list-card">
+                <h3>All Announcements</h3>
+                <div id="annList">
+                    <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function showMsg(text, type) {
+            const el = document.getElementById('formMsg');
+            el.textContent = text;
+            el.className = `form-msg ${type}`;
+        }
+
+        document.getElementById('annForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitAnnBtn');
+            btn.disabled = true;
+            btn.textContent = 'Posting...';
+            showMsg('', '');
+
+            const title = document.getElementById('annTitle').value.trim();
+            const content = document.getElementById('annContent').value.trim();
+
+            const { error } = await supabaseClient.from('announcements').insert({ title, content });
+            if (error) {
+                showMsg(error.message, 'error');
+            } else {
+                showMsg('Announcement posted!', 'success');
+                document.getElementById('annForm').reset();
+                loadAnnouncements();
+            }
+            btn.disabled = false;
+            btn.textContent = 'Post Announcement';
+        });
+
+        async function deleteAnn(id) {
+            if (!confirm('Delete this announcement?')) return;
+            const { error } = await supabaseClient.from('announcements').delete().eq('id', id);
+            if (error) { alert('Could not delete: ' + error.message); return; }
+            loadAnnouncements();
+        }
+
+        async function loadAnnouncements() {
+            const container = document.getElementById('annList');
+            const { data, error } = await supabaseClient.from('announcements').select('*').order('created_at', { ascending: false });
+            if (error) { container.innerHTML = `<p style="color:#dc2626; font-size:0.9rem;">${escapeHtml(error.message)}</p>`; return; }
+            if (!data || data.length === 0) { container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No announcements yet.</p>'; return; }
+
+            container.innerHTML = data.map(a => `
+        <div class="ann-row">
+            <div>
+                <h4>${escapeHtml(a.title)}</h4>
+                <p>${escapeHtml(a.content)}</p>
+                <span>${new Date(a.created_at).toLocaleString()}</span>
+            </div>
+            <button class="delete-btn" onclick="deleteAnn('${a.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>
+    `).join('');
+        }
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.top.location.href = '../../auth.html'; return; }
+            loadAnnouncements();
+        })();
+
+    </script>
+</body>
+
+</html>

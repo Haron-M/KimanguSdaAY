@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Members</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--primary-dark);
+            background: var(--off-white);
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .page-body {
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .page-body {
+                padding: 1.2rem;
+            }
+        }
+
+        .admin-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .admin-page-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .admin-search {
+            position: relative;
+        }
+
+        .admin-search input {
+            padding: 0.6rem 1rem 0.6rem 2.3rem;
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            width: 260px;
+        }
+
+        .admin-search i {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray, #64748b);
+            font-size: 0.85rem;
+        }
+
+        .members-table-wrap {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+            border: 1px solid var(--border-color, #e2e8f0);
+            overflow-x: auto;
+        }
+
+        table.members-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .members-table th {
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-gray, #64748b);
+            padding: 1rem 1.3rem;
+            border-bottom: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .members-table td {
+            padding: 1rem 1.3rem;
+            font-size: 0.9rem;
+            color: var(--primary-dark, #0a192f);
+            border-bottom: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .members-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .category-badge.youth {
+            background: rgba(15, 43, 76, 0.1);
+            color: var(--primary-blue, #0f2b4c);
+        }
+
+        .category-badge.ambassador {
+            background: rgba(245, 158, 11, 0.12);
+            color: #b45309;
+        }
+
+        .type-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            color: var(--text-gray, #64748b);
+        }
+
+        .empty-state {
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-gray, #64748b);
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page-body">
+        <div class="admin-page-header">
+            <h2 id="memberCountLabel">Loading members...</h2>
+            <div class="admin-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="memberSearch" placeholder="Search by name or phone...">
+            </div>
+        </div>
+
+        <div class="members-table-wrap">
+            <table class="members-table">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Phone Number</th>
+                        <th>Category</th>
+                        <th>Account Type</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:2rem; color:var(--text-gray);">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let allMembers = [];
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function renderMembers(members) {
+            const tbody = document.getElementById('membersTableBody');
+            document.getElementById('memberCountLabel').textContent = `${members.length} Registered Member${members.length === 1 ? '' : 's'}`;
+
+            if (members.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No members found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = members.map(m => `
+        <tr>
+            <td>${escapeHtml(m.full_name || '—')}</td>
+            <td>${escapeHtml(m.phone || '—')}</td>
+            <td><span class="category-badge ${m.category || ''}">${escapeHtml(m.category || '—')}</span></td>
+            <td><span class="type-badge">${escapeHtml(m.account_type || '—')}</span></td>
+            <td>${m.created_at ? new Date(m.created_at).toLocaleDateString() : '—'}</td>
+        </tr>
+    `).join('');
+        }
+
+        async function loadMembers() {
+            const { data, error } = await supabaseClient
+                .from('profiles').select('full_name, phone, category, account_type, created_at')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                document.getElementById('membersTableBody').innerHTML = `<tr><td colspan="5" class="empty-state">Could not load members: ${escapeHtml(error.message)}</td></tr>`;
+                return;
+            }
+            allMembers = data || [];
+            renderMembers(allMembers);
+        }
+
+        document.getElementById('memberSearch').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            const filtered = allMembers.filter(m => (m.full_name || '').toLowerCase().includes(q) || (m.phone || '').toLowerCase().includes(q));
+            renderMembers(filtered);
+        });
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.top.location.href = '../../auth.html'; return; }
+            loadMembers();
+        })();
+
+    </script>
+</body>
+
+</html>
