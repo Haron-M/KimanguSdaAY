@@ -336,7 +336,42 @@
                 background: var(--off-white, #f8fafc);
                 border-radius: 10px;
             }
+        }
 
+        /* Admin submenu */
+        .admin-toggle {
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+            justify-content: flex-start;
+        }
+
+        .admin-chevron {
+            margin-left: auto;
+            font-size: 0.7rem;
+            transition: transform 0.3s ease;
+        }
+
+        .admin-toggle.open .admin-chevron {
+            transform: rotate(180deg);
+        }
+
+        .admin-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease;
+        }
+
+        .admin-submenu.open {
+            max-height: 300px;
+        }
+
+        .sub-link {
+            padding-left: 2.2rem !important;
+            font-size: 0.85rem !important;
         }
     </style>
 </head>
@@ -360,18 +395,48 @@
 
             <nav class="sidebar-nav">
                 <p class="nav-group-label">Main</p>
-                <a href="#" class="sidebar-link active">
+                <a href="dashboard.html" class="sidebar-link active">
                     <i class="fa-solid fa-table-columns"></i> Dashboard
                 </a>
-                <a href="#" class="sidebar-link">
+                <a href="schedules.html" class="sidebar-link">
+                    <i class="fa-solid fa-calendar-day"></i> My Schedules
+                </a>
+                <a href="media.html" class="sidebar-link">
                     <i class="fa-solid fa-photo-film"></i> Media
                 </a>
-                <a href="#" class="sidebar-link">
+                <a href="resources.html" class="sidebar-link">
                     <i class="fa-solid fa-book-bible"></i> Resources
                 </a>
-                <a href="#" class="sidebar-link">
+                <a href="treasury.html" class="sidebar-link">
+                    <i class="fa-solid fa-coins"></i> Treasury Desk
+                </a>
+                <a href="account.html" class="sidebar-link">
                     <i class="fa-solid fa-user-gear"></i> Account
                 </a>
+
+                <div id="adminNavGroup" style="display:none;">
+                    <button type="button" class="sidebar-link admin-toggle" id="adminToggle">
+                        <i class="fa-solid fa-user-shield"></i> Admin Panel
+                        <i class="fa-solid fa-chevron-down admin-chevron" id="adminChevron"></i>
+                    </button>
+                    <div class="admin-submenu" id="adminSubmenu">
+                        <a href="admin/members.html" class="sidebar-link sub-link">
+                            <i class="fa-solid fa-users"></i> Members
+                        </a>
+                        <a href="admin/events.html" class="sidebar-link sub-link">
+                            <i class="fa-solid fa-calendar-plus"></i> Events
+                        </a>
+                        <a href="admin/announcements.html" class="sidebar-link sub-link">
+                            <i class="fa-solid fa-bullhorn"></i> Announcements
+                        </a>
+                        <a href="admin/media.html" class="sidebar-link sub-link">
+                            <i class="fa-solid fa-video"></i> Media
+                        </a>
+                        <a href="admin/resources.html" class="sidebar-link sub-link">
+                            <i class="fa-solid fa-folder-open"></i> Resources
+                        </a>
+                    </div>
+                </div>
 
                 <p class="nav-group-label">Session</p>
                 <a href="#" class="sidebar-link logout-link" id="logoutLink">
@@ -501,26 +566,8 @@
                             <a href="#" class="db-card-pill">View all</a>
                         </div>
 
-                        <div class="announcement-item">
-                            <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
-                            <div class="announcement-content">
-                                <p>Sabbath School curriculum for this quarter is now available in Resources.</p>
-                                <span>2 hours ago</span>
-                            </div>
-                        </div>
-                        <div class="announcement-item">
-                            <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
-                            <div class="announcement-content">
-                                <p>Choir practice moved to Thursday 5:00 PM this week only.</p>
-                                <span>1 day ago</span>
-                            </div>
-                        </div>
-                        <div class="announcement-item">
-                            <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
-                            <div class="announcement-content">
-                                <p>Tree planting volunteers should meet at the church gate by 7:30 AM.</p>
-                                <span>3 days ago</span>
-                            </div>
+                        <div id="announcementsList">
+                            <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading announcements...</p>
                         </div>
                     </div>
 
@@ -530,26 +577,8 @@
                             <a href="#" class="db-card-pill">See all</a>
                         </div>
 
-                        <div class="db-event-item">
-                            <div class="db-event-date"><span>Oct</span><strong>15</strong></div>
-                            <div class="db-event-info">
-                                <h4>AI Upskilling & Tech Sabbath</h4>
-                                <p>2:00 PM EAT</p>
-                            </div>
-                        </div>
-                        <div class="db-event-item">
-                            <div class="db-event-date"><span>Oct</span><strong>22</strong></div>
-                            <div class="db-event-info">
-                                <h4>Community Tree Planting Initiative</h4>
-                                <p>8:00 AM EAT</p>
-                            </div>
-                        </div>
-                        <div class="db-event-item">
-                            <div class="db-event-date"><span>Oct</span><strong>29</strong></div>
-                            <div class="db-event-info">
-                                <h4>AY Youth Choir Festival</h4>
-                                <p>3:00 PM EAT</p>
-                            </div>
+                        <div id="upcomingEventsList">
+                            <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading events...</p>
                         </div>
                     </div>
                 </div>
@@ -621,9 +650,119 @@
                 profile.category ? profile.category.charAt(0).toUpperCase() + profile.category.slice(1) + ' Member' : 'Kimangu AY Member';
             document.getElementById('sidebarAvatar').textContent = initials;
             document.getElementById('topbarAvatar').textContent = initials;
+
+            // Show Admin Panel nav only for admin accounts
+            if (profile.account_type === 'admin') {
+                document.getElementById('adminNavGroup').style.display = 'block';
+            }
         }
 
         loadUserProfile();
+
+        // Admin submenu toggle
+        const adminToggle = document.getElementById('adminToggle');
+        const adminSubmenu = document.getElementById('adminSubmenu');
+        adminToggle.addEventListener('click', () => {
+            adminToggle.classList.toggle('open');
+            adminSubmenu.classList.toggle('open');
+        });
+
+        // ===================== LOAD REAL EVENTS =====================
+        async function loadUpcomingEvents() {
+            const container = document.getElementById('upcomingEventsList');
+            const today = new Date().toISOString().split('T')[0];
+
+            const { data: events, error } = await supabaseClient
+                .from('events')
+                .select('*')
+                .gte('event_date', today)
+                .order('event_date', { ascending: true })
+                .limit(5);
+
+            if (error) {
+                console.error('Could not load events:', error);
+                return;
+            }
+
+            if (!events || events.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No upcoming events yet.</p>';
+                return;
+            }
+
+            container.innerHTML = events.map(ev => {
+                const d = new Date(ev.event_date + 'T00:00:00');
+                const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+                const day = d.getDate();
+                const timeLabel = ev.start_time ? formatTime(ev.start_time) : '';
+                return `
+                    <div class="db-event-item">
+                        <div class="db-event-date"><span>${month}</span><strong>${day}</strong></div>
+                        <div class="db-event-info">
+                            <h4>${escapeHtml(ev.title)}</h4>
+                            <p>${timeLabel}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===================== LOAD REAL ANNOUNCEMENTS =====================
+        async function loadAnnouncements() {
+            const container = document.getElementById('announcementsList');
+
+            const { data: items, error } = await supabaseClient
+                .from('announcements')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (error) {
+                console.error('Could not load announcements:', error);
+                return;
+            }
+
+            if (!items || items.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No announcements yet.</p>';
+                return;
+            }
+
+            container.innerHTML = items.map(a => `
+                <div class="announcement-item">
+                    <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                    <div class="announcement-content">
+                        <p>${escapeHtml(a.title)} — ${escapeHtml(a.content)}</p>
+                        <span>${timeAgo(a.created_at)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatTime(t) {
+            const [h, m] = t.split(':');
+            const hour = parseInt(h, 10);
+            const suffix = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = ((hour + 11) % 12) + 1;
+            return `${hour12}:${m} ${suffix}`;
+        }
+
+        function timeAgo(dateStr) {
+            const diff = Date.now() - new Date(dateStr).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 60) return `${mins} min${mins === 1 ? '' : 's'} ago`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
+            const days = Math.floor(hrs / 24);
+            return `${days} day${days === 1 ? '' : 's'} ago`;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        loadUpcomingEvents();
+        loadAnnouncements();
 
         // Notification dropdown toggle
         const notifBtn = document.getElementById('notifBtn');

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media | Kimangu AY Admin</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .admin-form-card,
+        .admin-list-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 1.6rem;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+            border: 1px solid var(--border-color, #e2e8f0);
+        }
+
+        .admin-form-card h3,
+        .admin-list-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .type-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .type-btn {
+            padding: 0.7rem;
+            text-align: center;
+            border: 1.5px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-gray, #64748b);
+            transition: all 0.2s ease;
+        }
+
+        .type-btn i {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 1.1rem;
+        }
+
+        .type-btn.selected {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.08);
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .file-drop {
+            border: 1.5px dashed var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            padding: 1.2rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-gray, #64748b);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .file-drop i {
+            font-size: 1.3rem;
+            color: #f59e0b;
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+
+        .file-drop input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-preview-name {
+            font-size: 0.8rem;
+            color: var(--primary-dark, #0a192f);
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--primary-dark, #0a192f);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            background: #f59e0b;
+            color: var(--primary-dark, #0a192f);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .form-msg {
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            padding: 0.6rem 0.9rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .form-msg.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.1);
+            color: #15803d;
+        }
+
+        .form-msg.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .media-card {
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .media-card-top {
+            height: 130px;
+            background: var(--primary-dark, #0a192f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f59e0b;
+            font-size: 2rem;
+        }
+
+        .media-card-body {
+            padding: 1rem;
+        }
+
+        .media-card-body h4 {
+            font-size: 0.9rem;
+            color: var(--primary-dark, #0a192f);
+            margin-bottom: 0.3rem;
+        }
+
+        .media-card-body p {
+            font-size: 0.78rem;
+            color: var(--text-gray, #64748b);
+            margin-bottom: 0.4rem;
+        }
+
+        .media-card-body span {
+            font-size: 0.7rem;
+            color: var(--text-gray, #64748b);
+        }
+
+        .media-type-tag {
+            position: absolute;
+            top: 0.6rem;
+            left: 0.6rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary-dark, #0a192f);
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+
+        .media-delete-btn {
+            position: absolute;
+            top: 0.6rem;
+            right: 0.6rem;
+            background: rgba(239, 68, 68, 0.9);
+            color: #fff;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        @media (max-width: 900px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-logo-wrap">
+                    <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
+                        alt="SDA Logo">
+                </div>
+                <div class="sidebar-brand-text">
+                    <h1>KIMANGU AY</h1>
+                    <p>Seventh-day Adventist</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <p class="nav-group-label">Main</p>
+                <a href="../dashboard.html" class="sidebar-link"><i class="fa-solid fa-table-columns"></i> Dashboard</a>
+                <a href="../schedules.html" class="sidebar-link"><i class="fa-solid fa-calendar-day"></i> My
+                    Schedules</a>
+                <a href="../media.html" class="sidebar-link"><i class="fa-solid fa-photo-film"></i> Media</a>
+                <a href="../resources.html" class="sidebar-link"><i class="fa-solid fa-book-bible"></i> Resources</a>
+                <a href="../treasury.html" class="sidebar-link"><i class="fa-solid fa-coins"></i> Treasury Desk</a>
+                <a href="../account.html" class="sidebar-link"><i class="fa-solid fa-user-gear"></i> Account</a>
+
+                <p class="nav-group-label">Admin Panel</p>
+                <a href="members.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Members</a>
+                <a href="events.html" class="sidebar-link"><i class="fa-solid fa-calendar-plus"></i> Events</a>
+                <a href="announcements.html" class="sidebar-link"><i class="fa-solid fa-bullhorn"></i> Announcements</a>
+                <a href="media.html" class="sidebar-link active"><i class="fa-solid fa-video"></i> Media</a>
+                <a href="resources.html" class="sidebar-link"><i class="fa-solid fa-folder-open"></i> Resources</a>
+
+                <p class="nav-group-label">Session</p>
+                <a href="#" class="sidebar-link logout-link" id="logoutLink"><i
+                        class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+
+            <div class="sidebar-profile">
+                <div class="profile-avatar" id="sidebarAvatar">--</div>
+                <div class="profile-info">
+                    <h4 id="sidebarFullName">Loading...</h4>
+                    <p>Admin</p>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="mobile-sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+                    <div class="welcome-text">
+                        <span>Media</span>
+                        <p>Upload videos and songs for members.</p>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="topbar-avatar" id="topbarAvatar">--</div>
+                </div>
+            </header>
+
+            <main class="page-body">
+                <div class="admin-grid">
+                    <div class="admin-form-card">
+                        <h3>Upload Media</h3>
+                        <div class="form-msg" id="formMsg"></div>
+
+                        <div class="type-toggle">
+                            <div class="type-btn selected" id="typeVideoBtn" onclick="selectType('video')">
+                                <i class="fa-solid fa-video"></i> Video
+                            </div>
+                            <div class="type-btn" id="typeSongBtn" onclick="selectType('song')">
+                                <i class="fa-solid fa-music"></i> Song
+                            </div>
+                        </div>
+
+                        <form id="mediaForm">
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input type="text" id="mediaTitle" placeholder="e.g. Sabbath Highlights" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="mediaDescription" placeholder="Describe this video/song..."
+                                    required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label id="fileLabel">Video File</label>
+                                <div class="file-drop" id="fileDrop">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    Click to upload file
+                                    <input type="file" id="mediaFile" accept="video/*">
+                                </div>
+                                <div class="file-preview-name" id="mediaFileName"></div>
+                            </div>
+
+                            <button type="submit" class="btn-submit" id="submitMediaBtn">Upload Media</button>
+                        </form>
+                    </div>
+
+                    <div class="admin-list-card">
+                        <h3>All Media</h3>
+                        <div class="media-grid" id="mediaGrid">
+                            <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let selectedType = 'video';
+
+        function selectType(type) {
+            selectedType = type;
+            document.getElementById('typeVideoBtn').classList.toggle('selected', type === 'video');
+            document.getElementById('typeSongBtn').classList.toggle('selected', type === 'song');
+            document.getElementById('fileLabel').textContent = type === 'video' ? 'Video File' : 'Song File';
+            document.getElementById('mediaFile').setAttribute('accept', type === 'video' ? 'video/*' : 'audio/*');
+        }
+
+        function getInitials(fullName) {
+            if (!fullName) return '--';
+            const parts = fullName.trim().split(/\s+/);
+            const first = parts[0] ? parts[0][0] : '';
+            const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+            return (first + last).toUpperCase();
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        async function guardAdminAccess() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.location.href = '../auth.html'; return null; }
+            const { data: profile } = await supabaseClient
+                .from('profiles').select('full_name, account_type').eq('id', session.user.id).single();
+            if (!profile || profile.account_type !== 'admin') { window.location.href = '../dashboard.html'; return null; }
+
+            document.getElementById('sidebarFullName').textContent = profile.full_name || 'Admin';
+            document.getElementById('sidebarAvatar').textContent = getInitials(profile.full_name);
+            document.getElementById('topbarAvatar').textContent = getInitials(profile.full_name);
+            return profile;
+        }
+
+        document.getElementById('mediaFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            document.getElementById('mediaFileName').textContent = file ? file.name : '';
+        });
+
+        function showMsg(text, type) {
+            const el = document.getElementById('formMsg');
+            el.textContent = text;
+            el.className = `form-msg ${type}`;
+        }
+
+        document.getElementById('mediaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitMediaBtn');
+            const file = document.getElementById('mediaFile').files[0];
+
+            if (!file) { showMsg('Please choose a file to upload.', 'error'); return; }
+
+            btn.disabled = true;
+            btn.textContent = 'Uploading...';
+            showMsg('', '');
+
+            try {
+                const title = document.getElementById('mediaTitle').value.trim();
+                const description = document.getElementById('mediaDescription').value.trim();
+
+                const filePath = `${Date.now()}_${file.name}`;
+                const { error: uploadError } = await supabaseClient.storage
+                    .from('media-files').upload(filePath, file);
+
+                if (uploadError) throw new Error('Upload failed: ' + uploadError.message);
+
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from('media-files').getPublicUrl(filePath);
+
+                const { error: insertError } = await supabaseClient.from('media').insert({
+                    type: selectedType, title, description, file_url: publicUrlData.publicUrl
+                });
+
+                if (insertError) throw new Error(insertError.message);
+
+                showMsg('Media uploaded successfully!', 'success');
+                document.getElementById('mediaForm').reset();
+                document.getElementById('mediaFileName').textContent = '';
+                loadMedia();
+
+            } catch (err) {
+                showMsg(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Upload Media';
+            }
+        });
+
+        async function deleteMedia(id) {
+            if (!confirm('Delete this media item?')) return;
+            const { error } = await supabaseClient.from('media').delete().eq('id', id);
+            if (error) { alert('Could not delete: ' + error.message); return; }
+            loadMedia();
+        }
+
+        async function loadMedia() {
+            const container = document.getElementById('mediaGrid');
+            const { data, error } = await supabaseClient
+                .from('media').select('*').order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<p style="color:#dc2626; font-size:0.9rem;">${escapeHtml(error.message)}</p>`;
+                return;
+            }
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No media uploaded yet.</p>';
+                return;
+            }
+
+            container.innerHTML = data.map(m => `
+                <div class="media-card">
+                    <span class="media-type-tag">${escapeHtml(m.type)}</span>
+                    <button class="media-delete-btn" onclick="deleteMedia('${m.id}')"><i class="fa-solid fa-trash"></i></button>
+                    <div class="media-card-top">
+                        <i class="fa-solid ${m.type === 'video' ? 'fa-play' : 'fa-music'}"></i>
+                    </div>
+                    <div class="media-card-body">
+                        <h4>${escapeHtml(m.title)}</h4>
+                        <p>${escapeHtml(m.description)}</p>
+                        <span>${new Date(m.created_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        (async () => {
+            const ok = await guardAdminAccess();
+            if (ok) loadMedia();
+        })();
+
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        sidebarToggle.addEventListener('click', () => { sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); });
+        sidebarOverlay.addEventListener('click', () => { sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); });
+
+        document.getElementById('logoutLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await supabaseClient.auth.signOut();
+            window.location.href = '../auth.html';
+        });
+    </script>
+
+</body>
+
+</html>
