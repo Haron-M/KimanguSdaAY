@@ -880,51 +880,40 @@
                 btn.textContent = 'Create account →';
                 showView('signInView');
 
-            } else {
-                clearError('signinError');
-                const btn = document.getElementById('signinBtn');
-                const phone = document.getElementById('signinPhone').value.trim();
-                const pass = document.getElementById('signinPassword').value;
-                const email = phoneToEmail(phone);
+            }
+        } else {
+            clearError('signinError');
 
-                btn.disabled = true;
-                btn.textContent = 'Signing in...';
+            const btn = document.getElementById('signinBtn');
+            const phone = document.getElementById('signinPhone').value.trim();
+            const pass = document.getElementById('signinPassword').value;
 
-                const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+            if (!phone || !pass) {
+                showError('signinError', 'Please enter your phone number and password.');
+                return;
+            }
+
+            const email = phoneToEmail(phone);
+
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+
+            const { data: signInData, error: signInError } =
+                await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: pass
                 });
 
-                if (signInError) {
-                    showError('signinError', 'Invalid phone number or password.');
-                    btn.disabled = false;
-                    btn.textContent = 'Sign In →';
-                    return;
-                }
-
-                const userId = signInData.user.id;
-                const { data: profile, error: profileError } = await supabaseClient
-                    .from('profiles')
-                    .select('account_type')
-                    .eq('id', userId)
-                    .single();
-
+            if (signInError) {
+                showError('signinError', 'Invalid phone number or password.');
                 btn.disabled = false;
                 btn.textContent = 'Sign In →';
-
-                if (profileError || !profile) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-
-                if (profile.account_type === 'admin') {
-                    window.location.href = 'dashboard.html';
-                } else {
-                    window.location.href = 'dashboard.html';
-                }
+                return;
             }
-        }
 
+            // Login was successful
+            window.location.href = 'dashboard.html';
+        }
         // Open sign-up code flow directly if linked with ?view=signup
         window.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
