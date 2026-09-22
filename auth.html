@@ -880,7 +880,6 @@
                 btn.textContent = 'Create account →';
                 showView('signInView');
 
-
             } else {
                 clearError('signinError');
 
@@ -915,6 +914,7 @@
                 window.location.href = 'dashboard.html';
             }
         }
+
         // Open sign-up code flow directly if linked with ?view=signup
         window.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
