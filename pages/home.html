@@ -271,6 +271,27 @@
             color: var(--text-gray, #64748b);
         }
 
+        .db-event-desc {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin: 0.2rem 0 0.35rem;
+            line-height: 1.4;
+        }
+
+        .db-event-time {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            color: var(--primary-dark, #0a192f) !important;
+        }
+
+        .db-event-time i {
+            color: var(--accent-gold, #f59e0b);
+        }
+
         /* Quick links */
         .quicklinks-header {
             display: flex;
@@ -580,13 +601,16 @@
                 const d = new Date(ev.event_date + 'T00:00:00');
                 const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
                 const day = d.getDate();
-                const timeLabel = ev.start_time ? formatTime(ev.start_time) : '';
+                const startLabel = ev.start_time ? formatTime(ev.start_time) : '';
+                const endLabel = ev.end_time ? formatTime(ev.end_time) : '';
+                const timeRange = startLabel && endLabel ? `${startLabel} - ${endLabel}` : (startLabel || endLabel || '');
                 return `
             <div class="db-event-item">
                 <div class="db-event-date"><span>${month}</span><strong>${day}</strong></div>
                 <div class="db-event-info">
                     <h4>${escapeHtml(ev.title)}</h4>
-                    <p>${timeLabel}</p>
+                    ${ev.content ? `<p class="db-event-desc">${escapeHtml(ev.content)}</p>` : ''}
+                    <p class="db-event-time"><i class="fa-regular fa-clock"></i> ${timeRange}</p>
                 </div>
             </div>
         `;
