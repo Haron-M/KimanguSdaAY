@@ -10,6 +10,9 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- jsPDF and jsPDF AutoTable Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --primary-dark: #0a192f;
@@ -509,8 +512,8 @@
                 <div class="top-header-row">
                     <h2 class="top-header-title">Transaction Logs</h2>
                     <div class="header-actions">
-                        <button class="btn-export" onclick="exportTransactionsCSV()">
-                            <i class="fa-solid fa-file-csv"></i> Export CSV
+                        <button class="btn-export" onclick="exportTransactionsPDF()">
+                            <i class="fa-solid fa-file-pdf"></i> Export PDF
                         </button>
                         <div class="tx-count-badge" id="txCountBadge">0 Logs</div>
                     </div>
@@ -845,39 +848,86 @@
             renderTransactionList();
         }
 
-        function exportTransactionsCSV() {
-            if (!cachedTransactions.length) {
+        function exportTransactionsPDF() {
+            if (!cachedTransactions || !cachedTransactions.length) {
                 alert('No transactions available to export.');
                 return;
             }
-            let csvContent = "data:text/csv;charset=utf-8,Transaction ID,Sequence,Type,Member/Description,Amount (KSh),Timestamp\r\n";
-            cachedTransactions.forEach(tx => {
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Format current date e.g. "Sep 24, 2026"
+            const today = new Date();
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const formattedDate = `${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
+
+            // PDF Title as requested: "Transaction of members as at (day)"
+            const reportTitle = `Transaction of members as at ${formattedDate}`;
+
+            // Header styling
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(15);
+            doc.setTextColor(10, 25, 47); // Dark blue primary color
+            doc.text(reportTitle, 14, 18);
+
+            // Prepare Table Rows: Name, Amount, Transaction ID
+            const head = [['Name', 'Amount', 'Transaction ID']];
+            const body = cachedTransactions.map(tx => {
                 const isExp = isExpenseTx(tx);
-                const typeLabel = isExp ? 'Expense' : 'Deposit';
-                const member = tx.profiles?.full_name || '';
-                const desc = tx.description || tx.category || tx.notes || '';
-                const combinedDesc = [member, desc].filter(Boolean).join(' - ') || 'N/A';
-                const signedAmount = isExp ? -Math.abs(tx.amount) : Math.abs(tx.amount);
+                const rawAmt = Math.abs(Number(tx.amount) || 0).toLocaleString();
 
-                csvContent += `"${generateTransactionId(tx)}","#${tx.num}","${typeLabel}","${combinedDesc.replace(/"/g, '""')}","${signedAmount}","${tx.created_at}"\r\n`;
+                // Signed Amount
+                const signedAmount = isExp ? `-KSh ${rawAmt}` : `+KSh ${rawAmt}`;
+
+                // Member Name / Description
+                const memberName = tx.profiles && tx.profiles.full_name
+                    ? tx.profiles.full_name
+                    : (isExp ? (tx.description || tx.category || 'Expense') : 'Member');
+
+                // Transaction ID
+                const txId = generateTransactionId(tx);
+
+                return [memberName, signedAmount, txId];
             });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `treasury_logs_${new Date().toISOString().slice(0, 10)}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
 
-        (async () => {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) {
-                window.top.location.href = '../auth.html';
-                return;
-            }
-            await loadAllTransactions();
-        })();
+            // AutoTable Configuration
+            doc.autoTable({
+                startY: 25,
+                head: head,
+                body: body,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [10, 25, 47],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 10
+                },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 4,
+                    textColor: [51, 65, 85]
+                },
+                columnStyles: {
+                    0: { cellWidth: 80 },  // Name
+                    1: { cellWidth: 50, fontStyle: 'bold' },  // Amount
+                    2: { cellWidth: 50 }   // Transaction ID
+                },
+                didParseCell: function (data) {
+                    // Optional: Color code amount column text in PDF
+                    if (data.section === 'body' && data.column.index === 1) {
+                        if (data.cell.raw.startsWith('-')) {
+                            data.cell.styles.textColor = [220, 38, 38]; // Red for expenses
+                        } else {
+                            data.cell.styles.textColor = [22, 163, 74]; // Green for deposits
+                        }
+                    }
+                }
+            });
+
+            // Trigger PDF download
+            doc.save(`Member_Transactions_${formattedDate.replace(/[\s,]+/g, '_')}.pdf`);
+        }
     </script>
 </body>
 
