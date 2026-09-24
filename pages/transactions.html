@@ -38,12 +38,6 @@
             line-height: 1.5;
         }
 
-        h1,
-        h2,
-        h3 {
-            font-family: 'Playfair Display', serif;
-        }
-
         .page-body {
             padding: 1.5rem 1rem;
             max-width: 1100px;
@@ -162,77 +156,56 @@
             }
         }
 
-        .tr-card-header {
+        /* SECTION TITLE BAR */
+        .top-header-bar {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.4rem;
             margin-bottom: 1.25rem;
+            width: 100%;
         }
 
-        @media (min-width: 640px) {
-            .tr-card-header {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
-        }
-
-        .tr-header-info {
+        .top-header-row {
             display: flex;
-            gap: 0.85rem;
+            justify-content: space-between;
             align-items: center;
+            gap: 0.5rem;
+            width: 100%;
         }
 
-        .tr-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            flex-shrink: 0;
-            background: var(--off-white);
-            color: var(--primary-dark);
-            border: 1px solid var(--border-color);
-        }
-
-        .tr-header-info h3 {
-            font-size: 1.1rem;
+        .top-header-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.1rem, 4vw, 1.75rem);
+            font-weight: 700;
             color: var(--primary-dark);
             line-height: 1.2;
+            margin: 0;
+            white-space: nowrap;
         }
 
-        .tr-header-info p {
-            font-size: 0.8rem;
+        .top-header-sub {
+            width: 100%;
+            font-size: 0.82rem;
             color: var(--text-gray);
+            line-height: 1.4;
+            margin: 0;
         }
 
         .header-actions {
             display: flex;
             align-items: center;
-            justify-content: space-between;
             gap: 10px;
-            width: 100%;
-        }
-
-        @media (min-width: 640px) {
-            .header-actions {
-                width: auto;
-                justify-content: flex-end;
-            }
         }
 
         .tx-count-badge {
             background: var(--off-white);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 0.45rem 0.8rem;
+            padding: 0.4rem 0.75rem;
             text-align: center;
             font-size: 0.72rem;
             font-weight: 700;
             color: var(--primary-dark);
-            line-height: 1.2;
             white-space: nowrap;
         }
 
@@ -240,7 +213,7 @@
             background: var(--primary-dark);
             color: #fff;
             border: none;
-            padding: 0.55rem 1rem;
+            padding: 0.5rem 0.9rem;
             border-radius: 10px;
             font-size: 0.8rem;
             font-weight: 600;
@@ -249,14 +222,7 @@
             align-items: center;
             gap: 6px;
             transition: var(--transition);
-            flex: 1;
-            justify-content: center;
-        }
-
-        @media (min-width: 640px) {
-            .btn-export {
-                flex: initial;
-            }
+            white-space: nowrap;
         }
 
         .btn-export:hover {
@@ -304,7 +270,7 @@
             box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.08);
         }
 
-        /* HORIZONTALLY SCROLLABLE FILTER PILLS (MOBILE APP STYLE) */
+        /* HORIZONTALLY SCROLLABLE FILTER PILLS */
         .filter-pills-row {
             width: 100%;
             overflow: hidden;
@@ -318,12 +284,10 @@
             padding-bottom: 4px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            /* Firefox */
         }
 
         .filter-pills::-webkit-scrollbar {
             display: none;
-            /* Chrome/Safari */
         }
 
         .filter-pill {
@@ -363,142 +327,125 @@
             border-color: var(--accent-red);
         }
 
-        /* TRANSACTION LIST ITEM - MOBILE OPTIMIZED LAYOUT */
-        .tx-list-item {
-            background: var(--off-white);
-            border-radius: 12px;
-            padding: 0.85rem 0.95rem;
+        /* ==========================================================
+           MATCHING SCREENSHOT TRANSACTION ROW CARD STYLES
+           ========================================================== */
+        .tx-row-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 0.85rem 1.1rem;
             margin-bottom: 0.65rem;
-            border: 1px solid var(--border-color);
-            transition: var(--transition);
             display: flex;
-            gap: 0.8rem;
-            align-items: flex-start;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: var(--transition);
         }
 
-        .tx-list-item:hover {
+        .tx-row-card:hover {
+            background: #ffffff;
             border-color: #cbd5e1;
-            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
-        .tx-list-item:last-child {
-            margin-bottom: 0;
+        .tx-row-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
         }
 
-        .tx-icon-box {
-            width: 38px;
-            height: 38px;
+        /* Red / Green Icon Circle */
+        .tx-icon-circle {
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            background: rgba(22, 163, 74, 0.12);
-            color: var(--accent-green);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 0.85rem;
             flex-shrink: 0;
-            margin-top: 2px;
         }
 
-        .tx-icon-box.expense {
-            background: rgba(220, 38, 38, 0.12);
-            color: var(--accent-red);
+        .tx-icon-circle.expense {
+            background: #fde8e8;
+            color: #dc2626;
         }
 
-        .tx-icon-box.initial {
-            background: rgba(245, 158, 11, 0.14);
-            color: var(--accent-gold);
+        .tx-icon-circle.deposit {
+            background: #def7ec;
+            color: #16a34a;
         }
 
-        .tx-main-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        /* Top row of item card: Title/Name & Amount */
-        .tx-top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 0.5rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .tx-title {
-            font-weight: 700;
-            font-size: 0.88rem;
-            color: var(--primary-dark);
-            line-height: 1.3;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tx-amount {
-            font-weight: 800;
-            font-size: 0.9rem;
-            color: var(--accent-green);
-            white-space: nowrap;
-            text-align: right;
-        }
-
-        .tx-amount.expense {
-            color: var(--accent-red);
-        }
-
-        .tx-amount.initial {
-            color: var(--accent-gold);
-        }
-
-        /* Middle description */
-        .tx-desc-text {
-            font-size: 0.8rem;
-            color: #475569;
-            line-height: 1.4;
-            margin-bottom: 0.4rem;
+        /* Middle Notification Text */
+        .tx-sentence-text {
+            font-size: 0.86rem;
+            color: #334155;
+            line-height: 1.45;
             word-break: break-word;
         }
 
-        /* Bottom metadata row */
-        .tx-meta-row {
+        /* Right Side Amount & Sequence Number */
+        .tx-row-right {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 6px;
-            font-size: 0.72rem;
-            color: var(--text-gray);
+            gap: 10px;
+            flex-shrink: 0;
+            text-align: right;
         }
 
-        .tx-time {
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        .tx-amount-text {
+            font-weight: 700;
+            font-size: 0.9rem;
+            white-space: nowrap;
         }
 
-        .tx-badges {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .tx-amount-text.expense {
+            color: #dc2626;
         }
 
-        .tx-id-pill {
-            background: var(--white);
-            border: 1px solid var(--border-color);
-            padding: 0.1rem 0.45rem;
+        .tx-amount-text.deposit {
+            color: #16a34a;
+        }
+
+        /* Sequence Badge (#22) */
+        .tx-seq-badge {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 0.75rem;
+            padding: 2px 8px;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 0.7rem;
-            color: var(--primary-dark);
             font-family: monospace;
+            white-space: nowrap;
         }
 
-        .tx-idx-pill {
-            background: #e2e8f0;
-            color: #334155;
-            padding: 0.1rem 0.4rem;
-            border-radius: 6px;
+        /* SEE MORE FOOTER BUTTON */
+        .see-more-wrap {
+            text-align: center;
+            padding-top: 1.25rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .btn-see-more {
+            background: transparent;
+            border: none;
+            color: var(--accent-green);
             font-weight: 700;
-            font-size: 0.68rem;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .btn-see-more:hover {
+            color: #15803d;
+            text-decoration: underline;
         }
 
         .empty-tx {
@@ -506,6 +453,24 @@
             font-size: 0.88rem;
             text-align: center;
             padding: 2.5rem 1rem;
+        }
+
+        /* Mobile Layout Adjustments */
+        @media (max-width: 640px) {
+            .tx-row-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 0.8rem 0.9rem;
+            }
+
+            .tx-row-right {
+                width: 100%;
+                justify-content: space-between;
+                border-top: 1px dashed #e2e8f0;
+                padding-top: 6px;
+                margin-top: 2px;
+            }
         }
     </style>
 </head>
@@ -538,32 +503,30 @@
 
         <!-- MAIN TRANSACTION LOGS CARD -->
         <div class="tr-card">
-            <div class="tr-card-header">
-                <div class="tr-header-info">
-                    <div class="tr-icon"><i class="fa-solid fa-receipt"></i></div>
-                    <div>
-                        <h3>Transaction Logs</h3>
-                        <p>Complete historical ledger of inflows and expenses.</p>
+
+            <!-- SECTION TITLE BAR -->
+            <div class="top-header-bar">
+                <div class="top-header-row">
+                    <h2 class="top-header-title">Transaction Logs</h2>
+                    <div class="header-actions">
+                        <button class="btn-export" onclick="exportTransactionsCSV()">
+                            <i class="fa-solid fa-file-csv"></i> Export CSV
+                        </button>
+                        <div class="tx-count-badge" id="txCountBadge">0 Logs</div>
                     </div>
                 </div>
-                <div class="header-actions">
-                    <button class="btn-export" onclick="exportTransactionsCSV()">
-                        <i class="fa-solid fa-file-csv"></i> Export CSV
-                    </button>
-                    <div class="tx-count-badge" id="txCountBadge">0<br>Logs</div>
-                </div>
+                <p class="top-header-sub">Complete historical ledger of inflows and expenditures.</p>
             </div>
 
             <!-- SEARCH BAR & SWIPEABLE FILTERS -->
             <div class="filter-toolbar">
-                <!-- Search Field -->
                 <div class="search-input-wrap">
                     <span class="search-prefix"><i class="fa-solid fa-search"></i></span>
                     <input type="text" id="txSearchInput" placeholder="Search member, expense, or ID..."
-                        oninput="renderTransactionList()">
+                        oninput="resetPaginationAndRender()">
                 </div>
 
-                <!-- Category Type Swipeable Pills -->
+                <!-- Category Type Pills -->
                 <div class="filter-pills-row">
                     <div class="filter-pills" id="typeFilterPills">
                         <button class="filter-pill active" onclick="setTypeFilter('all', this)">All Types</button>
@@ -576,7 +539,7 @@
                     </div>
                 </div>
 
-                <!-- Time Filter Swipeable Pills -->
+                <!-- Time Filter Pills -->
                 <div class="filter-pills-row">
                     <div class="filter-pills" id="timeFilterPills">
                         <button class="filter-pill active" onclick="setTimeFilter('all', this)">All Time</button>
@@ -593,6 +556,14 @@
             <div id="txLogList">
                 <p class="empty-tx">Loading transaction history...</p>
             </div>
+
+            <!-- SEE MORE BUTTON AREA -->
+            <div id="seeMoreContainer" class="see-more-wrap" style="display: none;">
+                <button class="btn-see-more" onclick="showMoreLogs()">
+                    <span id="seeMoreText">See more →</span>
+                </button>
+            </div>
+
         </div>
 
     </main>
@@ -605,6 +576,7 @@
         let cachedTransactions = [];
         let currentTimeFilter = 'all';
         let currentTypeFilter = 'all';
+        let displayLimit = 4; // Shows initial 4 logs to match screenshot pattern
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -612,17 +584,52 @@
             return div.innerHTML;
         }
 
-        function formatTimeLabel(dateInput) {
-            return new Date(dateInput).toLocaleString('en-US', {
-                hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric', year: 'numeric'
-            });
+        // Formats date to exact format: "Sep 24, 2026 at 3:41 PM"
+        function formatExactLogDate(dateInput) {
+            const d = new Date(dateInput);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = months[d.getMonth()];
+            const day = d.getDate();
+            const year = d.getFullYear();
+
+            let hours = d.getHours();
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+
+            return `${month} ${day}, ${year} at ${hours}:${minutes} ${ampm}`;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function formatExactLogDate(dateInput) {
+            if (!dateInput) return '';
+            const d = new Date(dateInput);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = months[d.getMonth()];
+            const day = d.getDate();
+            const year = d.getFullYear();
+
+            let hours = d.getHours();
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+
+            return `${month} ${day}, ${year} at ${hours}:${minutes} ${ampm}`;
         }
 
         function generateTransactionId(tx) {
+            if (tx.transaction_id) return tx.transaction_id;
             const dateObj = new Date(tx.created_at);
             const day = String(dateObj.getDate()).padStart(2, '0');
             let hash = 0;
-            const str = tx.id || (tx.created_at + tx.amount);
+            const str = String(tx.id || (tx.created_at + tx.amount));
             for (let i = 0; i < str.length; i++) {
                 hash = ((hash << 5) - hash) + str.charCodeAt(i);
                 hash |= 0;
@@ -638,27 +645,57 @@
             return `K${day}${randomPart}`;
         }
 
+        function isExpenseTx(tx) {
+            if (!tx) return false;
+
+            // 1. If amount is explicitly negative
+            const rawAmt = Number(tx.amount);
+            if (!isNaN(rawAmt) && rawAmt < 0) return true;
+
+            // 2. Check all string columns for deduction/expense keywords
+            const combinedText = [
+                tx.type,
+                tx.transaction_type,
+                tx.category,
+                tx.notes,
+                tx.description,
+                tx.title
+            ].filter(Boolean).join(' ').toLowerCase();
+
+            const expenseKeywords = ['expense', 'expenditure', 'deduct', 'deduction', 'withdraw', 'outflow', 'debit'];
+
+            if (expenseKeywords.some(keyword => combinedText.includes(keyword))) {
+                return true;
+            }
+
+            // 3. Boolean flags
+            if (tx.is_expense === true || tx.is_deduction === true) return true;
+
+            return false;
+        }
+
         function setTimeFilter(filterType, btn) {
             currentTimeFilter = filterType;
             document.querySelectorAll('#timeFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
-            renderTransactionList();
+            resetPaginationAndRender();
         }
 
         function setTypeFilter(type, btn) {
             currentTypeFilter = type;
             document.querySelectorAll('#typeFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
+            resetPaginationAndRender();
+        }
+
+        function resetPaginationAndRender() {
+            displayLimit = 4;
             renderTransactionList();
         }
 
-        function isExpenseTx(tx) {
-            const typeStr = String(tx.type || '').toLowerCase();
-            return typeStr === 'expense' || typeStr === 'withdrawal' || typeStr === 'outflow' || Number(tx.amount) < 0;
-        }
-
-        function isInitialTx(tx) {
-            return String(tx.type || '').toLowerCase() === 'initial';
+        function showMoreLogs() {
+            displayLimit += 10;
+            renderTransactionList();
         }
 
         function calculateSummaryStats(transactions) {
@@ -684,6 +721,8 @@
 
         function renderTransactionList() {
             const container = document.getElementById('txLogList');
+            const seeMoreContainer = document.getElementById('seeMoreContainer');
+            const seeMoreText = document.getElementById('seeMoreText');
             const searchQuery = (document.getElementById('txSearchInput').value || '').toLowerCase();
             const now = new Date();
 
@@ -710,13 +749,11 @@
                 const description = (tx.description || tx.category || tx.notes || tx.title || '').toLowerCase();
                 const amtStr = String(Math.abs(tx.amount));
                 const txId = generateTransactionId(tx).toLowerCase();
-                const txTypeStr = String(tx.type || '').toLowerCase();
 
                 const matchesSearch = !searchQuery ||
                     memberName.includes(searchQuery) ||
                     description.includes(searchQuery) ||
                     amtStr.includes(searchQuery) ||
-                    txTypeStr.includes(searchQuery) ||
                     txId.includes(searchQuery);
 
                 return matchesTime && matchesType && matchesSearch;
@@ -724,70 +761,65 @@
 
             if (filtered.length === 0) {
                 container.innerHTML = '<p class="empty-tx">No matching transactions found.</p>';
+                seeMoreContainer.style.display = 'none';
                 return;
             }
 
-            container.innerHTML = filtered.map(tx => {
-                const isInitial = isInitialTx(tx);
+            // Slice for "See More" pagination
+            const visibleLogs = filtered.slice(0, displayLimit);
+            const hiddenCount = filtered.length - visibleLogs.length;
+
+            if (hiddenCount > 0) {
+                seeMoreContainer.style.display = 'block';
+                seeMoreText.innerHTML = `See more (${hiddenCount} hidden) <i class="fa-solid fa-arrow-right"></i>`;
+            } else {
+                seeMoreContainer.style.display = 'none';
+            }
+
+            container.innerHTML = visibleLogs.map(tx => {
                 const isExpense = isExpenseTx(tx);
-
-                const memberName = tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'Treasury Member';
-                const descDetail = tx.description || tx.category || tx.notes || tx.title || '';
-                const timeLabel = formatTimeLabel(tx.created_at);
-                const txId = generateTransactionId(tx);
                 const rawAmount = Math.abs(Number(tx.amount) || 0);
-                const formattedAmount = `KSh ${rawAmount.toLocaleString()}`;
+                const formattedAmount = rawAmount.toLocaleString();
+                const timeLabel = formatExactLogDate(tx.created_at);
+                const txId = generateTransactionId(tx);
+                const memberName = tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'Member';
+                const expenseReason = tx.description || tx.category || tx.notes || 'expenses';
 
-                let mainTitle = '';
-                let descText = '';
-                let iconClass = 'fa-arrow-down';
-                let styleClass = '';
-                let amountSign = '+';
+                let sentenceHtml = '';
+                let amountDisplay = '';
+                let iconClass = '';
+                let typeStyleClass = '';
 
-                if (isInitial) {
-                    mainTitle = 'Initial Treasury Pool';
-                    descText = 'Initial baseline pool balance configured for the treasury desk.';
-                    iconClass = 'fa-coins';
-                    styleClass = 'initial';
-                    amountSign = '';
-                } else if (isExpense) {
-                    mainTitle = descDetail ? descDetail : 'Treasury Expense';
-                    descText = `Payout authorized by ${memberName}. ${descDetail ? `Note: "${descDetail}"` : ''}`;
+                if (isExpense) {
+                    typeStyleClass = 'expense';
                     iconClass = 'fa-arrow-up';
-                    styleClass = 'expense';
-                    amountSign = '-';
+                    amountDisplay = `-KSh ${formattedAmount}`;
+                    sentenceHtml = `Successfully deducted KSh ${formattedAmount} for ${escapeHtml(expenseReason)} on ${timeLabel}. Transaction ID (${txId})`;
                 } else {
-                    mainTitle = memberName;
-                    descText = `Deposit credit credited to pool balance.${descDetail ? ` Details: ${descDetail}` : ''}`;
+                    typeStyleClass = 'deposit';
                     iconClass = 'fa-arrow-down';
-                    styleClass = '';
-                    amountSign = '+';
+                    amountDisplay = `+KSh ${formattedAmount}`;
+                    sentenceHtml = `Successfully deposited KSh ${formattedAmount} to ${escapeHtml(memberName)} on ${timeLabel}. Transaction ID (${txId})`;
                 }
 
                 return `
-                    <div class="tx-list-item">
-                        <div class="tx-icon-box ${styleClass}">
-                            <i class="fa-solid ${iconClass}"></i>
-                        </div>
-                        <div class="tx-main-content">
-                            <div class="tx-top-row">
-                                <div class="tx-title">${escapeHtml(mainTitle)}</div>
-                                <div class="tx-amount ${styleClass}">${amountSign}${formattedAmount}</div>
-                            </div>
-                            <div class="tx-desc-text">${escapeHtml(descText)}</div>
-                            <div class="tx-meta-row">
-                                <span class="tx-time"><i class="fa-regular fa-clock"></i> ${timeLabel}</span>
-                                <div class="tx-badges">
-                                    <span class="tx-id-pill">${txId}</span>
-                                    <span class="tx-idx-pill">#${tx.num}</span>
-                                </div>
-                            </div>
-                        </div>
+            <div class="tx-row-card">
+                <div class="tx-row-left">
+                    <div class="tx-icon-circle ${typeStyleClass}">
+                        <i class="fa-solid ${iconClass}"></i>
                     </div>
-                `;
+                    <div class="tx-sentence-text">
+                        ${sentenceHtml}
+                    </div>
+                </div>
+                <div class="tx-row-right">
+                    <span class="tx-amount-text ${typeStyleClass}">${amountDisplay}</span>
+                    <span class="tx-seq-badge">#${tx.num}</span>
+                </div>
+            </div>
+        `;
             }).join('');
         }
-
         async function loadAllTransactions() {
             const { data: txData, error: txError } = await supabaseClient
                 .from('transactions')
@@ -801,7 +833,7 @@
             }
 
             const rawTransactions = txData || [];
-            document.getElementById('txCountBadge').innerHTML = `${rawTransactions.length}<br>Log${rawTransactions.length === 1 ? '' : 's'}`;
+            document.getElementById('txCountBadge').textContent = `${rawTransactions.length} Logs`;
 
             calculateSummaryStats(rawTransactions);
 
@@ -819,19 +851,16 @@
                 alert('No transactions available to export.');
                 return;
             }
-            let csvContent = "data:text/csv;charset=utf-8,Transaction ID,Type,Direction,Member/Description,Amount (KSh),Timestamp\r\n";
+            let csvContent = "data:text/csv;charset=utf-8,Transaction ID,Sequence,Type,Member/Description,Amount (KSh),Timestamp\r\n";
             cachedTransactions.forEach(tx => {
                 const isExp = isExpenseTx(tx);
-                const isInit = isInitialTx(tx);
-                const typeLabel = isInit ? 'Initial Baseline' : (isExp ? 'Expense' : 'Deposit');
-                const direction = isInit ? 'Neutral' : (isExp ? 'Outflow' : 'Inflow');
-
+                const typeLabel = isExp ? 'Expense' : 'Deposit';
                 const member = tx.profiles?.full_name || '';
                 const desc = tx.description || tx.category || tx.notes || '';
                 const combinedDesc = [member, desc].filter(Boolean).join(' - ') || 'N/A';
                 const signedAmount = isExp ? -Math.abs(tx.amount) : Math.abs(tx.amount);
 
-                csvContent += `"${generateTransactionId(tx)}","${typeLabel}","${direction}","${combinedDesc.replace(/"/g, '""')}","${signedAmount}","${tx.created_at}"\r\n`;
+                csvContent += `"${generateTransactionId(tx)}","#${tx.num}","${typeLabel}","${combinedDesc.replace(/"/g, '""')}","${signedAmount}","${tx.created_at}"\r\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
