@@ -55,51 +55,64 @@
             }
         }
 
-        /* TOP HORIZONTAL HEADER BAR */
         .top-header-bar {
-            background: var(--white);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.2rem 1.8rem;
-            margin-bottom: 1.5rem;
+            display: flex;
+            margin-top: 15px;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 1.25rem;
+            width: 100%;
+
+        }
+
+        /* Top Row: Title & Button Side-by-Side */
+        .top-header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.03);
+            gap: 0.5rem;
+            width: 100%;
         }
 
-        .top-header-title h2 {
-            font-size: 1.6rem;
-            color: var(--primary-dark);
-            margin-bottom: 0.15rem;
-        }
-
-        .top-header-title p {
-            font-size: 0.88rem;
-            color: var(--text-gray);
-        }
-
-        .top-header-actions {
-            display: flex;
-            align-items: center;
-            gap: 1.2rem;
-        }
-
-        .btn-expenditure {
-            background: var(--danger-red);
-            color: var(--white);
-            border: none;
-            padding: 0.65rem 1.28rem;
-            border-radius: 10px;
-            font-size: 0.88rem;
+        /* Full Title (Does not split onto 2 lines) */
+        .top-header-title {
+            font-family: 'Playfair Display', serif;
+            /* Responsive font scaling so title always stays on 1 line on mobile */
+            font-size: clamp(1.05rem, 4.2vw, 1.75rem);
             font-weight: 700;
+            color: #0a192f;
+            line-height: 1.2;
+            margin: 0;
+            white-space: nowrap;
+            /* Forces title to remain on a single line */
+        }
+
+        /* Compact Mobile Right-Aligned Button */
+        .btn-expenditure {
+            background-color: #ef4444;
+            color: #ffffff;
+            border: none;
+            padding: 0.45rem 0.85rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.78rem;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: var(--transition);
+            gap: 5px;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+            white-space: nowrap;
+            flex-shrink: 0;
+            /* Prevents button from shrinking */
+        }
+
+        /* Multi-Line Subtitle Below */
+        .top-header-sub {
+            width: 100%;
+            font-size: 0.82rem;
+            color: #64748b;
+            line-height: 1.4;
+            margin: 0;
         }
 
         .btn-expenditure:hover {
@@ -771,6 +784,18 @@
             animation: none;
         }
 
+        @media (min-width: 640px) {
+            .btn-expenditure {
+                padding: 0.55rem 1.1rem;
+                font-size: 0.85rem;
+                gap: 8px;
+            }
+
+            .top-header-sub {
+                font-size: 0.88rem;
+            }
+        }
+
         @media (max-width: 650px) {
             .tx-list-item {
                 align-items: flex-start;
@@ -796,6 +821,7 @@
             .tx-list-amount .amt {
                 font-size: 0.85rem;
             }
+
         }
     </style>
 </head>
@@ -803,25 +829,21 @@
 <body>
     <main class="page-body">
 
-        <!-- TOP HORIZONTAL HEADER BAR ABOVE 2 CARDS -->
-        <header class="top-header-bar">
-            <div class="top-header-title">
-                <h2>Treasury Desk</h2>
-                <p>Your contributions and account balance.</p>
-            </div>
-            <div class="top-header-actions">
+        <!-- SECTION HEADER BAR (Clean text directly on background) -->
+        <div class="top-header-bar">
+            <!-- Top Row: Full Title on Left, Button on Right -->
+            <div class="top-header-row">
+                <h2 class="top-header-title">Financial Overview &amp; Operations</h2>
                 <button class="btn-expenditure" id="openExpenditureBtn">
                     <i class="fa-solid fa-circle-minus"></i> Expenditure
                 </button>
-                <div class="top-user-widgets">
-                    <div class="notif-bell-wrap">
-                        <i class="fa-solid fa-bell"></i>
-                        <span class="notif-badge">3</span>
-                    </div>
-                    <div class="user-avatar-bubble">HM</div>
-                </div>
             </div>
-        </header>
+
+            <!-- Bottom Row: Subtitle wrapping on multiple lines -->
+            <p class="top-header-sub">
+                Manage live pool balance, review member contributions, and authorize expenditures.
+            </p>
+        </div>
 
         <!-- 2-COLUMN GRID -->
         <div class="treasury-grid">
