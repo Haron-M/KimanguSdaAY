@@ -456,7 +456,7 @@ a {
 .stat-card h3 {
     font-size: 1.8rem;
     color: var(--primary-dark);
-    font-family: 'Playfair Display', serif;
+    font-family: times new roman, serif;
 }
 
 .stat-card p {

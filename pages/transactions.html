@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Transactions</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --success-green: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--primary-dark);
+            background: var(--off-white);
+            line-height: 1.6;
+        }
+
+        .page-body {
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+        }
+
+        .back-link {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            border-color: var(--primary-dark);
+        }
+
+        /* Filter Buttons Bar */
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            color: var(--text-gray);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-dark);
+            color: var(--primary-dark);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-dark);
+            color: var(--white);
+            border-color: var(--primary-dark);
+        }
+
+        /* Transaction List */
+        .tx-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .tx-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(10, 25, 47, 0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        .tx-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .tx-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--success-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .tx-info p {
+            font-size: 0.95rem;
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+
+        .tx-right {
+            text-align: right;
+        }
+
+        .tx-amount {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--success-green);
+        }
+
+        .tx-number {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+        }
+
+        @media (max-width: 768px) {
+            .page-body {
+                padding: 1rem;
+            }
+
+            .tx-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page-body">
+        <div class="page-header">
+            <div>
+                <h2>All Transactions</h2>
+                <p>Complete historical record of member deposits.</p>
+            </div>
+            <a href="deposit.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Deposits</a>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all">All Time</button>
+            <button class="filter-btn" data-filter="24h">24 hrs</button>
+            <button class="filter-btn" data-filter="3d">3 days</button>
+            <button class="filter-btn" data-filter="7d">7 days</button>
+            <button class="filter-btn" data-filter="1m">1 month</button>
+            <button class="filter-btn" data-filter="1y">1 year</button>
+        </div>
+
+        <div id="allTransactionsContainer" class="tx-list">
+            <p style="color:var(--text-gray); font-size:0.9rem;">Loading transactions...</p>
+        </div>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let allTransactionsData = [];
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function renderTransactions(transactions) {
+            const container = document.getElementById('allTransactionsContainer');
+
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-gray); font-size:0.9rem;">No transactions found for this time range.</p>';
+                return;
+            }
+
+            container.innerHTML = transactions.map((tx, index) => {
+                const totalCount = allTransactionsData.length;
+                // Find original position index for numbering (#1 being oldest or #N matching total index)
+                const originalIndex = allTransactionsData.findIndex(item => item.id === tx.id);
+                const displayIndex = totalCount - originalIndex;
+                const formattedDate = formatDate(tx.created_at);
+                const description = tx.description || `You have successfully deposited ksh ${Number(tx.amount).toLocaleString()} at ${formattedDate}`;
+
+                return `
+                    <div class="tx-card">
+                        <div class="tx-left">
+                            <div class="tx-icon"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div class="tx-info">
+                                <p>${escapeHtml(description)}</p>
+                            </div>
+                        </div>
+                        <div class="tx-right">
+                            <div class="tx-amount">+KSh ${Number(tx.amount).toLocaleString()}</div>
+                            <div class="tx-number">#${displayIndex}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterTransactions(filterType) {
+            const now = new Date().getTime();
+            let filtered = [...allTransactionsData];
+
+            if (filterType === '24h') {
+                const cutoff = now - (24 * 60 * 60 * 1000);
+                filtered = allTransactionsData.filter(tx => new Date(tx.created_at).getTime() >= cutoff);
+            } else if (filterType === '3d') {
+                const cutoff = now - (3 * 24 * 60 * 60 * 1000);
+                filtered = allTransactionsData.filter(tx => new Date(tx.created_at).getTime() >= cutoff);
+            } else if (filterType === '7d') {
+                const cutoff = now - (7 * 24 * 60 * 60 * 1000);
+                filtered = allTransactionsData.filter(tx => new Date(tx.created_at).getTime() >= cutoff);
+            } else if (filterType === '1m') {
+                const cutoff = now - (30 * 24 * 60 * 60 * 1000);
+                filtered = allTransactionsData.filter(tx => new Date(tx.created_at).getTime() >= cutoff);
+            } else if (filterType === '1y') {
+                const cutoff = now - (365 * 24 * 60 * 60 * 1000);
+                filtered = allTransactionsData.filter(tx => new Date(tx.created_at).getTime() >= cutoff);
+            }
+
+            renderTransactions(filtered);
+        }
+
+        async function loadAllTransactions() {
+            const { data: transactions, error } = await supabaseClient
+                .from('transactions')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('allTransactionsContainer').innerHTML = '<p style="color:var(--text-gray); font-size:0.9rem;">Failed to load transactions.</p>';
+                return;
+            }
+
+            allTransactionsData = transactions || [];
+            renderTransactions(allTransactionsData);
+        }
+
+        // Setup Filter Button Click Listeners
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                const filter = e.target.getAttribute('data-filter');
+                filterTransactions(filter);
+            });
+        });
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.top.location.href = '../auth.html'; return; }
+            loadAllTransactions();
+        })();
+    </script>
+</body>
+
+</html>

@@ -149,6 +149,11 @@
             padding: 1.8rem;
             box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
             border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .tr-card:last-child {
+            margin-bottom: 0;
         }
 
         .tr-card-header {
@@ -201,6 +206,14 @@
             justify-content: space-between;
             align-items: flex-start;
             width: 100%;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .tx-count-badge {
@@ -216,6 +229,25 @@
             white-space: nowrap;
         }
 
+        .btn-export {
+            background: var(--primary-dark);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .btn-export:hover {
+            background: #14243f;
+        }
+
         .tr-label {
             font-size: 0.72rem;
             font-weight: 700;
@@ -227,12 +259,14 @@
         }
 
         .amount-input-wrap,
-        .select-wrap {
+        .select-wrap,
+        .search-input-wrap {
             position: relative;
             margin-bottom: 1.3rem;
         }
 
-        .amount-prefix {
+        .amount-prefix,
+        .search-prefix {
             position: absolute;
             left: 1rem;
             top: 50%;
@@ -243,7 +277,9 @@
             pointer-events: none;
         }
 
-        .amount-input-wrap input {
+        .amount-input-wrap input,
+        .select-wrap select,
+        .search-input-wrap input {
             width: 100%;
             padding: 0.85rem 1rem 0.85rem 3.2rem;
             border: 1.5px solid var(--border-color);
@@ -255,27 +291,19 @@
             transition: var(--transition);
         }
 
-        .amount-input-wrap input:focus {
-            outline: none;
-            border-color: var(--primary-dark);
-            box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.08);
-        }
-
         .select-wrap select {
-            width: 100%;
-            padding: 0.85rem 1rem;
-            border: 1.5px solid var(--border-color);
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 0.95rem;
-            background: #fff;
-            color: var(--primary-dark);
+            padding-left: 1rem;
             appearance: none;
             cursor: pointer;
-            transition: var(--transition);
         }
 
-        .select-wrap select:focus {
+        .search-input-wrap input {
+            padding-left: 2.8rem;
+        }
+
+        .amount-input-wrap input:focus,
+        .select-wrap select:focus,
+        .search-input-wrap input:focus {
             outline: none;
             border-color: var(--primary-dark);
             box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.08);
@@ -288,6 +316,42 @@
             transform: translateY(-50%);
             color: var(--text-gray);
             pointer-events: none;
+        }
+
+        .filter-toolbar {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.4rem;
+            background: var(--off-white);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-tab {
+            background: transparent;
+            border: none;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-gray);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-tab.active {
+            background: #fff;
+            color: var(--primary-dark);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         .btn-tr {
@@ -416,6 +480,12 @@
             padding: 1rem 1.2rem;
             margin-bottom: 0.8rem;
             border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .tx-list-item:hover {
+            border-color: #cbd5e1;
+            background: #fff;
         }
 
         .tx-list-item:last-child {
@@ -433,6 +503,11 @@
             justify-content: center;
             font-size: 0.9rem;
             flex-shrink: 0;
+        }
+
+        .tx-list-icon.initial {
+            background: rgba(245, 158, 11, 0.14);
+            color: var(--accent-gold);
         }
 
         .tx-list-body {
@@ -456,6 +531,10 @@
             font-size: 0.95rem;
         }
 
+        .tx-list-amount .amt.initial {
+            color: var(--accent-gold);
+        }
+
         .tx-list-amount .idx {
             font-size: 0.72rem;
             color: var(--text-gray);
@@ -466,7 +545,7 @@
             color: var(--text-gray);
             font-size: 0.9rem;
             text-align: center;
-            padding: 1.5rem;
+            padding: 2rem;
         }
     </style>
 </head>
@@ -479,8 +558,8 @@
             <div class="hero-left">
                 <span class="treasury-badge">Treasury Management</span>
                 <h1>Treasury Desk</h1>
-                <p>Set initial account balances, select database members, deposit funds, and audit real-time transaction
-                    logs.</p>
+                <p>Set initial account balances, allocate member deposits, audit real-time transaction logs, and export
+                    records.</p>
             </div>
             <div class="balance-panel">
                 <span>Active Account Balance</span>
@@ -552,14 +631,33 @@
         <!-- TRANSACTION LOGS CARD -->
         <div class="tr-card">
             <div class="tr-card-header tr-card-header-flex">
-                <div style="display:flex; gap:1rem;">
+                <div style="display:flex; gap:1rem; align-items:flex-start;">
                     <div class="tr-icon gray"><i class="fa-solid fa-list-check"></i></div>
                     <div>
                         <h3>Transaction Logs</h3>
-                        <p>Real-time record of all completed member deposits.</p>
+                        <p>Real-time record of the latest 4 treasury activities.</p>
                     </div>
                 </div>
-                <div class="tx-count-badge" id="txCountBadge">0<br>Transactions</div>
+                <div class="header-actions">
+                    <button class="btn-export" id="exportBtn" onclick="exportTransactionsCSV()">
+                        <i class="fa-solid fa-download"></i> Export CSV
+                    </button>
+                    <div class="tx-count-badge" id="txCountBadge">0<br>Transactions</div>
+                </div>
+            </div>
+
+            <!-- FILTERS & SEARCH -->
+            <div class="filter-toolbar">
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="setFilter('all', this)">All</button>
+                    <button class="filter-tab" onclick="setFilter('deposit', this)">Deposits</button>
+                    <button class="filter-tab" onclick="setFilter('initial', this)">Initial Balances</button>
+                </div>
+                <div class="search-input-wrap" style="margin-bottom:0; width: 260px;">
+                    <span class="search-prefix"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" id="txSearchInput" placeholder="Search member or amount..."
+                        oninput="filterTransactions()">
+                </div>
             </div>
 
             <div id="txLogList">
@@ -578,6 +676,8 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentAdminId = null;
+        let cachedTransactions = [];
+        let currentFilter = 'all';
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -589,6 +689,26 @@
             return new Date(dateInput).toLocaleString('en-US', {
                 hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric', year: 'numeric'
             });
+        }
+
+        function generateTransactionId(tx) {
+            const dateObj = new Date(tx.created_at);
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            let hash = 0;
+            const str = tx.id || (tx.created_at + tx.amount);
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let randomPart = '';
+            let seed = Math.abs(hash);
+            for (let i = 0; i < 5; i++) {
+                seed = (seed * 9301 + 49297) % 233280;
+                const rnd = seed / 233280;
+                randomPart += chars[Math.floor(rnd * chars.length)];
+            }
+            return `K${day}${randomPart}`;
         }
 
         function showToast(message, isError = false) {
@@ -679,10 +799,67 @@
             }
         });
 
-        async function loadTreasuryData() {
-            const container = document.getElementById('txLogList');
+        function setFilter(type, btn) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderTransactionList();
+        }
 
-            // 1. Fetch the latest initial balance
+        function filterTransactions() {
+            renderTransactionList();
+        }
+
+        function renderTransactionList() {
+            const container = document.getElementById('txLogList');
+            const searchQuery = (document.getElementById('txSearchInput').value || '').toLowerCase();
+
+            const filtered = cachedTransactions.filter(tx => {
+                const matchesType = currentFilter === 'all' || tx.type === currentFilter;
+                const name = (tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'Initial Baseline').toLowerCase();
+                const amtStr = String(tx.amount);
+                const txId = generateTransactionId(tx).toLowerCase();
+                const matchesSearch = !searchQuery || name.includes(searchQuery) || amtStr.includes(searchQuery) || tx.type.includes(searchQuery) || txId.includes(searchQuery);
+                return matchesType && matchesSearch;
+            });
+
+            // Show only the latest 4 transactions
+            const limited = filtered.slice(0, 4);
+
+            if (limited.length === 0) {
+                container.innerHTML = '<p class="empty-tx">No matching transactions found.</p>';
+                return;
+            }
+
+            container.innerHTML = limited.map(tx => {
+                const isInitial = tx.type === 'initial';
+                const name = isInitial ? 'Initial Baseline' : (tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'a member');
+                const timeLabel = formatTimeLabel(tx.created_at);
+                const txId = generateTransactionId(tx);
+
+                const formattedAmount = `KSh ${Number(tx.amount).toLocaleString()}`;
+                const textDesc = isInitial
+                    ? `Initial treasury pool established at ${formattedAmount} on ${timeLabel}. (${txId})`
+                    : `successfully deposited ${formattedAmount} to ${escapeHtml(name)} on ${timeLabel}. Transaction ID ${txId}`;
+
+                return `
+                    <div class="tx-list-item">
+                        <div class="tx-list-icon ${isInitial ? 'initial' : ''}">
+                            <i class="fa-solid ${isInitial ? 'fa-coins' : 'fa-arrow-down'}"></i>
+                        </div>
+                        <div class="tx-list-body">
+                            <p>${escapeHtml(textDesc)}</p>
+                        </div>
+                        <div class="tx-list-amount">
+                            <div class="amt ${isInitial ? 'initial' : ''}">${isInitial ? '' : '+'}${formattedAmount}</div>
+                            <div class="idx">#${tx.num}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadTreasuryData() {
             const { data: initialData, error: initialError } = await supabaseClient
                 .from('transactions')
                 .select('*')
@@ -697,59 +874,64 @@
                 baselineTime = initialData[0].created_at;
             }
 
-            // 2. Fetch all deposit transactions (Explicitly using profiles:user_id to fix ambiguity error)
-            const { data: depositData, error: depositError } = await supabaseClient
+            const { data: txData, error: txError } = await supabaseClient
                 .from('transactions')
                 .select('*, profiles:user_id(full_name)')
-                .eq('type', 'deposit')
                 .order('created_at', { ascending: false });
 
-            if (depositError) {
-                container.innerHTML = `<p class="empty-tx" style="color:#dc2626;">${escapeHtml(depositError.message)}</p>`;
+            const container = document.getElementById('txLogList');
+            if (txError) {
+                container.innerHTML = `<p class="empty-tx" style="color:#dc2626;">${escapeHtml(txError.message)}</p>`;
                 return;
             }
 
-            const allDeposits = depositData || [];
+            const rawTransactions = txData || [];
 
-            // 3. Compute active balance
-            const relevantDeposits = allDeposits.filter(tx =>
-                !baselineTime || new Date(tx.created_at) >= new Date(baselineTime)
+            const relevantDeposits = rawTransactions.filter(tx =>
+                tx.type === 'deposit' && (!baselineTime || new Date(tx.created_at) >= new Date(baselineTime))
             );
             const depositSum = relevantDeposits.reduce((sum, tx) => sum + Number(tx.amount), 0);
             const activeBalance = baseline + depositSum;
 
             document.getElementById('activeBalance').textContent = `KSh ${activeBalance.toLocaleString()}`;
-            document.getElementById('txCountBadge').innerHTML = `${allDeposits.length}<br>Transaction${allDeposits.length === 1 ? '' : 's'}`;
+            document.getElementById('txCountBadge').innerHTML = `${rawTransactions.length}<br>Transaction${rawTransactions.length === 1 ? '' : 's'}`;
 
-            if (allDeposits.length === 0) {
-                container.innerHTML = '<p class="empty-tx">No deposits recorded yet.</p>';
-                return;
-            }
-
-            const numbered = allDeposits
+            const numbered = rawTransactions
                 .slice()
                 .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
                 .map((tx, idx) => ({ ...tx, num: idx + 1 }));
 
-            container.innerHTML = numbered
-                .slice()
-                .reverse()
-                .map(tx => {
-                    const name = tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'a member';
-                    const timeLabel = formatTimeLabel(tx.created_at);
-                    return `
-                        <div class="tx-list-item">
-                            <div class="tx-list-icon"><i class="fa-solid fa-arrow-down"></i></div>
-                            <div class="tx-list-body">
-                                <p>You have successfully deposited ksh ${Number(tx.amount).toLocaleString()} at ${timeLabel} in favor of ${escapeHtml(name)}</p>
-                            </div>
-                            <div class="tx-list-amount">
-                                <div class="amt">+KSh ${Number(tx.amount).toLocaleString()}</div>
-                                <div class="idx">#${tx.num}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+            cachedTransactions = numbered.slice().reverse();
+            renderTransactionList();
+        }
+
+        function exportTransactionsCSV() {
+            if (!cachedTransactions.length) {
+                showToast('No transactions available to export.', true);
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,Transaction ID,Type,Member/Details,Amount (KSh),Timestamp\r\n";
+            cachedTransactions.forEach(tx => {
+                const name = tx.type === 'initial' ? 'Initial Balance' : (tx.profiles?.full_name || 'Member');
+                csvContent += `"${generateTransactionId(tx)}","${tx.type}","${name.replace(/"/g, '""')}","${tx.amount}","${tx.created_at}"\r\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `treasury_logs_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Transaction logs exported successfully.');
+        }
+
+        function setupRealtimeListener() {
+            supabaseClient
+                .channel('public:transactions')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+                    loadTreasuryData();
+                })
+                .subscribe();
         }
 
         (async () => {
@@ -761,6 +943,7 @@
             currentAdminId = session.user.id;
             await loadMemberOptions();
             await loadTreasuryData();
+            setupRealtimeListener();
         })();
     </script>
 </body>
