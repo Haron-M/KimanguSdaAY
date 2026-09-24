@@ -47,9 +47,9 @@
             margin: 0 auto;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 768px) {
             .page-body {
-                padding: 1.2rem;
+                padding: 1rem;
             }
         }
 
@@ -128,17 +128,34 @@
             }
         }
 
-        /* TWO COLUMN GRID */
+        /* TWO COLUMN GRID / RIGHT ALIGN SINGLE COLUMN */
         .treasury-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
             margin-bottom: 1.5rem;
+            align-items: start;
+        }
+
+        /* If initial card is hidden, push deposit card to the right */
+        .treasury-grid.single-col {
+            grid-template-columns: 1fr;
+        }
+
+        .treasury-grid.single-col #depositCard {
+            max-width: 700px;
+            margin-left: auto;
+            /* Pushes to the right */
         }
 
         @media (max-width: 900px) {
             .treasury-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .treasury-grid.single-col #depositCard {
+                margin-left: 0;
+                margin-right: auto;
             }
         }
 
@@ -259,14 +276,12 @@
         }
 
         .amount-input-wrap,
-        .select-wrap,
-        .search-input-wrap {
+        .select-wrap {
             position: relative;
             margin-bottom: 1.3rem;
         }
 
-        .amount-prefix,
-        .search-prefix {
+        .amount-prefix {
             position: absolute;
             left: 1rem;
             top: 50%;
@@ -278,8 +293,7 @@
         }
 
         .amount-input-wrap input,
-        .select-wrap select,
-        .search-input-wrap input {
+        .select-wrap select {
             width: 100%;
             padding: 0.85rem 1rem 0.85rem 3.2rem;
             border: 1.5px solid var(--border-color);
@@ -297,13 +311,8 @@
             cursor: pointer;
         }
 
-        .search-input-wrap input {
-            padding-left: 2.8rem;
-        }
-
         .amount-input-wrap input:focus,
-        .select-wrap select:focus,
-        .search-input-wrap input:focus {
+        .select-wrap select:focus {
             outline: none;
             border-color: var(--primary-dark);
             box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.08);
@@ -316,42 +325,6 @@
             transform: translateY(-50%);
             color: var(--text-gray);
             pointer-events: none;
-        }
-
-        .filter-toolbar {
-            display: flex;
-            gap: 0.8rem;
-            margin-bottom: 1.2rem;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .filter-tabs {
-            display: flex;
-            gap: 0.4rem;
-            background: var(--off-white);
-            padding: 4px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        .filter-tab {
-            background: transparent;
-            border: none;
-            padding: 0.4rem 0.9rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-gray);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .filter-tab.active {
-            background: #fff;
-            color: var(--primary-dark);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         .btn-tr {
@@ -470,17 +443,22 @@
             }
         }
 
-        /* TRANSACTION LIST */
+        /* ONE-LINE COMPACT TRANSACTION LIST ITEMS (Strictly enforced) */
         .tx-list-item {
             display: flex;
-            align-items: flex-start;
-            gap: 1rem;
+            align-items: center;
+            gap: 0.9rem;
             background: var(--off-white);
-            border-radius: 12px;
-            padding: 1rem 1.2rem;
-            margin-bottom: 0.8rem;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            margin-bottom: 0.5rem;
             border: 1px solid var(--border-color);
             transition: var(--transition);
+
+            /* Enforce single line layout on ALL devices */
+            flex-wrap: nowrap !important;
+            overflow: hidden;
+            width: 100%;
         }
 
         .tx-list-item:hover {
@@ -493,15 +471,15 @@
         }
 
         .tx-list-icon {
-            width: 38px;
-            height: 38px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: rgba(34, 197, 94, 0.14);
             color: #16a34a;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             flex-shrink: 0;
         }
 
@@ -512,23 +490,33 @@
 
         .tx-list-body {
             flex: 1;
+            min-width: 0;
+            /* Critical for truncation */
         }
 
         .tx-list-body p {
-            font-size: 0.88rem;
+            font-size: 0.84rem;
             color: var(--primary-dark);
-            line-height: 1.5;
+            /* Truncate text */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 0;
         }
 
         .tx-list-amount {
             text-align: right;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .tx-list-amount .amt {
             font-weight: 800;
             color: #16a34a;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            white-space: nowrap;
         }
 
         .tx-list-amount .amt.initial {
@@ -536,16 +524,80 @@
         }
 
         .tx-list-amount .idx {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: var(--text-gray);
-            margin-top: 0.2rem;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            padding: 0.1rem 0.4rem;
+            border-radius: 6px;
+            white-space: nowrap;
         }
 
         .empty-tx {
             color: var(--text-gray);
             font-size: 0.9rem;
             text-align: center;
-            padding: 2rem;
+            padding: 1.5rem;
+        }
+
+        /* BLINK ANIMATION FOR SEE MORE */
+        @keyframes blinkEffect {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        .see-more-container {
+            text-align: center;
+            margin-top: 0.8rem;
+            padding-top: 0.3rem;
+        }
+
+        .see-more-btn {
+            background: none;
+            border: none;
+            color: #16a34a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            animation: blinkEffect 1.4s ease-in-out infinite;
+            transition: var(--transition);
+        }
+
+        .see-more-btn:hover {
+            color: #15803d;
+            animation: none;
+        }
+
+        /* Mobile Specifics (No stacking for rows, just padding adjustments) */
+        @media (max-width: 650px) {
+            .tx-list-item {
+                padding: 0.5rem 0.8rem;
+                gap: 0.6rem;
+            }
+
+            .tx-list-body p {
+                font-size: 0.78rem;
+            }
+
+            .tx-list-amount .amt {
+                font-size: 0.85rem;
+            }
+
+            .tx-list-amount {
+                gap: 6px;
+            }
         }
     </style>
 </head>
@@ -558,8 +610,7 @@
             <div class="hero-left">
                 <span class="treasury-badge">Treasury Management</span>
                 <h1>Treasury Desk</h1>
-                <p>Set initial account balances, allocate member deposits, audit real-time transaction logs, and export
-                    records.</p>
+                <p>Allocate member deposits, audit real-time transaction logs, and export records.</p>
             </div>
             <div class="balance-panel">
                 <span>Active Account Balance</span>
@@ -567,15 +618,15 @@
             </div>
         </div>
 
-        <!-- TWO COLUMN CONTAINER FOR FORMS -->
-        <div class="treasury-grid">
-            <!-- INITIAL BALANCE CARD -->
-            <div class="tr-card">
+        <!-- CONTAINER FOR FORMS -->
+        <div class="treasury-grid" id="formsGrid">
+            <!-- INITIAL BALANCE CARD (LEFT) -->
+            <div class="tr-card" id="initialBalanceCard">
                 <div class="tr-card-header">
                     <div class="tr-icon gold"><i class="fa-solid fa-coins"></i></div>
                     <div>
                         <h3>Initial Account Balance</h3>
-                        <p>Configure or reset the opening account pool balance.</p>
+                        <p>Configure opening account pool balance (set once).</p>
                     </div>
                 </div>
 
@@ -596,8 +647,8 @@
                 </div>
             </div>
 
-            <!-- MEMBER DEPOSIT CARD -->
-            <div class="tr-card">
+            <!-- MEMBER DEPOSIT CARD (RIGHT) -->
+            <div class="tr-card" id="depositCard">
                 <div class="tr-card-header">
                     <div class="tr-icon dark"><i class="fa-solid fa-money-bill-transfer"></i></div>
                     <div>
@@ -628,14 +679,14 @@
             </div>
         </div>
 
-        <!-- TRANSACTION LOGS CARD -->
+        <!-- TRANSACTION LOGS PREVIEW CARD -->
         <div class="tr-card">
             <div class="tr-card-header tr-card-header-flex">
                 <div style="display:flex; gap:1rem; align-items:flex-start;">
                     <div class="tr-icon gray"><i class="fa-solid fa-list-check"></i></div>
                     <div>
                         <h3>Transaction Logs</h3>
-                        <p>Real-time record of the latest 4 treasury activities.</p>
+                        <p>Latest recent treasury activity records.</p>
                     </div>
                 </div>
                 <div class="header-actions">
@@ -643,20 +694,6 @@
                         <i class="fa-solid fa-download"></i> Export CSV
                     </button>
                     <div class="tx-count-badge" id="txCountBadge">0<br>Transactions</div>
-                </div>
-            </div>
-
-            <!-- FILTERS & SEARCH -->
-            <div class="filter-toolbar">
-                <div class="filter-tabs">
-                    <button class="filter-tab active" onclick="setFilter('all', this)">All</button>
-                    <button class="filter-tab" onclick="setFilter('deposit', this)">Deposits</button>
-                    <button class="filter-tab" onclick="setFilter('initial', this)">Initial Balances</button>
-                </div>
-                <div class="search-input-wrap" style="margin-bottom:0; width: 260px;">
-                    <span class="search-prefix"><i class="fa-solid fa-search"></i></span>
-                    <input type="text" id="txSearchInput" placeholder="Search member or amount..."
-                        oninput="filterTransactions()">
                 </div>
             </div>
 
@@ -677,7 +714,6 @@
 
         let currentAdminId = null;
         let cachedTransactions = [];
-        let currentFilter = 'all';
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -799,66 +835,6 @@
             }
         });
 
-        function setFilter(type, btn) {
-            currentFilter = type;
-            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            renderTransactionList();
-        }
-
-        function filterTransactions() {
-            renderTransactionList();
-        }
-
-        function renderTransactionList() {
-            const container = document.getElementById('txLogList');
-            const searchQuery = (document.getElementById('txSearchInput').value || '').toLowerCase();
-
-            const filtered = cachedTransactions.filter(tx => {
-                const matchesType = currentFilter === 'all' || tx.type === currentFilter;
-                const name = (tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'Initial Baseline').toLowerCase();
-                const amtStr = String(tx.amount);
-                const txId = generateTransactionId(tx).toLowerCase();
-                const matchesSearch = !searchQuery || name.includes(searchQuery) || amtStr.includes(searchQuery) || tx.type.includes(searchQuery) || txId.includes(searchQuery);
-                return matchesType && matchesSearch;
-            });
-
-            // Show only the latest 4 transactions
-            const limited = filtered.slice(0, 4);
-
-            if (limited.length === 0) {
-                container.innerHTML = '<p class="empty-tx">No matching transactions found.</p>';
-                return;
-            }
-
-            container.innerHTML = limited.map(tx => {
-                const isInitial = tx.type === 'initial';
-                const name = isInitial ? 'Initial Baseline' : (tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'a member');
-                const timeLabel = formatTimeLabel(tx.created_at);
-                const txId = generateTransactionId(tx);
-
-                const formattedAmount = `KSh ${Number(tx.amount).toLocaleString()}`;
-                const textDesc = isInitial
-                    ? `Initial treasury pool established at ${formattedAmount} on ${timeLabel}. (${txId})`
-                    : `successfully deposited ${formattedAmount} to ${escapeHtml(name)} on ${timeLabel}. Transaction ID ${txId}`;
-
-                return `
-                    <div class="tx-list-item">
-                        <div class="tx-list-icon ${isInitial ? 'initial' : ''}">
-                            <i class="fa-solid ${isInitial ? 'fa-coins' : 'fa-arrow-down'}"></i>
-                        </div>
-                        <div class="tx-list-body">
-                            <p>${escapeHtml(textDesc)}</p>
-                        </div>
-                        <div class="tx-list-amount">
-                            <div class="amt ${isInitial ? 'initial' : ''}">${isInitial ? '' : '+'}${formattedAmount}</div>
-                            <div class="idx">#${tx.num}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
         async function loadTreasuryData() {
             const { data: initialData, error: initialError } = await supabaseClient
                 .from('transactions')
@@ -869,9 +845,21 @@
 
             let baseline = 0;
             let baselineTime = null;
+            const initialCard = document.getElementById('initialBalanceCard');
+            const formsGrid = document.getElementById('formsGrid');
+
             if (!initialError && initialData && initialData.length > 0) {
                 baseline = Number(initialData[0].amount);
                 baselineTime = initialData[0].created_at;
+                if (initialCard) {
+                    initialCard.style.display = 'none';
+                    formsGrid.classList.add('single-col');
+                }
+            } else {
+                if (initialCard) {
+                    initialCard.style.display = 'block';
+                    formsGrid.classList.remove('single-col');
+                }
             }
 
             const { data: txData, error: txError } = await supabaseClient
@@ -902,7 +890,53 @@
                 .map((tx, idx) => ({ ...tx, num: idx + 1 }));
 
             cachedTransactions = numbered.slice().reverse();
-            renderTransactionList();
+
+            const displayedTransactions = cachedTransactions.slice(0, 4);
+            const hiddenCount = cachedTransactions.length > 4 ? cachedTransactions.length - 4 : 0;
+
+            if (cachedTransactions.length === 0) {
+                container.innerHTML = '<p class="empty-tx">No transactions recorded yet.</p>';
+                return;
+            }
+
+            let html = displayedTransactions.map(tx => {
+                const isInitial = tx.type === 'initial';
+                const name = isInitial ? 'Initial Baseline' : (tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'a member');
+                const timeLabel = formatTimeLabel(tx.created_at);
+                const txId = generateTransactionId(tx);
+
+                const formattedAmount = `KSh ${Number(tx.amount).toLocaleString()}`;
+                const textDesc = isInitial
+                    ? `Initial treasury pool established at ${formattedAmount} on ${timeLabel}. (${txId})`
+                    : `successfully deposited ${formattedAmount} to ${escapeHtml(name)} on ${timeLabel}. Transaction ID ${txId}`;
+
+                return `
+                    <div class="tx-list-item" title="${escapeHtml(textDesc)}">
+                        <div class="tx-list-icon ${isInitial ? 'initial' : ''}">
+                            <i class="fa-solid ${isInitial ? 'fa-coins' : 'fa-arrow-down'}"></i>
+                        </div>
+                        <div class="tx-list-body">
+                            <p>${escapeHtml(textDesc)}</p>
+                        </div>
+                        <div class="tx-list-amount">
+                            <div class="amt ${isInitial ? 'initial' : ''}">${isInitial ? '' : '+'}${formattedAmount}</div>
+                            <div class="idx">#${tx.num}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (hiddenCount > 0) {
+                html += `
+                    <div class="see-more-container">
+                        <a href="transactions.html" class="see-more-btn">
+                            See more (${hiddenCount} hidden) <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
         }
 
         function exportTransactionsCSV() {
