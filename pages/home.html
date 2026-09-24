@@ -402,72 +402,6 @@
                 border-radius: 10px;
             }
         }
-
-        /* Admin panel block - orange highlighted panel style */
-        .admin-block {
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 0.3rem;
-        }
-
-        .admin-toggle {
-            width: 100%;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-family: inherit;
-            text-align: left;
-            justify-content: flex-start;
-            border-radius: 8px;
-            margin-bottom: 0;
-        }
-
-        .admin-toggle.open {
-            background: var(--accent-gold, #f59e0b);
-            color: var(--primary-dark, #0a192f);
-            font-weight: 700;
-            border-radius: 8px 8px 0 0;
-        }
-
-        .admin-toggle.open i {
-            color: var(--primary-dark, #0a192f);
-        }
-
-        .admin-chevron {
-            margin-left: auto;
-            font-size: 0.7rem;
-            transition: transform 0.3s ease;
-        }
-
-        .admin-toggle.open .admin-chevron {
-            transform: rotate(90deg);
-        }
-
-        .admin-submenu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.35s ease;
-            background: rgba(245, 158, 11, 0.14);
-            border-radius: 0 0 8px 8px;
-        }
-
-        .admin-submenu.open {
-            max-height: 300px;
-            padding: 0.3rem 0;
-        }
-
-        .sub-link {
-            padding: 0.6rem 0.9rem 0.6rem 3rem !important;
-            font-size: 0.85rem !important;
-            color: #fcd34d !important;
-            margin-bottom: 0 !important;
-            border-radius: 0 !important;
-        }
-
-        .sub-link:hover {
-            background: rgba(245, 158, 11, 0.2) !important;
-            color: #fff !important;
-        }
     </style>
 </head>
 
@@ -582,6 +516,67 @@
             return `${days} day${days === 1 ? '' : 's'} ago`;
         }
 
+        async function loadDashboardStats(userId) {
+            // 1. Calculate Account Balance (Initial Baseline + Subsequent Deposits)
+            const { data: initialData } = await supabaseClient
+                .from('transactions')
+                .select('*')
+                .eq('type', 'initial')
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            let baseline = 0;
+            let baselineTime = null;
+            if (initialData && initialData.length > 0) {
+                baseline = Number(initialData[0].amount);
+                baselineTime = initialData[0].created_at;
+            }
+
+            const { data: depositData } = await supabaseClient
+                .from('transactions')
+                .select('*')
+                .eq('type', 'deposit');
+
+            const allDeposits = depositData || [];
+            const relevantDeposits = allDeposits.filter(tx =>
+                !baselineTime || new Date(tx.created_at) >= new Date(baselineTime)
+            );
+            const totalAccountBalance = baseline + relevantDeposits.reduce((sum, tx) => sum + Number(tx.amount), 0);
+            document.getElementById('statBalance').textContent = `KSh ${totalAccountBalance.toLocaleString()}`;
+
+            // 2. Calculate My Specific Contribution
+            const myDeposits = allDeposits.filter(tx => tx.user_id === userId);
+            const myTotalContribution = myDeposits.reduce((sum, tx) => sum + Number(tx.amount), 0);
+            document.getElementById('statContribution').textContent = `KSh ${myTotalContribution.toLocaleString()}`;
+
+            // 3. Load My Schedules Count
+            try {
+                const { count: schedulesCount, error: schedError } = await supabaseClient
+                    .from('schedules')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', userId);
+
+                if (!schedError && schedulesCount !== null) {
+                    document.getElementById('statSchedules').textContent = schedulesCount;
+                }
+            } catch (err) {
+                document.getElementById('statSchedules').textContent = '0';
+            }
+
+            // 4. Load Total Events Count
+            try {
+                const { count: eventsCount, error: eventsError } = await supabaseClient
+                    .from('events')
+                    .select('*', { count: 'exact', head: true });
+
+                if (!eventsError && eventsCount !== null) {
+                    document.getElementById('statEvents').textContent = eventsCount;
+                }
+            } catch (err) {
+                document.getElementById('statEvents').textContent = '0';
+            }
+        }
+
         async function loadUpcomingEvents() {
             const container = document.getElementById('upcomingEventsList');
             const today = new Date().toISOString().split('T')[0];
@@ -643,10 +638,11 @@
         (async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) { window.top.location.href = '../auth.html'; return; }
+
+            await loadDashboardStats(session.user.id);
             loadUpcomingEvents();
             loadAnnouncements();
         })();
-
     </script>
 </body>
 

@@ -4,12 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Treasury Desk</title>
+    <title>Treasury Desk | Kimangu AY</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../dashboard.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -42,71 +41,727 @@
             font-family: 'Playfair Display', serif;
         }
 
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
         .page-body {
             padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .page-body {
                 padding: 1.2rem;
             }
         }
 
-        .coming-soon {
-            background: #fff;
-            border-radius: 14px;
-            padding: 3rem;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
-            border: 1px solid var(--border-color, #e2e8f0);
+        /* HERO & BALANCE PANEL */
+        .treasury-hero {
+            background: var(--primary-dark);
+            border-radius: 18px;
+            padding: 2.2rem;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(10, 25, 47, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
         }
 
-        .coming-soon i {
-            font-size: 2.2rem;
-            color: #f59e0b;
+        .hero-left {
+            max-width: 650px;
+        }
+
+        .treasury-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-gold);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
             margin-bottom: 1rem;
         }
 
-        .coming-soon h3 {
-            font-family: 'Playfair Display', serif;
-            color: var(--primary-dark, #0a192f);
+        .treasury-hero h1 {
+            font-size: 1.9rem;
             margin-bottom: 0.6rem;
-            font-size: 1.3rem;
         }
 
-        .coming-soon p {
-            color: var(--text-gray, #64748b);
+        .treasury-hero p {
+            color: #cbd5e1;
+            font-size: 0.92rem;
+        }
+
+        .balance-panel {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 1.2rem 1.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.2rem;
+            min-width: 220px;
+        }
+
+        .balance-panel span {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .balance-panel strong {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+        }
+
+        @media (max-width: 768px) {
+            .balance-panel {
+                align-items: flex-start;
+                width: 100%;
+            }
+        }
+
+        /* TWO COLUMN GRID */
+        .treasury-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .treasury-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* CARDS */
+        .tr-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.8rem;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .tr-card-header {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            margin-bottom: 1.4rem;
+        }
+
+        .tr-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .tr-icon.gold {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .tr-icon.dark {
+            background: var(--primary-dark);
+            color: var(--accent-gold);
+        }
+
+        .tr-icon.gray {
+            background: var(--off-white);
+            color: var(--primary-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .tr-card-header h3 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.2rem;
+        }
+
+        .tr-card-header p {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+        }
+
+        .tr-card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .tx-count-badge {
+            background: var(--off-white);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.5rem 0.9rem;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+
+        .tr-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .amount-input-wrap,
+        .select-wrap {
+            position: relative;
+            margin-bottom: 1.3rem;
+        }
+
+        .amount-prefix {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+            font-weight: 600;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .amount-input-wrap input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 3.2rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            font-family: inherit;
             font-size: 0.95rem;
-            max-width: 420px;
-            margin: 0 auto;
+            background: #fff;
+            color: var(--primary-dark);
+            transition: var(--transition);
+        }
+
+        .amount-input-wrap input:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.08);
+        }
+
+        .select-wrap select {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: #fff;
+            color: var(--primary-dark);
+            appearance: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .select-wrap select:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.08);
+        }
+
+        .select-wrap i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+            pointer-events: none;
+        }
+
+        .btn-tr {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .btn-tr.dark {
+            background: var(--primary-dark);
+            color: #fff;
+        }
+
+        .btn-tr.dark:hover {
+            background: #14243f;
+        }
+
+        .btn-tr.gold {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .btn-tr.gold:hover {
+            background: #d97e0a;
+        }
+
+        .btn-tr:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .info-banner {
+            display: flex;
+            gap: 0.7rem;
+            align-items: flex-start;
+            background: #fef9e7;
+            border-radius: 10px;
+            padding: 0.9rem 1.1rem;
+            margin-top: 1.2rem;
+            font-size: 0.85rem;
+            color: #92652b;
+        }
+
+        .info-banner i {
+            color: var(--accent-gold);
+            margin-top: 2px;
+        }
+
+        /* TOAST NOTIFICATION CONTAINER */
+        #toastContainer {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-msg {
+            pointer-events: auto;
+            background: var(--primary-dark);
+            color: #fff;
+            padding: 1rem 1.3rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(10, 25, 47, 0.2);
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--accent-gold);
+            animation: slideInUp 0.3s ease forwards;
+            max-width: 380px;
+        }
+
+        .toast-msg.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast-msg i {
+            color: var(--accent-gold);
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .toast-msg.error i {
+            color: #ef4444;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+        }
+
+        /* TRANSACTION LIST */
+        .tx-list-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            background: var(--off-white);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 0.8rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .tx-list-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .tx-list-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(34, 197, 94, 0.14);
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .tx-list-body {
+            flex: 1;
+        }
+
+        .tx-list-body p {
+            font-size: 0.88rem;
+            color: var(--primary-dark);
+            line-height: 1.5;
+        }
+
+        .tx-list-amount {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .tx-list-amount .amt {
+            font-weight: 800;
+            color: #16a34a;
+            font-size: 0.95rem;
+        }
+
+        .tx-list-amount .idx {
+            font-size: 0.72rem;
+            color: var(--text-gray);
+            margin-top: 0.2rem;
+        }
+
+        .empty-tx {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 1.5rem;
         }
     </style>
 </head>
 
 <body>
     <main class="page-body">
-        <div class="coming-soon">
-            <i class="fa-solid fa-coins"></i>
-            <h3>Treasury Desk</h3>
-            <p>This page will show your account balance, contribution history, and payment options. Let me know what
-                should appear here and I'll build it out.</p>
+
+        <!-- HERO -->
+        <div class="treasury-hero">
+            <div class="hero-left">
+                <span class="treasury-badge">Treasury Management</span>
+                <h1>Treasury Desk</h1>
+                <p>Set initial account balances, select database members, deposit funds, and audit real-time transaction
+                    logs.</p>
+            </div>
+            <div class="balance-panel">
+                <span>Active Account Balance</span>
+                <strong id="activeBalance">KSh 0</strong>
+            </div>
         </div>
+
+        <!-- TWO COLUMN CONTAINER FOR FORMS -->
+        <div class="treasury-grid">
+            <!-- INITIAL BALANCE CARD -->
+            <div class="tr-card">
+                <div class="tr-card-header">
+                    <div class="tr-icon gold"><i class="fa-solid fa-coins"></i></div>
+                    <div>
+                        <h3>Initial Account Balance</h3>
+                        <p>Configure or reset the opening account pool balance.</p>
+                    </div>
+                </div>
+
+                <form id="initialForm">
+                    <span class="tr-label">Initial Balance Amount (KSh)</span>
+                    <div class="amount-input-wrap">
+                        <span class="amount-prefix">KSh</span>
+                        <input type="number" id="initialAmount" min="0" step="0.01" placeholder="e.g. 50000" required>
+                    </div>
+                    <button type="submit" class="btn-tr dark" id="initialBtn">
+                        <i class="fa-solid fa-circle-check"></i> Set Initial Balance
+                    </button>
+                </form>
+
+                <div class="info-banner">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Establishes the opening baseline for treasury auditing.</span>
+                </div>
+            </div>
+
+            <!-- MEMBER DEPOSIT CARD -->
+            <div class="tr-card">
+                <div class="tr-card-header">
+                    <div class="tr-icon dark"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                    <div>
+                        <h3>Make Member Deposit</h3>
+                        <p>Select member from database and allocate deposit amount.</p>
+                    </div>
+                </div>
+
+                <form id="depositForm">
+                    <span class="tr-label">Select Member (Database)</span>
+                    <div class="select-wrap">
+                        <select id="depositUser" required>
+                            <option value="">-- Select Member from Database --</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+
+                    <span class="tr-label">Deposit Amount (KSh)</span>
+                    <div class="amount-input-wrap">
+                        <span class="amount-prefix">KSh</span>
+                        <input type="number" id="depositAmount" min="1" step="0.01" placeholder="e.g. 2500" required>
+                    </div>
+
+                    <button type="submit" class="btn-tr gold" id="depositBtn">
+                        <i class="fa-solid fa-paper-plane"></i> Deposit Funds
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TRANSACTION LOGS CARD -->
+        <div class="tr-card">
+            <div class="tr-card-header tr-card-header-flex">
+                <div style="display:flex; gap:1rem;">
+                    <div class="tr-icon gray"><i class="fa-solid fa-list-check"></i></div>
+                    <div>
+                        <h3>Transaction Logs</h3>
+                        <p>Real-time record of all completed member deposits.</p>
+                    </div>
+                </div>
+                <div class="tx-count-badge" id="txCountBadge">0<br>Transactions</div>
+            </div>
+
+            <div id="txLogList">
+                <p class="empty-tx">Loading transactions...</p>
+            </div>
+        </div>
+
     </main>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer"></div>
+
     <script>
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let currentAdminId = null;
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function formatTimeLabel(dateInput) {
+            return new Date(dateInput).toLocaleString('en-US', {
+                hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric', year: 'numeric'
+            });
+        }
+
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-msg ${isError ? 'error' : ''}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-circle-check'}"></i>
+                <span>${escapeHtml(message)}</span>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        async function loadMemberOptions() {
+            const { data, error } = await supabaseClient.from('profiles').select('id, full_name').order('full_name');
+            const select = document.getElementById('depositUser');
+            if (error || !data) {
+                select.innerHTML = '<option value="">Could not load members</option>';
+                return;
+            }
+            select.innerHTML = '<option value="">-- Select Member from Database --</option>' +
+                data.map(p => `<option value="${p.id}">${escapeHtml(p.full_name || 'Unnamed')}</option>`).join('');
+        }
+
+        document.getElementById('initialForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('initialBtn');
+            const amount = parseFloat(document.getElementById('initialAmount').value);
+
+            if (isNaN(amount) || amount < 0) {
+                showToast('Please enter a valid amount.', true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Setting...';
+
+            try {
+                const { error } = await supabaseClient.from('transactions').insert({
+                    user_id: null, amount, type: 'initial', performed_by: currentAdminId
+                });
+                if (error) throw new Error(error.message);
+
+                showToast(`Initial account balance set to KSh ${amount.toLocaleString()} successfully.`);
+                document.getElementById('initialForm').reset();
+                await loadTreasuryData();
+            } catch (err) {
+                showToast(err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Set Initial Balance';
+            }
+        });
+
+        document.getElementById('depositForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('depositBtn');
+            const select = document.getElementById('depositUser');
+            const userId = select.value;
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+            const userName = select.selectedOptions[0] ? select.selectedOptions[0].textContent : 'this member';
+
+            if (!userId) { showToast('Please select a member.', true); return; }
+            if (!amount || amount <= 0) { showToast('Please enter a valid amount.', true); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Depositing...';
+
+            try {
+                const { error } = await supabaseClient.from('transactions').insert({
+                    user_id: userId, amount, type: 'deposit', performed_by: currentAdminId
+                });
+                if (error) throw new Error(error.message);
+
+                showToast(`Deposit of KSh ${amount.toLocaleString()} for ${userName} completed successfully.`);
+                document.getElementById('depositForm').reset();
+                await loadTreasuryData();
+            } catch (err) {
+                showToast(err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Deposit Funds';
+            }
+        });
+
+        async function loadTreasuryData() {
+            const container = document.getElementById('txLogList');
+
+            // 1. Fetch the latest initial balance
+            const { data: initialData, error: initialError } = await supabaseClient
+                .from('transactions')
+                .select('*')
+                .eq('type', 'initial')
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            let baseline = 0;
+            let baselineTime = null;
+            if (!initialError && initialData && initialData.length > 0) {
+                baseline = Number(initialData[0].amount);
+                baselineTime = initialData[0].created_at;
+            }
+
+            // 2. Fetch all deposit transactions (Explicitly using profiles:user_id to fix ambiguity error)
+            const { data: depositData, error: depositError } = await supabaseClient
+                .from('transactions')
+                .select('*, profiles:user_id(full_name)')
+                .eq('type', 'deposit')
+                .order('created_at', { ascending: false });
+
+            if (depositError) {
+                container.innerHTML = `<p class="empty-tx" style="color:#dc2626;">${escapeHtml(depositError.message)}</p>`;
+                return;
+            }
+
+            const allDeposits = depositData || [];
+
+            // 3. Compute active balance
+            const relevantDeposits = allDeposits.filter(tx =>
+                !baselineTime || new Date(tx.created_at) >= new Date(baselineTime)
+            );
+            const depositSum = relevantDeposits.reduce((sum, tx) => sum + Number(tx.amount), 0);
+            const activeBalance = baseline + depositSum;
+
+            document.getElementById('activeBalance').textContent = `KSh ${activeBalance.toLocaleString()}`;
+            document.getElementById('txCountBadge').innerHTML = `${allDeposits.length}<br>Transaction${allDeposits.length === 1 ? '' : 's'}`;
+
+            if (allDeposits.length === 0) {
+                container.innerHTML = '<p class="empty-tx">No deposits recorded yet.</p>';
+                return;
+            }
+
+            const numbered = allDeposits
+                .slice()
+                .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+                .map((tx, idx) => ({ ...tx, num: idx + 1 }));
+
+            container.innerHTML = numbered
+                .slice()
+                .reverse()
+                .map(tx => {
+                    const name = tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'a member';
+                    const timeLabel = formatTimeLabel(tx.created_at);
+                    return `
+                        <div class="tx-list-item">
+                            <div class="tx-list-icon"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div class="tx-list-body">
+                                <p>You have successfully deposited ksh ${Number(tx.amount).toLocaleString()} at ${timeLabel} in favor of ${escapeHtml(name)}</p>
+                            </div>
+                            <div class="tx-list-amount">
+                                <div class="amt">+KSh ${Number(tx.amount).toLocaleString()}</div>
+                                <div class="idx">#${tx.num}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
         (async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { window.top.location.href = '../auth.html'; return; }
+            if (!session) {
+                window.top.location.href = '../auth.html';
+                return;
+            }
+            currentAdminId = session.user.id;
+            await loadMemberOptions();
+            await loadTreasuryData();
         })();
-
     </script>
 </body>
 
