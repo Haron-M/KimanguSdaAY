@@ -241,16 +241,6 @@
             color: #94a3b8;
         }
 
-        .cal-cell.has-income {
-            background-color: var(--green-bg);
-            border-color: var(--green-border);
-        }
-
-        .cal-cell.has-expense {
-            background-color: var(--red-bg);
-            border-color: var(--red-border);
-        }
-
         .cell-amount {
             font-weight: 700;
             font-size: 0.82rem;
@@ -290,6 +280,22 @@
 
         .week-total.negative {
             color: var(--red-expense);
+        }
+
+        /* Week cell with transactions this week — same dark-green/white-text
+           treatment as day cells and month cards. !important guards against
+           the .positive/.negative color rules above winning by source order. */
+        .week-cell.has-data {
+            background-color: #064e3b;
+            border-left-color: #10b981;
+        }
+
+        .week-cell.has-data .week-title,
+        .week-cell.has-data .week-total,
+        .week-cell.has-data .week-total.positive,
+        .week-cell.has-data .week-total.negative,
+        .week-cell.has-data .cell-trans-sub {
+            color: #ffffff !important;
         }
 
         /* 4. Monthly Performance Bar (Feature from Image 2, Colors from Image 1) */
@@ -352,35 +358,6 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
         }
 
-        /* Only months containing data become dark green */
-        .month-item-card.has-data {
-            background-color: #004a36;
-            border-color: #10b981;
-            color: #ffffff;
-        }
-
-        /* Month name */
-        .month-item-card.has-data span {
-            color: #ffffff;
-        }
-
-        /* Amount */
-        .month-item-card.has-data p {
-            color: #ffffff;
-        }
-
-        /* Negative amount */
-        .month-item-card.has-data p.negative {
-            color: #fecaca;
-        }
-
-        /* Hover / selected month with data */
-        .month-item-card.has-data:hover,
-        .month-item-card.has-data.active-month {
-            background-color: #047857;
-            border-color: #34d399;
-        }
-
         .month-item-card span {
             font-weight: 600;
             font-size: 0.85rem;
@@ -399,6 +376,30 @@
 
         .month-item-card p.negative {
             color: var(--red-expense);
+        }
+
+        /* Months containing data — matches the calendar's "has-income" cell styling exactly.
+           !important is used deliberately here so these colors always win regardless of
+           whether .positive/.negative rules appear later in the cascade. */
+        .month-item-card.has-data {
+            background-color: #064e3b;
+            border-color: #10b981;
+        }
+
+        .month-item-card.has-data span,
+        .month-item-card.has-data p,
+        .month-item-card.has-data p.positive {
+            color: #ffffff !important;
+        }
+
+        .month-item-card.has-data p.negative {
+            color: #fecaca !important;
+        }
+
+        .month-item-card.has-data:hover,
+        .month-item-card.has-data.active-month {
+            background-color: #047857;
+            border-color: #34d399;
         }
 
         /* 5. Net Account Curve (Feature from Image 2, Colors from Image 1) */
@@ -448,17 +449,6 @@
             position: relative;
             height: 320px;
             width: 100%;
-        }
-
-        /* Mobile adjustments */
-        @media (max-width: 640px) {
-            body {
-                padding: 16px;
-            }
-
-            .page-header h1 {
-                font-size: 1.5rem;
-            }
         }
 
         /* ===================== LIVE DATA / LOADING UI ===================== */
@@ -591,6 +581,213 @@
             color: var(--red-expense);
             font-weight: 700;
         }
+
+        /* ===================== MOBILE RESPONSIVENESS ===================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .dashboard-container {
+                gap: 16px;
+            }
+
+            .page-header h1 {
+                font-size: 1.4rem;
+            }
+
+            .page-header p {
+                font-size: 0.82rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .metric-card {
+                padding: 14px;
+                border-radius: 12px;
+            }
+
+            .metric-title {
+                font-size: 0.72rem;
+                margin-bottom: 5px;
+            }
+
+            .metric-value {
+                font-size: 1.15rem;
+            }
+
+            .calendar-card,
+            .monthly-perf-card,
+            .chart-card {
+                padding: 16px;
+                border-radius: 14px;
+            }
+
+            .calendar-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .month-nav {
+                justify-content: space-between;
+            }
+
+            .month-nav h2 {
+                font-size: 1.05rem;
+                min-width: 0;
+                flex: 1;
+            }
+
+            .nav-btn {
+                width: 34px;
+                height: 34px;
+                flex-shrink: 0;
+            }
+
+            .legend-bar {
+                justify-content: center;
+                font-size: 0.72rem;
+            }
+
+            .gradient-indicator {
+                width: 90px;
+            }
+
+            /* Compact calendar cells on mobile */
+            .calendar-grid {
+                grid-template-columns: repeat(7, minmax(64px, 1fr)) minmax(80px, 1fr);
+                min-width: 528px;
+                gap: 5px;
+            }
+
+            .cal-cell {
+                min-height: 62px;
+                padding: 6px;
+                border-radius: 8px;
+                font-size: 0.68rem;
+            }
+
+            .day-head {
+                font-size: 0.62rem;
+                padding-bottom: 4px;
+            }
+
+            .day-num {
+                font-size: 0.75rem;
+            }
+
+            .cell-status {
+                font-size: 0.6rem;
+            }
+
+            .cell-amount {
+                font-size: 0.68rem;
+            }
+
+            .cell-trans-sub {
+                font-size: 0.56rem;
+            }
+
+            .week-cell {
+                padding-left: 8px;
+            }
+
+            .week-title {
+                font-size: 0.58rem;
+            }
+
+            .week-total {
+                font-size: 0.7rem;
+            }
+
+            .card-title-row h3 {
+                font-size: 0.85rem;
+            }
+
+            .month-item-card {
+                min-width: 100px;
+                padding: 10px;
+            }
+
+            .month-item-card span {
+                font-size: 0.78rem;
+            }
+
+            .month-item-card p {
+                font-size: 0.7rem;
+            }
+
+            .chart-header h3 {
+                font-size: 1.05rem;
+            }
+
+            .chart-header p {
+                font-size: 0.75rem;
+            }
+
+            .btn-export-csv {
+                padding: 7px 12px;
+                font-size: 0.75rem;
+            }
+
+            .chart-wrapper {
+                height: 240px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .metric-value {
+                font-size: 1.05rem;
+            }
+
+            .chart-wrapper {
+                height: 210px;
+            }
+
+            .page-header h1 {
+                font-size: 1.25rem;
+            }
+
+            .calendar-grid {
+                grid-template-columns: repeat(7, minmax(52px, 1fr)) minmax(68px, 1fr);
+                min-width: 432px;
+                gap: 4px;
+            }
+
+            .cal-cell {
+                min-height: 54px;
+                padding: 5px;
+            }
+
+            .day-num {
+                font-size: 0.68rem;
+            }
+
+            .cell-amount {
+                font-size: 0.6rem;
+            }
+
+            .cell-trans-sub {
+                font-size: 0.5rem;
+            }
+
+            .week-title {
+                font-size: 0.52rem;
+            }
+
+            .week-total {
+                font-size: 0.62rem;
+            }
+        }
     </style>
 </head>
 
@@ -702,25 +899,7 @@
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        /*
-         * IMPORTANT:
-         * Change this only if your Supabase table has a different name.
-         * The screenshot supplied with this page shows transaction records with
-         * "amount" and "type" columns. This dashboard reads those columns directly.
-         */
         const TRANSACTIONS_TABLE = 'transactions';
-
-        /*
-         * Supported transaction types:
-         *   deposit     -> Revenue / money in
-         *   income      -> Revenue / money in
-         *   revenue     -> Revenue / money in
-         *   expense     -> Expenditure / money out
-         *   expenditure -> Expenditure / money out
-         *
-         * The database may store amounts as numeric or text; the code converts them
-         * safely to numbers before calculating the dashboard.
-         */
 
         let currentDate = new Date();
         currentDate.setDate(1);
@@ -737,10 +916,6 @@
 
         const incomeTypes = new Set(["deposit", "income", "revenue"]);
         const expenseTypes = new Set(["expense", "expenditure"]);
-
-        /* --------------------------------------------------------------------------
-           Helpers
-           -------------------------------------------------------------------------- */
 
         function setDataStatus(message, state = "normal") {
             const el = document.getElementById("data-status");
@@ -802,11 +977,6 @@
             return String(row.type ?? "").trim().toLowerCase();
         }
 
-        /*
-         * Your screenshot does not show the date column, so the dashboard supports
-         * common date-column names. "date" is preferred, then transaction_date,
-         * created_at, timestamp, etc.
-         */
         function getTransactionDate(row) {
             const candidates = [
                 row.date,
@@ -862,10 +1032,6 @@
             });
         }
 
-        /* --------------------------------------------------------------------------
-           Fetch live data from Supabase
-           -------------------------------------------------------------------------- */
-
         async function fetchTransactions(showLoader = true) {
             if (showLoader) {
                 showDashboardLoading(
@@ -894,7 +1060,6 @@
 
             transactionsDatabase = Array.isArray(data) ? data : [];
 
-            // Sort oldest -> newest for calculations and the account curve.
             transactionsDatabase.sort((a, b) => {
                 const da = getTransactionDate(a)?.getTime() ?? 0;
                 const db = getTransactionDate(b)?.getTime() ?? 0;
@@ -910,20 +1075,12 @@
             hideDashboardLoading();
         }
 
-        /* --------------------------------------------------------------------------
-           Refresh every dashboard section
-           -------------------------------------------------------------------------- */
-
         function refreshDashboard() {
             calculateOverallMetrics();
             renderCalendarGrid();
             renderMonthlyPerformance();
             renderNetCurveChart();
         }
-
-        /* --------------------------------------------------------------------------
-           Top metrics
-           -------------------------------------------------------------------------- */
 
         function calculateOverallMetrics() {
             let revenue = 0;
@@ -946,10 +1103,6 @@
             document.getElementById("metric-count").innerText =
                 transactionsDatabase.length.toLocaleString();
         }
-
-        /* --------------------------------------------------------------------------
-           Calendar
-           -------------------------------------------------------------------------- */
 
         function renderCalendarGrid() {
             const year = currentDate.getFullYear();
@@ -1010,7 +1163,6 @@
             let dayCounter = 1;
             let nextMonthDay = 1;
 
-            // Six rows are used when needed so every possible month is displayed.
             const totalCells = Math.ceil((firstDayIndex + lastDate) / 7);
             const weeksToRender = Math.max(5, totalCells);
 
@@ -1071,9 +1223,10 @@
                 }
 
                 const isPositiveWeek = weekNetSum >= 0;
+                const weekHasData = weekTransCount > 0 ? "has-data" : "";
 
                 grid.innerHTML += `
-                    <div class="cal-cell week-cell">
+                    <div class="cal-cell week-cell ${weekHasData}">
                         <span class="week-title">WEEK ${week + 1}</span>
                         <span class="week-total ${weekNetSum === 0 ? "" : (isPositiveWeek ? "positive" : "negative")}">
                             ${weekNetSum === 0
@@ -1091,10 +1244,6 @@
             currentDate.setMonth(currentDate.getMonth() + delta);
             refreshDashboard();
         }
-
-        /* --------------------------------------------------------------------------
-           Monthly performance
-           -------------------------------------------------------------------------- */
 
         function renderMonthlyPerformance() {
             const year = currentDate.getFullYear();
@@ -1114,7 +1263,6 @@
                 monthlySums[date.getMonth()] += signedAmount(row);
             });
 
-            monthsLoop:
             for (let index = 0; index < 12; index++) {
                 const value = monthlySums[index];
                 const isActive =
@@ -1144,10 +1292,6 @@
             currentDate.setMonth(index);
             refreshDashboard();
         }
-
-        /* --------------------------------------------------------------------------
-           Net account curve
-           -------------------------------------------------------------------------- */
 
         function renderNetCurveChart() {
             const canvas = document.getElementById("netCurveChart");
@@ -1182,6 +1326,8 @@
             if (netChartInstance) {
                 netChartInstance.destroy();
             }
+
+            const isMobile = window.innerWidth <= 640;
 
             netChartInstance = new Chart(ctx, {
                 type: "line",
@@ -1220,9 +1366,9 @@
                         tension: 0.35,
                         pointBackgroundColor: "#10b981",
                         pointBorderColor: "#ffffff",
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 8
+                        pointBorderWidth: isMobile ? 1 : 2,
+                        pointRadius: isMobile ? 3 : 5,
+                        pointHoverRadius: isMobile ? 6 : 8
                     }]
                 },
                 options: {
@@ -1271,8 +1417,12 @@
                                 color: "#64748b",
                                 font: {
                                     family: "Inter",
-                                    size: 11
-                                }
+                                    size: isMobile ? 9 : 11
+                                },
+                                maxRotation: isMobile ? 60 : 0,
+                                minRotation: isMobile ? 60 : 0,
+                                autoSkip: true,
+                                maxTicksLimit: isMobile ? 6 : undefined
                             }
                         },
                         y: {
@@ -1283,10 +1433,14 @@
                                 color: "#64748b",
                                 font: {
                                     family: "Inter",
-                                    size: 11
+                                    size: isMobile ? 9 : 11
                                 },
+                                maxTicksLimit: isMobile ? 5 : undefined,
+                                // Plain compact numbers on the axis (no "KES" prefix) so
+                                // labels stay short and the plot area isn't squeezed on
+                                // small screens. Full currency detail still shows on hover.
                                 callback: function (value) {
-                                    return formatKES(value);
+                                    return Number(value).toLocaleString("en-KE");
                                 }
                             }
                         }
@@ -1294,10 +1448,6 @@
                 }
             });
         }
-
-        /* --------------------------------------------------------------------------
-           CSV export of the LIVE database data
-           -------------------------------------------------------------------------- */
 
         function exportCSV() {
             if (!transactionsDatabase.length) {
@@ -1345,10 +1495,6 @@
             URL.revokeObjectURL(url);
         }
 
-        /* --------------------------------------------------------------------------
-           REALTIME DATABASE UPDATES
-           -------------------------------------------------------------------------- */
-
         function subscribeToRealtimeChanges() {
             if (realtimeChannel) {
                 supabaseClient.removeChannel(realtimeChannel);
@@ -1366,10 +1512,6 @@
                     payload => {
                         console.log("Live database change:", payload);
 
-                        /*
-                         * Small debounce prevents several rapid INSERT/UPDATE/DELETE
-                         * events from causing unnecessary repeated requests.
-                         */
                         clearTimeout(refreshTimer);
 
                         refreshTimer = setTimeout(() => {
@@ -1389,9 +1531,13 @@
                 });
         }
 
-        /* --------------------------------------------------------------------------
-           START
-           -------------------------------------------------------------------------- */
+        let resizeTimer;
+        window.addEventListener("resize", () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                renderNetCurveChart();
+            }, 200);
+        });
 
         document.addEventListener("DOMContentLoaded", async () => {
             await fetchTransactions();
