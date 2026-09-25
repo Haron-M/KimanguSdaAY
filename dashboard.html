@@ -449,6 +449,104 @@
             border: none;
             display: block;
         }
+
+        /* Container Card */
+        .sidebar-dropdown {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 6px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Default / Closed State Button */
+        .sidebar-dropdown-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background-color: transparent;
+            border: none;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar-dropdown-btn:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .dropdown-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dropdown-arrow {
+            font-size: 0.85rem;
+            transition: transform 0.3s ease;
+        }
+
+        /* Submenu Panel (Dark Charcoal) */
+        .sidebar-submenu {
+            max-height: 0;
+            overflow: hidden;
+            background-color: #2c2c2e;
+            /* Dark gray matching screenshot */
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+
+        /* Submenu Links (Amber Text) */
+        .sidebar-submenu .sub-link {
+            display: block;
+            padding: 12px 16px 12px 42px;
+            /* Indented sub-items */
+            color: #f5a623;
+            /* Bright amber text */
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Submenu Hover / Active State */
+        .sidebar-submenu .sub-link:hover,
+        .sidebar-submenu .sub-link.active {
+            background-color: #453823;
+            /* Dark brownish-amber highlight */
+            color: #ffbe4a;
+        }
+
+        /* --- ACTIVE / OPEN STATE --- */
+
+        /* Bright Amber Header when open */
+        .sidebar-dropdown.active .sidebar-dropdown-btn {
+            background-color: #f19e00;
+            /* Exact amber yellow color */
+            color: #0b1320;
+            /* Dark navy/black text and icons */
+            border-radius: 12px 12px 0 0;
+            /* Keep top rounded, flatten bottom */
+        }
+
+        /* Chevron Rotation */
+        .sidebar-dropdown.active .dropdown-arrow {
+            transform: rotate(90deg);
+        }
+
+        /* Expand Submenu */
+        .sidebar-dropdown.active .sidebar-submenu {
+            max-height: 200px;
+        }
     </style>
 </head>
 
@@ -513,14 +611,30 @@
                             data-desc="Upload lessons, guides and documents for members.">Upload Resources</a>
                     </div>
                 </div>
-                <a href="treasury.html" class="sidebar-link" data-page="pages/treasury.html" data-title="Treasury Desk"
-                    data-desc="Your contributions and account balance.">
-                    <i class="fa-solid fa-coins"></i> Treasury Desk
-                </a>
-                <a href="transactions.html" class="sidebar-link" data-page="pages/transactions.html"
-                    data-title="Transactions" data-desc="View your transaction history.">
-                    <i class="fa-solid fa-coins"></i> transactions
-                </a>
+                <!-- Treasury Desk Accordion Dropdown -->
+                <div class="sidebar-dropdown">
+                    <button type="button" class="sidebar-dropdown-btn" onclick="toggleSidebarDropdown(this)">
+                        <div class="dropdown-title">
+                            <i class="fa-solid fa-coins"></i>
+                            <span>Treasury Desk</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right dropdown-arrow"></i>
+                    </button>
+
+                    <div class="sidebar-submenu">
+                        <a href="treasury.html" class="sidebar-link sub-link" data-page="pages/treasury.html"
+                            data-title="Payment" data-desc="Make payments and contributions.">
+                            Payment
+                        </a>
+                        <a href="transactions.html" class="sidebar-link sub-link" data-page="pages/transactions.html"
+                            data-title="Transaction History" data-desc="View your payment history and receipts.">
+                            Transaction History
+                        </a>
+                        <a href="report-analysis.html" class="sidebar-link sub-link"
+                            data-page="pages/report-analysis.html">Report Analysis</a>
+                    </div>
+                </div>
+
 
                 <p class="nav-group-label">Session</p>
                 <a href="#" class="sidebar-link logout-link" id="logoutLink">
@@ -666,6 +780,19 @@
         }
 
         loadUserProfile();
+        function toggleSidebarDropdown(button) {
+            const dropdown = button.parentElement;
+
+            // Optional: Close other open menus
+            document.querySelectorAll('.sidebar-dropdown.active').forEach(openDropdown => {
+                if (openDropdown !== dropdown) {
+                    openDropdown.classList.remove('active');
+                }
+            });
+
+            // Toggle current menu
+            dropdown.classList.toggle('active');
+        }
 
         // ===================== PERSISTENT SHELL NAVIGATION =====================
         // Clicking a sidebar link swaps only the iframe's content — the

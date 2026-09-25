@@ -10,8 +10,9 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- jsPDF and jsPDF AutoTable Libraries -->
+    <!-- jsPDF & AutoTable CDNs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
@@ -570,49 +571,36 @@
         </div>
 
     </main>
-
     <script>
+        // Supabase Configuration
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // Global State
         let cachedTransactions = [];
         let currentTimeFilter = 'all';
         let currentTypeFilter = 'all';
-        let displayLimit = 4; // Shows initial 4 logs to match screenshot pattern
+        let displayLimit = 4; // Initial log display limit
 
+        // Auto-load data on page readiness
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllTransactions();
+        });
+
+        // Helper: HTML Escaping to prevent XSS
         function escapeHtml(str) {
             const div = document.createElement('div');
             div.textContent = str || '';
             return div.innerHTML;
         }
 
-        // Formats date to exact format: "Sep 24, 2026 at 3:41 PM"
-        function formatExactLogDate(dateInput) {
-            const d = new Date(dateInput);
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const month = months[d.getMonth()];
-            const day = d.getDate();
-            const year = d.getFullYear();
-
-            let hours = d.getHours();
-            const minutes = String(d.getMinutes()).padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12;
-
-            return `${month} ${day}, ${year} at ${hours}:${minutes} ${ampm}`;
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str || '';
-            return div.innerHTML;
-        }
-
+        // Helper: Formats date to: "Sep 24, 2026 at 3:41 PM"
         function formatExactLogDate(dateInput) {
             if (!dateInput) return '';
             const d = new Date(dateInput);
+            if (isNaN(d.getTime())) return '';
+
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const month = months[d.getMonth()];
             const day = d.getDate();
@@ -621,22 +609,24 @@
             let hours = d.getHours();
             const minutes = String(d.getMinutes()).padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12;
+            hours = hours % 12 || 12;
 
             return `${month} ${day}, ${year} at ${hours}:${minutes} ${ampm}`;
         }
 
+        // Helper: Generate consistent unique Transaction ID
         function generateTransactionId(tx) {
             if (tx.transaction_id) return tx.transaction_id;
             const dateObj = new Date(tx.created_at);
             const day = String(dateObj.getDate()).padStart(2, '0');
+
             let hash = 0;
             const str = String(tx.id || (tx.created_at + tx.amount));
             for (let i = 0; i < str.length; i++) {
                 hash = ((hash << 5) - hash) + str.charCodeAt(i);
                 hash |= 0;
             }
+
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let randomPart = '';
             let seed = Math.abs(hash);
@@ -648,14 +638,15 @@
             return `K${day}${randomPart}`;
         }
 
+        // Helper: Identify if transaction is an expense/deduction
         function isExpenseTx(tx) {
             if (!tx) return false;
 
-            // 1. If amount is explicitly negative
+            // 1. Explicitly negative amount
             const rawAmt = Number(tx.amount);
             if (!isNaN(rawAmt) && rawAmt < 0) return true;
 
-            // 2. Check all string columns for deduction/expense keywords
+            // 2. Check text columns for deduction keywords
             const combinedText = [
                 tx.type,
                 tx.transaction_type,
@@ -666,16 +657,14 @@
             ].filter(Boolean).join(' ').toLowerCase();
 
             const expenseKeywords = ['expense', 'expenditure', 'deduct', 'deduction', 'withdraw', 'outflow', 'debit'];
-
             if (expenseKeywords.some(keyword => combinedText.includes(keyword))) {
                 return true;
             }
 
-            if (tx.is_expense === true || tx.is_deduction === true) return true;
-
-            return false;
+            return tx.is_expense === true || tx.is_deduction === true;
         }
 
+        // Filter Handlers
         function setTimeFilter(filterType, btn) {
             currentTimeFilter = filterType;
             document.querySelectorAll('#timeFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
@@ -700,6 +689,7 @@
             renderTransactionList();
         }
 
+        // Stats Calculation
         function calculateSummaryStats(transactions) {
             let totalDeposits = 0;
             let totalExpenses = 0;
@@ -715,17 +705,28 @@
 
             const netFlow = totalDeposits - totalExpenses;
 
-            document.getElementById('statDeposits').textContent = `KSh ${totalDeposits.toLocaleString()}`;
-            document.getElementById('statExpenses').textContent = `KSh ${totalExpenses.toLocaleString()}`;
-            document.getElementById('statNetFlow').textContent = `KSh ${netFlow.toLocaleString()}`;
-            document.getElementById('statNetFlow').style.color = netFlow < 0 ? 'var(--accent-red)' : 'var(--primary-dark)';
+            const depEl = document.getElementById('statDeposits');
+            const expEl = document.getElementById('statExpenses');
+            const netEl = document.getElementById('statNetFlow');
+
+            if (depEl) depEl.textContent = `KSh ${totalDeposits.toLocaleString()}`;
+            if (expEl) expEl.textContent = `KSh ${totalExpenses.toLocaleString()}`;
+            if (netEl) {
+                netEl.textContent = `KSh ${netFlow.toLocaleString()}`;
+                netEl.style.color = netFlow < 0 ? 'var(--accent-red)' : 'var(--primary-dark)';
+            }
         }
 
+        // Render Transaction Log Cards
         function renderTransactionList() {
             const container = document.getElementById('txLogList');
             const seeMoreContainer = document.getElementById('seeMoreContainer');
             const seeMoreText = document.getElementById('seeMoreText');
-            const searchQuery = (document.getElementById('txSearchInput').value || '').toLowerCase();
+            const searchInput = document.getElementById('txSearchInput');
+
+            if (!container) return;
+
+            const searchQuery = (searchInput ? searchInput.value : '').toLowerCase().trim();
             const now = new Date();
 
             const filtered = cachedTransactions.filter(tx => {
@@ -749,7 +750,7 @@
                 // Search Matches
                 const memberName = (tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : '').toLowerCase();
                 const description = (tx.description || tx.category || tx.notes || tx.title || '').toLowerCase();
-                const amtStr = String(Math.abs(tx.amount));
+                const amtStr = String(Math.abs(tx.amount || 0));
                 const txId = generateTransactionId(tx).toLowerCase();
 
                 const matchesSearch = !searchQuery ||
@@ -763,7 +764,7 @@
 
             if (filtered.length === 0) {
                 container.innerHTML = '<p class="empty-tx">No matching transactions found.</p>';
-                seeMoreContainer.style.display = 'none';
+                if (seeMoreContainer) seeMoreContainer.style.display = 'none';
                 return;
             }
 
@@ -771,11 +772,13 @@
             const visibleLogs = filtered.slice(0, displayLimit);
             const hiddenCount = filtered.length - visibleLogs.length;
 
-            if (hiddenCount > 0) {
-                seeMoreContainer.style.display = 'block';
-                seeMoreText.innerHTML = `See more (${hiddenCount} hidden) <i class="fa-solid fa-arrow-right"></i>`;
-            } else {
-                seeMoreContainer.style.display = 'none';
+            if (seeMoreContainer && seeMoreText) {
+                if (hiddenCount > 0) {
+                    seeMoreContainer.style.display = 'block';
+                    seeMoreText.innerHTML = `See more (${hiddenCount} hidden) <i class="fa-solid fa-arrow-right"></i>`;
+                } else {
+                    seeMoreContainer.style.display = 'none';
+                }
             }
 
             container.innerHTML = visibleLogs.map(tx => {
@@ -805,128 +808,165 @@
                 }
 
                 return `
-            <div class="tx-row-card">
-                <div class="tx-row-left">
-                    <div class="tx-icon-circle ${typeStyleClass}">
-                        <i class="fa-solid ${iconClass}"></i>
+                <div class="tx-row-card">
+                    <div class="tx-row-left">
+                        <div class="tx-icon-circle ${typeStyleClass}">
+                            <i class="fa-solid ${iconClass}"></i>
+                        </div>
+                        <div class="tx-sentence-text">
+                            ${sentenceHtml}
+                        </div>
                     </div>
-                    <div class="tx-sentence-text">
-                        ${sentenceHtml}
+                    <div class="tx-row-right">
+                        <span class="tx-amount-text ${typeStyleClass}">${amountDisplay}</span>
+                        <span class="tx-seq-badge">#${tx.num}</span>
                     </div>
                 </div>
-                <div class="tx-row-right">
-                    <span class="tx-amount-text ${typeStyleClass}">${amountDisplay}</span>
-                    <span class="tx-seq-badge">#${tx.num}</span>
-                </div>
-            </div>
-        `;
+            `;
             }).join('');
         }
+
+        // Load Transactions from Supabase
         async function loadAllTransactions() {
-            const { data: txData, error: txError } = await supabaseClient
-                .from('transactions')
-                .select('*, profiles:user_id(full_name)')
-                .order('created_at', { ascending: false });
-
             const container = document.getElementById('txLogList');
-            if (txError) {
-                container.innerHTML = `<p class="empty-tx" style="color:#dc2626;">Error loading logs: ${escapeHtml(txError.message)}</p>`;
-                return;
+
+            try {
+                const { data: txData, error: txError } = await supabaseClient
+                    .from('transactions')
+                    .select('*, profiles:user_id(full_name)')
+                    .order('created_at', { ascending: false });
+
+                if (txError) throw txError;
+
+                const rawTransactions = txData || [];
+
+                const badge = document.getElementById('txCountBadge');
+                if (badge) badge.textContent = `${rawTransactions.length} Logs`;
+
+                calculateSummaryStats(rawTransactions);
+
+                // Assign incremental sequential numbers based on chronological order
+                const numbered = rawTransactions
+                    .slice()
+                    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+                    .map((tx, idx) => ({ ...tx, num: idx + 1 }));
+
+                cachedTransactions = numbered.slice().reverse();
+                renderTransactionList();
+            } catch (err) {
+                console.error('Error fetching transactions:', err);
+                if (container) {
+                    container.innerHTML = `<p class="empty-tx" style="color:#dc2626;">Error loading logs: ${escapeHtml(err.message)}</p>`;
+                }
             }
+        }
 
-            const rawTransactions = txData || [];
-            document.getElementById('txCountBadge').textContent = `${rawTransactions.length} Logs`;
-
-            calculateSummaryStats(rawTransactions);
-
-            const numbered = rawTransactions
-                .slice()
-                .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-                .map((tx, idx) => ({ ...tx, num: idx + 1 }));
-
-            cachedTransactions = numbered.slice().reverse();
-            renderTransactionList();
+        // Dynamic Script Loader for jsPDF
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                if (document.querySelector(`script[src="${src}"]`)) {
+                    resolve();
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+                document.head.appendChild(script);
+            });
         }
 
         function exportTransactionsPDF() {
+            console.log("Exporting PDF triggered. Transactions count:", cachedTransactions ? cachedTransactions.length : 0);
+
+            // 1. Check if transactions exist
             if (!cachedTransactions || !cachedTransactions.length) {
                 alert('No transactions available to export.');
                 return;
             }
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            try {
+                // 2. Access jsPDF instance safely
+                const { jsPDF } = window.jspdf || {};
+                if (!jsPDF) {
+                    alert('PDF library is not loaded. Please refresh the page or check your internet connection.');
+                    return;
+                }
 
-            // Format current date e.g. "Sep 24, 2026"
-            const today = new Date();
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const formattedDate = `${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
+                const doc = new jsPDF();
 
-            // PDF Title as requested: "Transaction of members as at (day)"
-            const reportTitle = `Transaction of members as at ${formattedDate}`;
+                // 3. Format Date
+                const today = new Date();
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const formattedDate = `${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
+                const reportTitle = `Transaction of members as at ${formattedDate}`;
 
-            // Header styling
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(15);
-            doc.setTextColor(10, 25, 47); // Dark blue primary color
-            doc.text(reportTitle, 14, 18);
+                // Header Styling
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(15);
+                doc.setTextColor(10, 25, 47);
+                doc.text(reportTitle, 14, 18);
 
-            // Prepare Table Rows: Name, Amount, Transaction ID
-            const head = [['Name', 'Amount', 'Transaction ID']];
-            const body = cachedTransactions.map(tx => {
-                const isExp = isExpenseTx(tx);
-                const rawAmt = Math.abs(Number(tx.amount) || 0).toLocaleString();
+                // 4. Map Table Body Data
+                const head = [['Name', 'Amount', 'Transaction ID']];
+                const body = cachedTransactions.map(tx => {
+                    const isExp = isExpenseTx(tx);
+                    const rawAmt = Math.abs(Number(tx.amount) || 0).toLocaleString();
+                    const signedAmount = isExp ? `-KSh ${rawAmt}` : `+KSh ${rawAmt}`;
+                    const memberName = tx.profiles && tx.profiles.full_name
+                        ? tx.profiles.full_name
+                        : (isExp ? (tx.description || tx.category || 'Expense') : 'Member');
+                    const txId = generateTransactionId(tx);
 
-                // Signed Amount
-                const signedAmount = isExp ? `-KSh ${rawAmt}` : `+KSh ${rawAmt}`;
+                    return [memberName, signedAmount, txId];
+                });
 
-                // Member Name / Description
-                const memberName = tx.profiles && tx.profiles.full_name
-                    ? tx.profiles.full_name
-                    : (isExp ? (tx.description || tx.category || 'Expense') : 'Member');
+                // 5. Check AutoTable Plugin
+                if (typeof doc.autoTable !== 'function') {
+                    alert('AutoTable plugin is missing. Please refresh the page.');
+                    return;
+                }
 
-                // Transaction ID
-                const txId = generateTransactionId(tx);
-
-                return [memberName, signedAmount, txId];
-            });
-
-            // AutoTable Configuration
-            doc.autoTable({
-                startY: 25,
-                head: head,
-                body: body,
-                theme: 'striped',
-                headStyles: {
-                    fillColor: [10, 25, 47],
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold',
-                    fontSize: 10
-                },
-                styles: {
-                    fontSize: 9,
-                    cellPadding: 4,
-                    textColor: [51, 65, 85]
-                },
-                columnStyles: {
-                    0: { cellWidth: 80 },  // Name
-                    1: { cellWidth: 50, fontStyle: 'bold' },  // Amount
-                    2: { cellWidth: 50 }   // Transaction ID
-                },
-                didParseCell: function (data) {
-                    // Optional: Color code amount column text in PDF
-                    if (data.section === 'body' && data.column.index === 1) {
-                        if (data.cell.raw.startsWith('-')) {
-                            data.cell.styles.textColor = [220, 38, 38]; // Red for expenses
-                        } else {
-                            data.cell.styles.textColor = [22, 163, 74]; // Green for deposits
+                // Generate Table
+                doc.autoTable({
+                    startY: 25,
+                    head: head,
+                    body: body,
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: [10, 25, 47],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold',
+                        fontSize: 10
+                    },
+                    styles: {
+                        fontSize: 9,
+                        cellPadding: 4,
+                        textColor: [51, 65, 85]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 80 },
+                        1: { cellWidth: 50, fontStyle: 'bold' },
+                        2: { cellWidth: 50 }
+                    },
+                    didParseCell: function (data) {
+                        if (data.section === 'body' && data.column.index === 1) {
+                            if (data.cell.raw.startsWith('-')) {
+                                data.cell.styles.textColor = [220, 38, 38]; // Red for expenses
+                            } else {
+                                data.cell.styles.textColor = [22, 163, 74]; // Green for deposits
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            // Trigger PDF download
-            doc.save(`Member_Transactions_${formattedDate.replace(/[\s,]+/g, '_')}.pdf`);
+                // Save Download
+                doc.save(`Member_Transactions_${formattedDate.replace(/[\s,]+/g, '_')}.pdf`);
+
+            } catch (err) {
+                console.error('PDF Generation Error:', err);
+                alert(`Failed to generate PDF: ${err.message}`);
+            }
         }
     </script>
 </body>

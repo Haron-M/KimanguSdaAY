@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Analysis Dashboard</title>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter (Sans-serif) & Playfair Display (Serif headers from Image 1) -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap">
+    <!-- Chart.js for Net Account Curve -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* Light Palette from Image 1 */
+        :root {
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --navy-dark: #0b132b;
+            --amber-accent: #f59e0b;
+            --green-income: #10b981;
+            --green-bg: #ecfdf5;
+            --green-border: #a7f3d0;
+            --red-expense: #ef4444;
+            --red-bg: #fef2f2;
+            --red-border: #fecaca;
+            --border-light: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --font-serif: 'Playfair Display', Georgia, serif;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-sans);
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 28px;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* 1. Page Header (Style from Image 1, Title from Image 3) */
+        .page-header h1 {
+            font-family: var(--font-serif);
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .page-header p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* 2. Top Metric Cards (Features from Image 3, Colors from Image 1) */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        .metric-title {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .metric-value.income {
+            color: var(--green-income);
+        }
+
+        .metric-value.expense {
+            color: var(--red-expense);
+        }
+
+        /* 3. Calendar Card (Features from Image 3, Light Theme from Image 1) */
+        .calendar-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .month-nav h2 {
+            font-family: var(--font-serif);
+            font-size: 1.4rem;
+            font-weight: 700;
+            min-width: 180px;
+            text-align: center;
+        }
+
+        .nav-btn {
+            background-color: #f1f5f9;
+            border: 1px solid var(--border-light);
+            color: var(--text-main);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--navy-dark);
+            color: #ffffff;
+        }
+
+        .legend-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .gradient-indicator {
+            width: 120px;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, var(--red-expense), var(--amber-accent), var(--green-income));
+        }
+
+        /* Fixed Width Grid with Horizontal Scroll Wrapper for Small Screens */
+        .calendar-scroll-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(110px, 1fr)) minmax(130px, 1.2fr);
+            gap: 8px;
+            min-width: 860px;
+            /* Fixed width minimum to preserve layout on mobile */
+            padding-bottom: 6px;
+        }
+
+        .day-head {
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .week-head {
+            color: var(--green-income);
+            text-align: left;
+            padding-left: 8px;
+        }
+
+        .cal-cell {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            min-height: 95px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .cal-cell.muted {
+            opacity: 0.35;
+            background-color: #ffffff;
+        }
+
+        .day-num {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .cell-status {
+            font-size: 0.72rem;
+            color: #94a3b8;
+        }
+
+        .cal-cell.has-income {
+            background-color: var(--green-bg);
+            border-color: var(--green-border);
+        }
+
+        .cal-cell.has-expense {
+            background-color: var(--red-bg);
+            border-color: var(--red-border);
+        }
+
+        .cell-amount {
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: var(--green-income);
+        }
+
+        .cell-amount.negative {
+            color: var(--red-expense);
+        }
+
+        .cell-trans-sub {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+        }
+
+        .week-cell {
+            background-color: #f1f5f9;
+            border-left: 2px solid var(--border-light);
+            align-items: flex-start;
+            padding-left: 12px;
+        }
+
+        .week-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .week-total {
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .week-total.positive {
+            color: var(--green-income);
+        }
+
+        .week-total.negative {
+            color: var(--red-expense);
+        }
+
+        /* 4. Monthly Performance Bar (Feature from Image 2, Colors from Image 1) */
+        .monthly-perf-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 20px 24px;
+        }
+
+        .card-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            color: var(--amber-accent);
+        }
+
+        .card-title-row h3 {
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--navy-dark);
+        }
+
+        .monthly-scroll-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .monthly-scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .monthly-scroll-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .month-item-card {
+            min-width: 130px;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-light);
+            padding: 14px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .month-item-card:hover,
+        .month-item-card.active-month {
+            border-color: var(--amber-accent);
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .month-item-card span {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .month-item-card p {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .month-item-card p.positive {
+            color: var(--green-income);
+        }
+
+        .month-item-card p.negative {
+            color: var(--red-expense);
+        }
+
+        /* 5. Net Account Curve (Feature from Image 2, Colors from Image 1) */
+        .chart-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .chart-header h3 {
+            font-family: var(--font-serif);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .btn-export-csv {
+            background-color: var(--navy-dark);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-export-csv:hover {
+            opacity: 0.9;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 320px;
+            width: 100%;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 640px) {
+            body {
+                padding: 16px;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+
+        <!-- 1. Page Header -->
+        <div class="page-header">
+            <h1>Analyse financial in one place</h1>
+            <p>Review real-time transaction activity, monitor monthly performance, and track cumulative cash flow.</p>
+            <div id="data-status" style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Connecting to live financial data...
+            </div>
+        </div>
+
+        <!-- 2. Metrics Row (Image 3 layout) -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-title">Revenue</div>
+                <div class="metric-value income" id="metric-revenue">KES 0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Expenditure</div>
+                <div class="metric-value expense" id="metric-expenditure">KES 0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Net Balance</div>
+                <div class="metric-value" id="metric-net">KES 0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Total No. of Transactions</div>
+                <div class="metric-value" id="metric-count">0</div>
+            </div>
+        </div>
+
+        <!-- 3. Calendar Widget (Image 3 layout, Light Theme) -->
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <div class="month-nav">
+                    <button class="nav-btn" type="button" onclick="changeMonth(-1)"><i
+                            class="fa-solid fa-chevron-left"></i></button>
+                    <h2 id="calendar-month-title">September 2026</h2>
+                    <button class="nav-btn" type="button" onclick="changeMonth(1)"><i
+                            class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="legend-bar">
+                    <span>Expense</span>
+                    <div class="gradient-indicator"></div>
+                    <span>Income</span>
+                </div>
+            </div>
+
+            <!-- Scroll Wrapper for Small/Mobile Screens -->
+            <div class="calendar-scroll-wrapper">
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Monthly Performance Track (Image 2 layout, Light Theme) -->
+        <div class="monthly-perf-card">
+            <div class="card-title-row">
+                <i class="fa-solid fa-calendar-days"></i>
+                <h3 id="monthlyPerfYearTitle">MONTHLY PERFORMANCE ( 2026 )</h3>
+            </div>
+            <div class="monthly-scroll-container" id="monthlyPerformanceRow">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+
+        <!-- 5. Net Account Curve (Image 2 layout, Light Theme) -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <h3>Net Account Curve</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Your financial growth and cash flow trends over time (Hover over data points for details)
+                    </p>
+                </div>
+                <button type="button" class="btn-export-csv" onclick="exportCSV()"><i class="fa-solid fa-download"></i>
+                    Export CSV</button>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="netCurveChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ==========================================================================
+           LIVE SUPABASE FINANCIAL DASHBOARD
+           ========================================================================== */
+
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        /*
+         * IMPORTANT:
+         * Change this only if your Supabase table has a different name.
+         * The screenshot supplied with this page shows transaction records with
+         * "amount" and "type" columns. This dashboard reads those columns directly.
+         */
+        const TRANSACTIONS_TABLE = 'transactions';
+
+        /*
+         * Supported transaction types:
+         *   deposit     -> Revenue / money in
+         *   income      -> Revenue / money in
+         *   revenue     -> Revenue / money in
+         *   expense     -> Expenditure / money out
+         *   expenditure -> Expenditure / money out
+         *
+         * The database may store amounts as numeric or text; the code converts them
+         * safely to numbers before calculating the dashboard.
+         */
+
+        let currentDate = new Date();
+        currentDate.setDate(1);
+
+        let transactionsDatabase = [];
+        let netChartInstance = null;
+        let realtimeChannel = null;
+        let refreshTimer = null;
+
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        const incomeTypes = new Set(["deposit", "income", "revenue"]);
+        const expenseTypes = new Set(["expense", "expenditure"]);
+
+        /* --------------------------------------------------------------------------
+           Helpers
+           -------------------------------------------------------------------------- */
+
+        function setDataStatus(message, state = "normal") {
+            const el = document.getElementById("data-status");
+            if (!el) return;
+
+            const icons = {
+                normal: "fa-circle-check",
+                loading: "fa-circle-notch fa-spin",
+                error: "fa-circle-exclamation"
+            };
+
+            const colors = {
+                normal: "var(--green-income)",
+                loading: "var(--text-muted)",
+                error: "var(--red-expense)"
+            };
+
+            el.innerHTML = `<i class="fa-solid ${icons[state]}"></i> ${message}`;
+            el.style.color = colors[state];
+        }
+
+        function getAmount(row) {
+            const amount = Number(row.amount);
+            return Number.isFinite(amount) ? Math.abs(amount) : 0;
+        }
+
+        function getType(row) {
+            return String(row.type ?? "").trim().toLowerCase();
+        }
+
+        /*
+         * Your screenshot does not show the date column, so the dashboard supports
+         * common date-column names. "date" is preferred, then transaction_date,
+         * created_at, timestamp, etc.
+         */
+        function getTransactionDate(row) {
+            const candidates = [
+                row.date,
+                row.transaction_date,
+                row.transactionDate,
+                row.created_at,
+                row.createdAt,
+                row.timestamp
+            ];
+
+            for (const value of candidates) {
+                if (!value) continue;
+
+                const parsed = new Date(value);
+                if (!Number.isNaN(parsed.getTime())) {
+                    return parsed;
+                }
+            }
+
+            return null;
+        }
+
+        function getISODate(row) {
+            const date = getTransactionDate(row);
+            if (!date) return null;
+
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, "0");
+            const d = String(date.getDate()).padStart(2, "0");
+            return `${y}-${m}-${d}`;
+        }
+
+        function isIncome(row) {
+            return incomeTypes.has(getType(row));
+        }
+
+        function isExpense(row) {
+            return expenseTypes.has(getType(row));
+        }
+
+        function signedAmount(row) {
+            const amount = getAmount(row);
+            if (isIncome(row)) return amount;
+            if (isExpense(row)) return -amount;
+            return 0;
+        }
+
+        function formatKES(value) {
+            const number = Number(value) || 0;
+            return "KES " + number.toLocaleString("en-KE", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
+
+        /* --------------------------------------------------------------------------
+           Fetch live data from Supabase
+           -------------------------------------------------------------------------- */
+
+        async function fetchTransactions() {
+            setDataStatus("Loading live transactions...", "loading");
+
+            const { data, error } = await supabaseClient
+                .from(TRANSACTIONS_TABLE)
+                .select("*");
+
+            if (error) {
+                console.error("Supabase transaction fetch error:", error);
+                setDataStatus(
+                    `Database error: ${error.message}`,
+                    "error"
+                );
+                transactionsDatabase = [];
+                refreshDashboard();
+                return;
+            }
+
+            transactionsDatabase = Array.isArray(data) ? data : [];
+
+            // Sort oldest -> newest for calculations and the account curve.
+            transactionsDatabase.sort((a, b) => {
+                const da = getTransactionDate(a)?.getTime() ?? 0;
+                const db = getTransactionDate(b)?.getTime() ?? 0;
+                return da - db;
+            });
+
+            setDataStatus(
+                `${transactionsDatabase.length.toLocaleString()} transaction(s) loaded • Live database connection active`,
+                "normal"
+            );
+
+            refreshDashboard();
+        }
+
+        /* --------------------------------------------------------------------------
+           Refresh every dashboard section
+           -------------------------------------------------------------------------- */
+
+        function refreshDashboard() {
+            calculateOverallMetrics();
+            renderCalendarGrid();
+            renderMonthlyPerformance();
+            renderNetCurveChart();
+        }
+
+        /* --------------------------------------------------------------------------
+           Top metrics
+           -------------------------------------------------------------------------- */
+
+        function calculateOverallMetrics() {
+            let revenue = 0;
+            let expenditure = 0;
+
+            transactionsDatabase.forEach(row => {
+                if (isIncome(row)) {
+                    revenue += getAmount(row);
+                } else if (isExpense(row)) {
+                    expenditure += getAmount(row);
+                }
+            });
+
+            const netBalance = revenue - expenditure;
+
+            document.getElementById("metric-revenue").innerText = formatKES(revenue);
+            document.getElementById("metric-expenditure").innerText = formatKES(expenditure);
+            document.getElementById("metric-net").innerText =
+                (netBalance < 0 ? "- " : "") + formatKES(Math.abs(netBalance));
+            document.getElementById("metric-count").innerText =
+                transactionsDatabase.length.toLocaleString();
+        }
+
+        /* --------------------------------------------------------------------------
+           Calendar
+           -------------------------------------------------------------------------- */
+
+        function renderCalendarGrid() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById("calendar-month-title").innerText =
+                `${monthNames[month]} ${year}`;
+
+            const grid = document.getElementById("calendarGrid");
+            grid.innerHTML = "";
+
+            const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+            days.forEach(day => {
+                grid.innerHTML += `<div class="day-head">${day}</div>`;
+            });
+            grid.innerHTML += `<div class="day-head week-head">WEEK</div>`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const prevLastDate = new Date(year, month, 0).getDate();
+
+            const dailyMap = {};
+
+            transactionsDatabase.forEach(row => {
+                const date = getTransactionDate(row);
+                if (!date) return;
+
+                if (
+                    date.getFullYear() === year &&
+                    date.getMonth() === month
+                ) {
+                    const day = date.getDate();
+
+                    if (!dailyMap[day]) {
+                        dailyMap[day] = {
+                            amount: 0,
+                            count: 0
+                        };
+                    }
+
+                    dailyMap[day].amount += signedAmount(row);
+                    dailyMap[day].count += 1;
+                }
+            });
+
+            let dayCounter = 1;
+            let nextMonthDay = 1;
+
+            // Six rows are used when needed so every possible month is displayed.
+            const totalCells = Math.ceil((firstDayIndex + lastDate) / 7);
+            const weeksToRender = Math.max(5, totalCells);
+
+            for (let week = 0; week < weeksToRender; week++) {
+                let weekNetSum = 0;
+                let weekTransCount = 0;
+
+                for (let day = 0; day < 7; day++) {
+                    const cellIndex = week * 7 + day;
+
+                    if (cellIndex < firstDayIndex) {
+                        const prevDay =
+                            prevLastDate - (firstDayIndex - cellIndex - 1);
+
+                        grid.innerHTML += `
+                            <div class="cal-cell muted">
+                                <span class="day-num">${prevDay}</span>
+                                <span class="cell-status">Previous month</span>
+                            </div>`;
+                    } else if (dayCounter <= lastDate) {
+                        const record = dailyMap[dayCounter];
+
+                        if (record) {
+                            weekNetSum += record.amount;
+                            weekTransCount += record.count;
+
+                            const isPositive = record.amount >= 0;
+
+                            grid.innerHTML += `
+                                <div class="cal-cell ${isPositive ? "has-income" : "has-expense"}">
+                                    <span class="day-num">${dayCounter}</span>
+                                    <div>
+                                        <div class="cell-amount ${isPositive ? "" : "negative"}">
+                                            ${isPositive ? "" : "-"}${formatKES(Math.abs(record.amount))}
+                                        </div>
+                                        <div class="cell-trans-sub">
+                                            ${record.count} trans
+                                        </div>
+                                    </div>
+                                </div>`;
+                        } else {
+                            grid.innerHTML += `
+                                <div class="cal-cell">
+                                    <span class="day-num">${dayCounter}</span>
+                                    <span class="cell-status">No data</span>
+                                </div>`;
+                        }
+
+                        dayCounter++;
+                    } else {
+                        grid.innerHTML += `
+                            <div class="cal-cell muted">
+                                <span class="day-num">${nextMonthDay}</span>
+                                <span class="cell-status">Next month</span>
+                            </div>`;
+                        nextMonthDay++;
+                    }
+                }
+
+                const isPositiveWeek = weekNetSum >= 0;
+
+                grid.innerHTML += `
+                    <div class="cal-cell week-cell">
+                        <span class="week-title">WEEK ${week + 1}</span>
+                        <span class="week-total ${weekNetSum === 0 ? "" : (isPositiveWeek ? "positive" : "negative")}">
+                            ${weekNetSum === 0
+                        ? "KES 0"
+                        : (isPositiveWeek ? "" : "-") + formatKES(Math.abs(weekNetSum))}
+                        </span>
+                        <span class="cell-trans-sub">
+                            ${weekTransCount} trans
+                        </span>
+                    </div>`;
+            }
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            refreshDashboard();
+        }
+
+        /* --------------------------------------------------------------------------
+           Monthly performance
+           -------------------------------------------------------------------------- */
+
+        function renderMonthlyPerformance() {
+            const year = currentDate.getFullYear();
+
+            document.getElementById("monthlyPerfYearTitle").innerText =
+                `MONTHLY PERFORMANCE ( ${year} )`;
+
+            const container = document.getElementById("monthlyPerformanceRow");
+            container.innerHTML = "";
+
+            const monthlySums = new Array(12).fill(0);
+
+            transactionsDatabase.forEach(row => {
+                const date = getTransactionDate(row);
+                if (!date || date.getFullYear() !== year) return;
+
+                monthlySums[date.getMonth()] += signedAmount(row);
+            });
+
+            monthsLoop:
+            for (let index = 0; index < 12; index++) {
+                const value = monthlySums[index];
+                const isActive =
+                    index === currentDate.getMonth() ? "active-month" : "";
+
+                let valueDisplay = "<p>No data</p>";
+
+                if (value !== 0) {
+                    valueDisplay = `
+                        <p class="${value > 0 ? "positive" : "negative"}">
+                            ${value > 0 ? "" : "-"}${formatKES(Math.abs(value))}
+                        </p>`;
+                }
+
+                container.innerHTML += `
+                    <div class="month-item-card ${isActive}"
+                         onclick="selectMonth(${index})">
+                        <span>${monthNames[index]}</span>
+                        ${valueDisplay}
+                    </div>`;
+            }
+        }
+
+        function selectMonth(index) {
+            currentDate.setMonth(index);
+            refreshDashboard();
+        }
+
+        /* --------------------------------------------------------------------------
+           Net account curve
+           -------------------------------------------------------------------------- */
+
+        function renderNetCurveChart() {
+            const canvas = document.getElementById("netCurveChart");
+            if (!canvas) return;
+
+            const ctx = canvas.getContext("2d");
+
+            const sorted = [...transactionsDatabase]
+                .filter(row => getTransactionDate(row))
+                .sort((a, b) =>
+                    getTransactionDate(a) - getTransactionDate(b)
+                );
+
+            const labels = [];
+            const cumulativeBalances = [];
+            let runningNet = 0;
+
+            sorted.forEach(row => {
+                runningNet += signedAmount(row);
+
+                const date = getTransactionDate(row);
+                labels.push(
+                    date.toLocaleDateString("en-KE", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
+                    })
+                );
+                cumulativeBalances.push(runningNet);
+            });
+
+            if (netChartInstance) {
+                netChartInstance.destroy();
+            }
+
+            netChartInstance = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Net Account Curve",
+                        data: cumulativeBalances,
+                        borderColor: "#10b981",
+                        borderWidth: 2.5,
+                        backgroundColor: function (context) {
+                            const chart = context.chart;
+                            const { ctx, chartArea } = chart;
+
+                            if (!chartArea) return null;
+
+                            const gradient = ctx.createLinearGradient(
+                                0,
+                                chartArea.top,
+                                0,
+                                chartArea.bottom
+                            );
+
+                            gradient.addColorStop(
+                                0,
+                                "rgba(16, 185, 129, 0.22)"
+                            );
+                            gradient.addColorStop(
+                                1,
+                                "rgba(16, 185, 129, 0.0)"
+                            );
+
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: "#10b981",
+                        pointBorderColor: "#ffffff",
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: "index",
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: "#0b132b",
+                            titleColor: "#f59e0b",
+                            bodyColor: "#ffffff",
+                            titleFont: {
+                                family: "Playfair Display",
+                                size: 14,
+                                weight: "bold"
+                            },
+                            bodyFont: {
+                                family: "Inter",
+                                size: 13
+                            },
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                title: function (tooltipItems) {
+                                    return "Date: " + tooltipItems[0].label;
+                                },
+                                label: function (context) {
+                                    return "Net Balance: " +
+                                        formatKES(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: "#64748b",
+                                font: {
+                                    family: "Inter",
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: "#f1f5f9"
+                            },
+                            ticks: {
+                                color: "#64748b",
+                                font: {
+                                    family: "Inter",
+                                    size: 11
+                                },
+                                callback: function (value) {
+                                    return formatKES(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /* --------------------------------------------------------------------------
+           CSV export of the LIVE database data
+           -------------------------------------------------------------------------- */
+
+        function exportCSV() {
+            if (!transactionsDatabase.length) {
+                alert("There are no transactions to export.");
+                return;
+            }
+
+            const headers = [
+                "id",
+                "date",
+                "amount",
+                "type"
+            ];
+
+            const rows = transactionsDatabase.map(row => [
+                row.id ?? row.transaction_id ?? "",
+                getISODate(row) ?? "",
+                getAmount(row),
+                row.type ?? ""
+            ]);
+
+            const csv = [
+                headers.join(","),
+                ...rows.map(row =>
+                    row.map(value =>
+                        `"${String(value).replace(/"/g, '""')}"`
+                    ).join(",")
+                )
+            ].join("\n");
+
+            const blob = new Blob([csv], {
+                type: "text/csv;charset=utf-8;"
+            });
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = `financial-transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            URL.revokeObjectURL(url);
+        }
+
+        /* --------------------------------------------------------------------------
+           REALTIME DATABASE UPDATES
+           -------------------------------------------------------------------------- */
+
+        function subscribeToRealtimeChanges() {
+            if (realtimeChannel) {
+                supabaseClient.removeChannel(realtimeChannel);
+            }
+
+            realtimeChannel = supabaseClient
+                .channel("financial-transactions-live")
+                .on(
+                    "postgres_changes",
+                    {
+                        event: "*",
+                        schema: "public",
+                        table: TRANSACTIONS_TABLE
+                    },
+                    payload => {
+                        console.log("Live database change:", payload);
+
+                        /*
+                         * Small debounce prevents several rapid INSERT/UPDATE/DELETE
+                         * events from causing unnecessary repeated requests.
+                         */
+                        clearTimeout(refreshTimer);
+
+                        refreshTimer = setTimeout(() => {
+                            fetchTransactions();
+                        }, 250);
+                    }
+                )
+                .subscribe(status => {
+                    console.log("Realtime status:", status);
+
+                    if (status === "SUBSCRIBED") {
+                        setDataStatus(
+                            `${transactionsDatabase.length.toLocaleString()} transaction(s) loaded • Live updates enabled`,
+                            "normal"
+                        );
+                    }
+                });
+        }
+
+        /* --------------------------------------------------------------------------
+           START
+           -------------------------------------------------------------------------- */
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await fetchTransactions();
+            subscribeToRealtimeChanges();
+        });
+    </script>
+</body>
+
+</html>
