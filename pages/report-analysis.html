@@ -22,15 +22,15 @@
             --card-bg: #ffffff;
             --navy-dark: #0b132b;
             --amber-accent: #f59e0b;
-            --green-income: #10b981;
+            --green-income: #1a8f68;
             --green-bg: #ecfdf5;
-            --green-border: #a7f3d0;
-            --red-expense: #ef4444;
+            --green-border: #1a5439;
+            --red-expense: #e62323;
             --red-bg: #fef2f2;
             --red-border: #fecaca;
             --border-light: #e2e8f0;
             --text-main: #0f172a;
-            --text-muted: #64748b;
+            --text-muted: #1f2328;
             --font-serif: 'Playfair Display', Georgia, serif;
             --font-sans: 'Inter', -apple-system, sans-serif;
         }
@@ -352,6 +352,35 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
         }
 
+        /* Only months containing data become dark green */
+        .month-item-card.has-data {
+            background-color: #004a36;
+            border-color: #10b981;
+            color: #ffffff;
+        }
+
+        /* Month name */
+        .month-item-card.has-data span {
+            color: #ffffff;
+        }
+
+        /* Amount */
+        .month-item-card.has-data p {
+            color: #ffffff;
+        }
+
+        /* Negative amount */
+        .month-item-card.has-data p.negative {
+            color: #fecaca;
+        }
+
+        /* Hover / selected month with data */
+        .month-item-card.has-data:hover,
+        .month-item-card.has-data.active-month {
+            background-color: #047857;
+            border-color: #34d399;
+        }
+
         .month-item-card span {
             font-weight: 600;
             font-size: 0.85rem;
@@ -431,10 +460,151 @@
                 font-size: 1.5rem;
             }
         }
+
+        /* ===================== LIVE DATA / LOADING UI ===================== */
+
+        /* Dark, high-contrast income cells */
+        .cal-cell.has-income {
+            background: #064e3b;
+            border-color: #10b981;
+            color: #ffffff;
+        }
+
+        .cal-cell.has-income .day-num {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .cal-cell.has-income .cell-amount {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .cal-cell.has-income .cell-trans-sub {
+            color: #d1fae5;
+            font-weight: 600;
+        }
+
+        /* Keep expense cells strong and readable too */
+        .cal-cell.has-expense {
+            background: #7f1d1d;
+            border-color: #ef4444;
+            color: #ffffff;
+        }
+
+        .cal-cell.has-expense .day-num {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .cal-cell.has-expense .cell-amount,
+        .cal-cell.has-expense .cell-amount.negative {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .cal-cell.has-expense .cell-trans-sub {
+            color: #fee2e2;
+            font-weight: 600;
+        }
+
+        /* Full dashboard loading layer */
+        .dashboard-loading {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(248, 250, 252, 0.94);
+            backdrop-filter: blur(3px);
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .dashboard-loading.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-box {
+            min-width: 230px;
+            padding: 24px 28px;
+            text-align: center;
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            box-shadow: 0 10px 35px rgba(15, 23, 42, 0.12);
+        }
+
+        .loading-spinner {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 12px;
+            border: 4px solid #d1fae5;
+            border-top-color: #047857;
+            border-radius: 50%;
+            animation: dashboardSpin 0.75s linear infinite;
+        }
+
+        .loading-title {
+            color: #064e3b;
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+
+        .loading-subtitle {
+            margin-top: 5px;
+            color: #64748b;
+            font-size: 0.78rem;
+        }
+
+        @keyframes dashboardSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Inline loading state for the calendar while data is being fetched */
+        .calendar-loading {
+            grid-column: 1 / -1;
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            color: #064e3b;
+            font-weight: 800;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+        }
+
+        .calendar-loading .loading-spinner {
+            width: 34px;
+            height: 34px;
+            margin: 0;
+        }
+
+        .data-error {
+            color: var(--red-expense);
+            font-weight: 700;
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Live database loading overlay -->
+    <div id="dashboardLoading" class="dashboard-loading">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <div class="loading-title">Loading financial data...</div>
+            <div class="loading-subtitle">Connecting to the live database</div>
+        </div>
+    </div>
+
 
     <div class="dashboard-container">
 
@@ -442,7 +612,7 @@
         <div class="page-header">
             <h1>Analyse financial in one place</h1>
             <p>Review real-time transaction activity, monitor monthly performance, and track cumulative cash flow.</p>
-            <div id="data-status" style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">
+            <div id="data-status" style="margin-top:8px;font-size:0.8rem;font-weight:600;color:var(--text-muted);">
                 <i class="fa-solid fa-circle-notch fa-spin"></i> Connecting to live financial data...
             </div>
         </div>
@@ -592,6 +762,37 @@
             el.style.color = colors[state];
         }
 
+
+        function showDashboardLoading(message = "Loading financial data...",
+            subtitle = "Connecting to the live database") {
+            const overlay = document.getElementById("dashboardLoading");
+            if (!overlay) return;
+
+            const title = overlay.querySelector(".loading-title");
+            const sub = overlay.querySelector(".loading-subtitle");
+
+            if (title) title.textContent = message;
+            if (sub) sub.textContent = subtitle;
+
+            overlay.classList.remove("hidden");
+        }
+
+        function hideDashboardLoading() {
+            const overlay = document.getElementById("dashboardLoading");
+            if (overlay) overlay.classList.add("hidden");
+        }
+
+        function renderCalendarLoading() {
+            const grid = document.getElementById("calendarGrid");
+            if (!grid) return;
+
+            grid.innerHTML = `
+                <div class="calendar-loading">
+                    <div class="loading-spinner"></div>
+                    <div>Loading transaction data...</div>
+                </div>`;
+        }
+
         function getAmount(row) {
             const amount = Number(row.amount);
             return Number.isFinite(amount) ? Math.abs(amount) : 0;
@@ -665,7 +866,14 @@
            Fetch live data from Supabase
            -------------------------------------------------------------------------- */
 
-        async function fetchTransactions() {
+        async function fetchTransactions(showLoader = true) {
+            if (showLoader) {
+                showDashboardLoading(
+                    "Loading financial data...",
+                    "Fetching transactions from Supabase"
+                );
+                renderCalendarLoading();
+            }
             setDataStatus("Loading live transactions...", "loading");
 
             const { data, error } = await supabaseClient
@@ -680,6 +888,7 @@
                 );
                 transactionsDatabase = [];
                 refreshDashboard();
+                hideDashboardLoading();
                 return;
             }
 
@@ -698,6 +907,7 @@
             );
 
             refreshDashboard();
+            hideDashboardLoading();
         }
 
         /* --------------------------------------------------------------------------
@@ -750,6 +960,18 @@
 
             const grid = document.getElementById("calendarGrid");
             grid.innerHTML = "";
+
+            if (transactionsDatabase.length === 0) {
+                grid.innerHTML = `
+                    <div class="calendar-loading">
+                        <i class="fa-solid fa-database" style="font-size:1.8rem;"></i>
+                        <div>No transaction data available</div>
+                        <div style="font-size:.75rem;font-weight:500;color:#64748b;">
+                            Add transactions to your Supabase table to populate the dashboard.
+                        </div>
+                    </div>`;
+                return;
+            }
 
             const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
             days.forEach(day => {
@@ -898,6 +1120,8 @@
                 const isActive =
                     index === currentDate.getMonth() ? "active-month" : "";
 
+                const hasData = value !== 0 ? "has-data" : "";
+
                 let valueDisplay = "<p>No data</p>";
 
                 if (value !== 0) {
@@ -908,8 +1132,8 @@
                 }
 
                 container.innerHTML += `
-                    <div class="month-item-card ${isActive}"
-                         onclick="selectMonth(${index})">
+          <div class="month-item-card ${hasData} ${isActive}"
+     onclick="selectMonth(${index})">
                         <span>${monthNames[index]}</span>
                         ${valueDisplay}
                     </div>`;
@@ -1149,7 +1373,7 @@
                         clearTimeout(refreshTimer);
 
                         refreshTimer = setTimeout(() => {
-                            fetchTransactions();
+                            fetchTransactions(false);
                         }, 250);
                     }
                 )
