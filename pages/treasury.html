@@ -1000,25 +1000,9 @@
             return div.innerHTML;
         }
 
-        function generateTransactionId(tx) {
-            const dateObj = new Date(tx.created_at);
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            let hash = 0;
-            const str = tx.id || (tx.created_at + tx.amount);
-            for (let i = 0; i < str.length; i++) {
-                hash = ((hash << 5) - hash) + str.charCodeAt(i);
-                hash |= 0;
-            }
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let randomPart = '';
-            let seed = Math.abs(hash);
-            for (let i = 0; i < 5; i++) {
-                seed = (seed * 9301 + 49297) % 233280;
-                const rnd = seed / 233280;
-                randomPart += chars[Math.floor(rnd * chars.length)];
-            }
-            return `K${day}${randomPart}`;
-        }
+       function generateTransactionId(tx) {
+    return tx.transaction_code || "—";
+}
 
         function showToast(message, isError = false) {
             const container = document.getElementById('toastContainer');
@@ -1259,11 +1243,11 @@
                 const formattedAmount = `KSh ${Number(tx.amount).toLocaleString()}`;
 
                 // EXACT REQUESTED LOG TEXT FORMATTING FOR EXPENDITURES
-                let textDesc = `successfully deposited ${formattedAmount} to ${escapeHtml(name)} on ${dateStr} at ${timeStr}. Transaction ID (${txId})`;
+                let textDesc = `successfully deposited ${formattedAmount} to ${escapeHtml(name)} on ${dateStr} at ${timeStr}. Transaction ID ${txId}`;
                 if (isInitial) {
-                    textDesc = `Initial treasury pool established at ${formattedAmount} on ${dateStr} at ${timeStr}. Transaction ID (${txId})`;
+                    textDesc = `Initial treasury pool established at ${formattedAmount} on ${dateStr} at ${timeStr}. Transaction ID ${txId}`;
                 } else if (isExpenditure) {
-                    textDesc = `Confirm ${formattedAmount} has been deducted for expenses on ${dateStr} at ${timeStr}. Transaction ID (${txId})`;
+                    textDesc = `Confirm ${formattedAmount} has been deducted for expenses on ${dateStr} at ${timeStr}. Transaction ID ${txId}`;
                 }
 
                 return `

@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account Report | Kimangu AY</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --navy-dark: #0b132b;
+            --amber-accent: #f59e0b;
+            --green-income: #1a8f68;
+            --border-light: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #1f2328;
+            --text-soft: #64748b;
+            --font-serif: 'Playfair Display', Georgia, serif;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-sans);
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 28px;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ---------- Header ---------- */
+        .page-header h1 {
+            font-family: var(--font-serif);
+            font-size: 1.85rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ---------- Metric cards (3) ---------- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        .metric-title {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .metric-value.income {
+            color: var(--green-income);
+        }
+
+        /* ---------- Calendar ---------- */
+        .calendar-card,
+        .monthly-perf-card,
+        .chart-card,
+        .log-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .month-nav h2 {
+            font-family: var(--font-serif);
+            font-size: 1.4rem;
+            font-weight: 700;
+            min-width: 180px;
+            text-align: center;
+        }
+
+        .nav-btn {
+            background-color: #f1f5f9;
+            border: 1px solid var(--border-light);
+            color: var(--text-main);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--navy-dark);
+            color: #ffffff;
+        }
+
+        .legend-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .legend-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .legend-swatch.empty {
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+        }
+
+        .legend-swatch.income {
+            background: #064e3b;
+            border: 1px solid #10b981;
+            margin-left: 8px;
+        }
+
+        .calendar-scroll-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(110px, 1fr)) minmax(130px, 1.2fr);
+            gap: 8px;
+            min-width: 860px;
+            padding-bottom: 6px;
+        }
+
+        .day-head {
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .week-head {
+            color: var(--green-income);
+            text-align: left;
+            padding-left: 8px;
+        }
+
+        .cal-cell {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            min-height: 95px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .cal-cell.muted {
+            opacity: 0.35;
+            background-color: #ffffff;
+        }
+
+        .day-num {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .cell-status {
+            font-size: 0.72rem;
+            color: #94a3b8;
+        }
+
+        .cell-amount {
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: var(--green-income);
+        }
+
+        .cell-trans-sub {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+        }
+
+        /* Day with a contribution */
+        .cal-cell.has-income {
+            background: #064e3b;
+            border-color: #10b981;
+            color: #ffffff;
+        }
+
+        .cal-cell.has-income .day-num,
+        .cal-cell.has-income .cell-amount {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .cal-cell.has-income .cell-trans-sub {
+            color: #d1fae5;
+            font-weight: 600;
+        }
+
+        /* Week summary cell */
+        .week-cell {
+            background-color: #f1f5f9;
+            border-left: 2px solid var(--border-light);
+            align-items: flex-start;
+            padding-left: 12px;
+        }
+
+        .week-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .week-total {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--green-income);
+        }
+
+        .week-cell.has-data {
+            background-color: #064e3b;
+            border-left-color: #10b981;
+        }
+
+        .week-cell.has-data .week-title,
+        .week-cell.has-data .week-total,
+        .week-cell.has-data .cell-trans-sub {
+            color: #ffffff !important;
+        }
+
+        /* ---------- Monthly performance ---------- */
+        .monthly-perf-card {
+            padding: 20px 24px;
+        }
+
+        .card-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            color: var(--amber-accent);
+        }
+
+        .card-title-row h3 {
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--navy-dark);
+        }
+
+        .monthly-scroll-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .monthly-scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .monthly-scroll-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .month-item-card {
+            min-width: 130px;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-light);
+            padding: 14px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .month-item-card:hover,
+        .month-item-card.active-month {
+            border-color: var(--amber-accent);
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .month-item-card span {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .month-item-card p {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .month-item-card.has-data {
+            background-color: #064e3b;
+            border-color: #10b981;
+        }
+
+        .month-item-card.has-data span,
+        .month-item-card.has-data p {
+            color: #ffffff !important;
+        }
+
+        .month-item-card.has-data:hover,
+        .month-item-card.has-data.active-month {
+            background-color: #047857;
+            border-color: #34d399;
+        }
+
+        /* ---------- Chart ---------- */
+        .chart-header {
+            margin-bottom: 20px;
+        }
+
+        .chart-header h3 {
+            font-family: var(--font-serif);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .chart-header p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 320px;
+            width: 100%;
+        }
+
+        /* ---------- Transaction log ---------- */
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .log-title-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .log-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            color: var(--navy-dark);
+            flex-shrink: 0;
+        }
+
+        .log-title-group h3 {
+            font-family: var(--font-serif);
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .log-title-group p {
+            font-size: 0.78rem;
+            color: var(--text-soft);
+            margin-top: 2px;
+        }
+
+        .log-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-export-csv {
+            background-color: var(--navy-dark);
+            color: #ffffff;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-export-csv:hover {
+            opacity: 0.9;
+        }
+
+        .log-count-badge {
+            border: 1px solid var(--border-light);
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 6px 14px;
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            line-height: 1.3;
+            color: var(--text-main);
+        }
+
+        .log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 12px 16px;
+        }
+
+        .log-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .log-message {
+            flex: 1;
+            min-width: 0;
+            font-size: 0.82rem;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .log-amount-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .log-amount {
+            font-weight: 800;
+            font-size: 0.88rem;
+            color: #16a34a;
+            white-space: nowrap;
+        }
+
+        .log-index {
+            border: 1px solid var(--border-light);
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-soft);
+        }
+
+        .log-empty {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--text-soft);
+            font-size: 0.88rem;
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+
+        /* ---------- Loading UI ---------- */
+        .dashboard-loading {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(248, 250, 252, 0.94);
+            backdrop-filter: blur(3px);
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .dashboard-loading.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-box {
+            min-width: 230px;
+            padding: 24px 28px;
+            text-align: center;
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            box-shadow: 0 10px 35px rgba(15, 23, 42, 0.12);
+        }
+
+        .loading-spinner {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 12px;
+            border: 4px solid #d1fae5;
+            border-top-color: #047857;
+            border-radius: 50%;
+            animation: dashboardSpin 0.75s linear infinite;
+        }
+
+        .loading-title {
+            color: #064e3b;
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+
+        .loading-subtitle {
+            margin-top: 5px;
+            color: #64748b;
+            font-size: 0.78rem;
+        }
+
+        @keyframes dashboardSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .calendar-loading {
+            grid-column: 1 / -1;
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            color: #064e3b;
+            font-weight: 800;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            text-align: center;
+            padding: 16px;
+        }
+
+        .calendar-loading .loading-spinner {
+            width: 34px;
+            height: 34px;
+            margin: 0;
+        }
+
+        /* ---------- Mobile ---------- */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .dashboard-container {
+                gap: 16px;
+            }
+
+            .page-header h1 {
+                font-size: 1.4rem;
+            }
+
+            .page-header p {
+                font-size: 0.82rem;
+            }
+
+            /* 3 cards: treasury total full-width, the other two side by side */
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+
+            .metric-card:first-child {
+                grid-column: auto;
+            }
+
+            .metric-card {
+                padding: 10px 8px;
+                border-radius: 10px;
+            }
+
+            .metric-title {
+                font-size: 0.58rem;
+                line-height: 1.2;
+                margin-bottom: 5px;
+            }
+
+            .metric-value {
+                font-size: 0.85rem;
+                white-space: nowrap;
+            }
+
+            .calendar-card,
+            .monthly-perf-card,
+            .chart-card,
+            .log-card {
+                padding: 16px;
+                border-radius: 14px;
+            }
+
+            .calendar-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .month-nav {
+                justify-content: space-between;
+            }
+
+            .month-nav h2 {
+                font-size: 1.05rem;
+                min-width: 0;
+                flex: 1;
+            }
+
+            .nav-btn {
+                width: 34px;
+                height: 34px;
+                flex-shrink: 0;
+            }
+
+            .legend-bar {
+                justify-content: center;
+                font-size: 0.72rem;
+            }
+
+            .calendar-grid {
+                grid-template-columns: repeat(7, minmax(64px, 1fr)) minmax(80px, 1fr);
+                min-width: 528px;
+                gap: 5px;
+            }
+
+            .cal-cell {
+                min-height: 62px;
+                padding: 6px;
+                border-radius: 8px;
+                font-size: 0.68rem;
+            }
+
+            .day-head {
+                font-size: 0.62rem;
+                padding-bottom: 4px;
+            }
+
+            .day-num {
+                font-size: 0.75rem;
+            }
+
+            .cell-status {
+                font-size: 0.6rem;
+            }
+
+            .cell-amount {
+                font-size: 0.68rem;
+            }
+
+            .cell-trans-sub {
+                font-size: 0.56rem;
+            }
+
+            .week-cell {
+                padding-left: 8px;
+            }
+
+            .week-title {
+                font-size: 0.58rem;
+            }
+
+            .week-total {
+                font-size: 0.7rem;
+            }
+
+            .card-title-row h3 {
+                font-size: 0.85rem;
+            }
+
+            .month-item-card {
+                min-width: 100px;
+                padding: 10px;
+            }
+
+            .month-item-card span {
+                font-size: 0.78rem;
+            }
+
+            .month-item-card p {
+                font-size: 0.7rem;
+            }
+
+            .chart-header h3 {
+                font-size: 1.05rem;
+            }
+
+            .chart-header p {
+                font-size: 0.75rem;
+            }
+
+            .chart-wrapper {
+                height: 240px;
+            }
+
+            /* Log: icon + message on top, amount + index underneath */
+            .log-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .log-actions {
+                justify-content: space-between;
+            }
+
+            .log-item {
+                display: grid;
+                grid-template-columns: 34px 1fr;
+                gap: 8px 10px;
+                align-items: start;
+                padding: 12px;
+            }
+
+            .log-icon {
+                width: 34px;
+                height: 34px;
+            }
+
+            .log-message {
+                font-size: 0.76rem;
+            }
+
+            .log-amount-wrap {
+                grid-column: 2;
+                justify-content: space-between;
+            }
+
+            .log-list {
+                max-height: 460px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .metric-value {
+                font-size: 1.05rem;
+            }
+
+            .chart-wrapper {
+                height: 210px;
+            }
+
+            .page-header h1 {
+                font-size: 1.25rem;
+            }
+
+            .calendar-grid {
+                grid-template-columns: repeat(7, minmax(52px, 1fr)) minmax(68px, 1fr);
+                min-width: 432px;
+                gap: 4px;
+            }
+
+            .cal-cell {
+                min-height: 54px;
+                padding: 5px;
+            }
+
+            .day-num {
+                font-size: 0.68rem;
+            }
+
+            .cell-amount {
+                font-size: 0.6rem;
+            }
+
+            .cell-trans-sub {
+                font-size: 0.5rem;
+            }
+
+            .week-title {
+                font-size: 0.52rem;
+            }
+
+            .week-total {
+                font-size: 0.62rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="dashboardLoading" class="dashboard-loading">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <div class="loading-title">Loading your account...</div>
+            <div class="loading-subtitle">Connecting to the live database</div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+
+        <!-- Header -->
+        <div class="page-header">
+            <h1>My Account Report</h1>
+            <p>Review your personal contributions, monthly performance and payment confirmations.</p>
+            <div id="data-status" style="margin-top:8px;font-size:0.8rem;font-weight:600;color:var(--text-muted);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Connecting to your account...
+            </div>
+        </div>
+
+        <!-- 3 metric cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-title">Total Net Account in Treasury</div>
+                <div class="metric-value" id="metric-treasury">KSh 0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">My Contribution</div>
+                <div class="metric-value income" id="metric-contribution">KSh 0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Total No. of Transactions</div>
+                <div class="metric-value" id="metric-count">0</div>
+            </div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <div class="month-nav">
+                    <button class="nav-btn" type="button" onclick="changeMonth(-1)"><i
+                            class="fa-solid fa-chevron-left"></i></button>
+                    <h2 id="calendar-month-title">September 2026</h2>
+                    <button class="nav-btn" type="button" onclick="changeMonth(1)"><i
+                            class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="legend-bar">
+                    <span class="legend-swatch empty"></span><span>No data</span>
+                    <span class="legend-swatch income"></span><span>Contribution</span>
+                </div>
+            </div>
+
+            <div class="calendar-scroll-wrapper">
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+        </div>
+
+        <!-- Monthly performance -->
+        <div class="monthly-perf-card">
+            <div class="card-title-row">
+                <i class="fa-solid fa-calendar-days"></i>
+                <h3 id="monthlyPerfYearTitle">MONTHLY PERFORMANCE ( 2026 )</h3>
+            </div>
+            <div class="monthly-scroll-container" id="monthlyPerformanceRow"></div>
+        </div>
+
+        <!-- Individual contribution curve -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>My Contribution Curve</h3>
+                <p>Your cumulative contributions over time (Hover over data points for details)</p>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="netCurveChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Transaction log -->
+        <div class="log-card">
+            <div class="log-header">
+                <div class="log-title-group">
+                    <div class="log-icon-box"><i class="fa-solid fa-list-check"></i></div>
+                    <div>
+                        <h3>Transaction Logs</h3>
+                        <p>Payments received into your account.</p>
+                    </div>
+                </div>
+                <div class="log-actions">
+                    <button type="button" class="btn-export-csv" onclick="exportCSV()">
+                        <i class="fa-solid fa-download"></i> Export CSV
+                    </button>
+                    <div class="log-count-badge" id="txCountBadge">0<br>Transactions</div>
+                </div>
+            </div>
+            <div class="log-list" id="txLogList"></div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ==========================================================================
+           MY ACCOUNT REPORT — individual member analysis (live Supabase data)
+           ========================================================================== */
+
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const TRANSACTIONS_TABLE = 'transactions';
+
+        // Works whether this file sits in the site root or inside /pages/
+        const AUTH_PATH = window.location.pathname.includes('/pages/') ? '../auth.html' : 'auth.html';
+
+        let currentDate = new Date();
+        currentDate.setDate(1);
+
+        let currentUserId = null;
+        let currentUserName = '';
+        let transactionsDatabase = []; // ONLY this member's contributions
+        let netChartInstance = null;
+        let realtimeChannel = null;
+        let refreshTimer = null;
+
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        const incomeTypes = new Set(["deposit", "income", "revenue"]);
+
+        /* ------------------------------ Helpers ------------------------------ */
+
+        function escapeHtml(str) {
+            const div = document.createElement("div");
+            div.textContent = str ?? "";
+            return div.innerHTML;
+        }
+
+        function setDataStatus(message, state = "normal") {
+            const el = document.getElementById("data-status");
+            if (!el) return;
+
+            const icons = {
+                normal: "fa-circle-check",
+                loading: "fa-circle-notch fa-spin",
+                error: "fa-circle-exclamation"
+            };
+            const colors = {
+                normal: "var(--green-income)",
+                loading: "var(--text-muted)",
+                error: "#e62323"
+            };
+
+            el.innerHTML = `<i class="fa-solid ${icons[state]}"></i> ${message}`;
+            el.style.color = colors[state];
+        }
+
+        function showDashboardLoading(message, subtitle) {
+            const overlay = document.getElementById("dashboardLoading");
+            if (!overlay) return;
+            overlay.querySelector(".loading-title").textContent = message;
+            overlay.querySelector(".loading-subtitle").textContent = subtitle;
+            overlay.classList.remove("hidden");
+        }
+
+        function hideDashboardLoading() {
+            const overlay = document.getElementById("dashboardLoading");
+            if (overlay) overlay.classList.add("hidden");
+        }
+
+        function renderCalendarLoading() {
+            const grid = document.getElementById("calendarGrid");
+            if (!grid) return;
+            grid.innerHTML = `
+                <div class="calendar-loading">
+                    <div class="loading-spinner"></div>
+                    <div>Loading your transactions...</div>
+                </div>`;
+        }
+
+        function getAmount(row) {
+            const amount = Number(row.amount);
+            return Number.isFinite(amount) ? Math.abs(amount) : 0;
+        }
+
+        function getType(row) {
+            return String(row.type ?? "").trim().toLowerCase();
+        }
+
+        function isIncome(row) {
+            return incomeTypes.has(getType(row));
+        }
+
+        function getTransactionDate(row) {
+            const candidates = [
+                row.date, row.transaction_date, row.transactionDate,
+                row.created_at, row.createdAt, row.timestamp
+            ];
+            for (const value of candidates) {
+                if (!value) continue;
+                const parsed = new Date(value);
+                if (!Number.isNaN(parsed.getTime())) return parsed;
+            }
+            return null;
+        }
+
+        function getISODate(row) {
+            const date = getTransactionDate(row);
+            if (!date) return "";
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, "0");
+            const d = String(date.getDate()).padStart(2, "0");
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatKSh(value) {
+            const number = Number(value) || 0;
+            return "KSh " + number.toLocaleString("en-KE", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatDateLabel(date) {
+            return date
+                ? date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                : "—";
+        }
+
+        function formatTimeLabel(date) {
+            return date
+                ? date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+                : "—";
+        }
+
+        /*
+         * Transaction ID shown in the payment confirmation.
+         * Uses a saved code if your table has one (transaction_code, transaction_id,
+         * reference, ...). Otherwise falls back to the first 8 characters of the row id.
+         */
+        function getTransactionCode(row) {
+            const explicit = row.transaction_code || row.transaction_id || row.reference ||
+                row.ref_code || row.receipt_no || row.code;
+            if (explicit) return String(explicit).toUpperCase();
+
+            const raw = String(row.id ?? "").replace(/-/g, "").toUpperCase();
+            return raw ? raw.slice(0, 8) : "—";
+        }
+
+        /* --------------------------- Data fetching --------------------------- */
+
+        // Treasury-wide net balance. Members can't read other people's rows, so this
+        // calls a database function that returns only the single total.
+        async function fetchTreasuryBalance() {
+            const el = document.getElementById("metric-treasury");
+
+            // Show loading while fetching
+            el.innerText = "Loading...";
+
+            const { data, error } = await supabaseClient
+                .rpc("treasury_net_balance");
+
+            if (error) {
+                console.error("Treasury balance error:", error);
+
+                el.innerText = "KSh —";
+                el.title = error.message;
+                return;
+            }
+
+            const net = Number(data) || 0;
+
+            el.innerText = formatKSh(net);
+            el.removeAttribute("title");
+        }
+
+        function statusPrefix() {
+            return currentUserName ? `${escapeHtml(currentUserName)} • ` : "";
+        }
+
+        async function fetchTransactions(showLoader = true) {
+            if (showLoader) {
+                showDashboardLoading("Loading your account...", "Fetching your transactions from Supabase");
+                renderCalendarLoading();
+            }
+            setDataStatus("Loading your transactions...", "loading");
+
+            // Filter explicitly so even admins only see THEIR OWN contributions here.
+            const { data, error } = await supabaseClient
+                .from(TRANSACTIONS_TABLE)
+                .select("*")
+                .eq("user_id", currentUserId);
+
+            if (error) {
+                console.error("Supabase transaction fetch error:", error);
+                setDataStatus(`Database error: ${escapeHtml(error.message)}`, "error");
+                transactionsDatabase = [];
+                refreshDashboard();
+                hideDashboardLoading();
+                return;
+            }
+
+            transactionsDatabase = (Array.isArray(data) ? data : [])
+                .filter(isIncome)
+                .sort((a, b) =>
+                    (getTransactionDate(a)?.getTime() ?? 0) - (getTransactionDate(b)?.getTime() ?? 0)
+                );
+
+            setDataStatus(
+                `${statusPrefix()}${transactionsDatabase.length.toLocaleString()} transaction(s) loaded • Live database connection active`,
+                "normal"
+            );
+
+            refreshDashboard();
+            hideDashboardLoading();
+        }
+
+        function refreshDashboard() {
+            calculateMetrics();
+            renderCalendarGrid();
+            renderMonthlyPerformance();
+            renderNetCurveChart();
+            renderTransactionLog();
+        }
+
+        /* ------------------------------ Metrics ------------------------------ */
+
+        function calculateMetrics() {
+            const contribution = transactionsDatabase.reduce((sum, row) => sum + getAmount(row), 0);
+
+            document.getElementById("metric-contribution").innerText = formatKSh(contribution);
+            document.getElementById("metric-count").innerText =
+                transactionsDatabase.length.toLocaleString();
+        }
+
+        /* ------------------------------ Calendar ----------------------------- */
+
+        function renderCalendarGrid() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById("calendar-month-title").innerText = `${monthNames[month]} ${year}`;
+
+            const grid = document.getElementById("calendarGrid");
+
+            if (transactionsDatabase.length === 0) {
+                grid.innerHTML = `
+                    <div class="calendar-loading">
+                        <i class="fa-solid fa-database" style="font-size:1.8rem;"></i>
+                        <div>No contributions recorded yet</div>
+                        <div style="font-size:.75rem;font-weight:500;color:#64748b;">
+                            Your payments will appear here once the treasury records them.
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            let html = "";
+            ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].forEach(day => {
+                html += `<div class="day-head">${day}</div>`;
+            });
+            html += `<div class="day-head week-head">WEEK</div>`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const prevLastDate = new Date(year, month, 0).getDate();
+
+            const dailyMap = {};
+            transactionsDatabase.forEach(row => {
+                const date = getTransactionDate(row);
+                if (!date || date.getFullYear() !== year || date.getMonth() !== month) return;
+
+                const day = date.getDate();
+                if (!dailyMap[day]) dailyMap[day] = { amount: 0, count: 0 };
+                dailyMap[day].amount += getAmount(row);
+                dailyMap[day].count += 1;
+            });
+
+            let dayCounter = 1;
+            let nextMonthDay = 1;
+            const weeksToRender = Math.max(5, Math.ceil((firstDayIndex + lastDate) / 7));
+
+            for (let week = 0; week < weeksToRender; week++) {
+                let weekSum = 0;
+                let weekCount = 0;
+
+                for (let day = 0; day < 7; day++) {
+                    const cellIndex = week * 7 + day;
+
+                    if (cellIndex < firstDayIndex) {
+                        const prevDay = prevLastDate - (firstDayIndex - cellIndex - 1);
+                        html += `
+                            <div class="cal-cell muted">
+                                <span class="day-num">${prevDay}</span>
+                                <span class="cell-status">Previous month</span>
+                            </div>`;
+                    } else if (dayCounter <= lastDate) {
+                        const record = dailyMap[dayCounter];
+
+                        if (record) {
+                            weekSum += record.amount;
+                            weekCount += record.count;
+                            html += `
+                                <div class="cal-cell has-income">
+                                    <span class="day-num">${dayCounter}</span>
+                                    <div>
+                                        <div class="cell-amount">${formatKSh(record.amount)}</div>
+                                        <div class="cell-trans-sub">${record.count} trans</div>
+                                    </div>
+                                </div>`;
+                        } else {
+                            html += `
+                                <div class="cal-cell">
+                                    <span class="day-num">${dayCounter}</span>
+                                    <span class="cell-status">No data</span>
+                                </div>`;
+                        }
+                        dayCounter++;
+                    } else {
+                        html += `
+                            <div class="cal-cell muted">
+                                <span class="day-num">${nextMonthDay}</span>
+                                <span class="cell-status">Next month</span>
+                            </div>`;
+                        nextMonthDay++;
+                    }
+                }
+
+                html += `
+                    <div class="cal-cell week-cell ${weekCount > 0 ? "has-data" : ""}">
+                        <span class="week-title">WEEK ${week + 1}</span>
+                        <span class="week-total">${formatKSh(weekSum)}</span>
+                        <span class="cell-trans-sub">${weekCount} trans</span>
+                    </div>`;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            refreshDashboard();
+        }
+
+        /* ------------------------ Monthly performance ------------------------ */
+
+        function renderMonthlyPerformance() {
+            const year = currentDate.getFullYear();
+            document.getElementById("monthlyPerfYearTitle").innerText = `MONTHLY PERFORMANCE ( ${year} )`;
+
+            const monthlySums = new Array(12).fill(0);
+            transactionsDatabase.forEach(row => {
+                const date = getTransactionDate(row);
+                if (!date || date.getFullYear() !== year) return;
+                monthlySums[date.getMonth()] += getAmount(row);
+            });
+
+            let html = "";
+            for (let index = 0; index < 12; index++) {
+                const value = monthlySums[index];
+                const isActive = index === currentDate.getMonth() ? "active-month" : "";
+                const hasData = value > 0 ? "has-data" : "";
+
+                html += `
+                    <div class="month-item-card ${hasData} ${isActive}" onclick="selectMonth(${index})">
+                        <span>${monthNames[index]}</span>
+                        <p>${value > 0 ? formatKSh(value) : "No data"}</p>
+                    </div>`;
+            }
+
+            document.getElementById("monthlyPerformanceRow").innerHTML = html;
+        }
+
+        function selectMonth(index) {
+            currentDate.setMonth(index);
+            refreshDashboard();
+        }
+
+        /* -------------------- Individual contribution curve ------------------- */
+
+        function renderNetCurveChart() {
+            const canvas = document.getElementById("netCurveChart");
+            if (!canvas) return;
+
+            const ctx = canvas.getContext("2d");
+
+            const labels = [];
+            const cumulative = [];
+            let running = 0;
+
+            transactionsDatabase.forEach(row => {
+                const date = getTransactionDate(row);
+                if (!date) return;
+
+                running += getAmount(row);
+                labels.push(date.toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }));
+                cumulative.push(running);
+            });
+
+            if (netChartInstance) netChartInstance.destroy();
+
+            const isMobile = window.innerWidth <= 640;
+
+            netChartInstance = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "My Contributions",
+                        data: cumulative,
+                        borderColor: "#10b981",
+                        borderWidth: 2.5,
+                        backgroundColor: function (context) {
+                            const { ctx, chartArea } = context.chart;
+                            if (!chartArea) return null;
+
+                            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                            gradient.addColorStop(0, "rgba(16, 185, 129, 0.22)");
+                            gradient.addColorStop(1, "rgba(16, 185, 129, 0.0)");
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: "#10b981",
+                        pointBorderColor: "#ffffff",
+                        pointBorderWidth: isMobile ? 1 : 2,
+                        pointRadius: isMobile ? 3 : 5,
+                        pointHoverRadius: isMobile ? 6 : 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: "index", intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: "#0b132b",
+                            titleColor: "#f59e0b",
+                            bodyColor: "#ffffff",
+                            titleFont: { family: "Playfair Display", size: 14, weight: "bold" },
+                            bodyFont: { family: "Inter", size: 13 },
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                title: items => "Date: " + items[0].label,
+                                label: context => "Total Contributed: " + formatKSh(context.raw)
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: "#64748b",
+                                font: { family: "Inter", size: isMobile ? 9 : 11 },
+                                maxRotation: isMobile ? 60 : 0,
+                                minRotation: isMobile ? 60 : 0,
+                                autoSkip: true,
+                                maxTicksLimit: isMobile ? 6 : undefined
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "#f1f5f9" },
+                            ticks: {
+                                color: "#64748b",
+                                font: { family: "Inter", size: isMobile ? 9 : 11 },
+                                maxTicksLimit: isMobile ? 5 : undefined,
+                                callback: value => Number(value).toLocaleString("en-KE")
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /* --------------------------- Transaction log -------------------------- */
+
+        function renderTransactionLog() {
+            const list = document.getElementById("txLogList");
+            const badge = document.getElementById("txCountBadge");
+            const total = transactionsDatabase.length;
+
+            badge.innerHTML = `${total.toLocaleString()}<br>${total === 1 ? "Transaction" : "Transactions"}`;
+
+            if (total === 0) {
+                list.innerHTML = `<div class="log-empty">No payments received yet.</div>`;
+                return;
+            }
+
+            // transactionsDatabase is oldest -> newest, so index + 1 gives #1 for the oldest.
+            const numbered = transactionsDatabase.map((row, i) => ({ row, number: i + 1 }));
+
+            list.innerHTML = numbered.reverse().map(({ row, number }) => {
+                const date = getTransactionDate(row);
+                const amount = formatKSh(getAmount(row));
+                const code = escapeHtml(getTransactionCode(row));
+
+                return `
+                    <div class="log-item">
+                        <div class="log-icon"><i class="fa-solid fa-arrow-down"></i></div>
+                        <p class="log-message">
+                            Confirmed. Payment of ${amount} on ${formatDateLabel(date)} at ${formatTimeLabel(date)}
+                            has been successfully received. Transaction ID ${code}.
+                        </p>
+                        <div class="log-amount-wrap">
+                            <span class="log-amount">+${amount}</span>
+                            <span class="log-index">#${number}</span>
+                        </div>
+                    </div>`;
+            }).join("");
+        }
+
+        /* ------------------------------ CSV export ---------------------------- */
+
+        function exportCSV() {
+            if (!transactionsDatabase.length) {
+                alert("There are no transactions to export.");
+                return;
+            }
+
+            const headers = ["transaction_id", "date", "time", "amount", "type"];
+            const rows = transactionsDatabase.map(row => [
+                getTransactionCode(row),
+                getISODate(row),
+                formatTimeLabel(getTransactionDate(row)),
+                getAmount(row),
+                row.type ?? ""
+            ]);
+
+            const csv = [
+                headers.join(","),
+                ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+            ].join("\n");
+
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = `my-contributions-${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        /* --------------------------- Realtime updates -------------------------- */
+
+        function subscribeToRealtimeChanges() {
+            if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+
+            realtimeChannel = supabaseClient
+                .channel("my-account-live")
+                .on(
+                    "postgres_changes",
+                    {
+                        event: "*",
+                        schema: "public",
+                        table: TRANSACTIONS_TABLE,
+                        filter: `user_id=eq.${currentUserId}`
+                    },
+                    () => {
+                        clearTimeout(refreshTimer);
+                        refreshTimer = setTimeout(() => {
+                            fetchTransactions(false);
+                            fetchTreasuryBalance();
+                        }, 250);
+                    }
+                )
+                .subscribe();
+        }
+
+        /* --------------------------------- Start -------------------------------- */
+
+        let resizeTimer;
+        window.addEventListener("resize", () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(renderNetCurveChart, 200);
+        });
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                window.top.location.href = AUTH_PATH;
+                return;
+            }
+
+            currentUserId = session.user.id;
+
+            const { data: profile } = await supabaseClient
+                .from("profiles")
+                .select("full_name")
+                .eq("id", currentUserId)
+                .single();
+
+            currentUserName = profile?.full_name || "";
+
+            await Promise.all([fetchTransactions(), fetchTreasuryBalance()]);
+            subscribeToRealtimeChanges();
+
+            // Other members' deposits aren't pushed to this session, so keep the
+            // treasury total fresh with a light periodic refresh.
+            setInterval(fetchTreasuryBalance, 30000);
+        });
+    </script>
+</body>
+
+</html>
