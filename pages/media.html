@@ -13,14 +13,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --primary-dark: #0a192f;
-            --primary-blue: #0f2b4c;
-            --accent-gold: #f59e0b;
-            --white: #ffffff;
-            --off-white: #f8fafc;
-            --text-gray: #64748b;
+            --bg-color: #ffffff;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-blue: #1d4ed8;
+            --text-muted: #64748b;
             --border-color: #e2e8f0;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.08);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -31,15 +32,30 @@
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            color: var(--primary-dark);
-            background: var(--off-white);
-            line-height: 1.6;
+            color: var(--text-main);
+            background: var(--bg-color);
+            line-height: 1.4;
         }
 
-        h1,
-        h2,
-        h3 {
+        .page-body {
+            padding: 1.5rem;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        h2.section-title {
             font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            margin-top: 1.5rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        h2.section-title:first-child {
+            margin-top: 0;
         }
 
         a {
@@ -47,144 +63,243 @@
             color: inherit;
         }
 
-        .page-body {
-            padding: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .page-body {
-                padding: 1.2rem;
-            }
-        }
-
-        .filter-tabs {
-            display: flex;
-            gap: 0.6rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .filter-tab {
-            padding: 0.5rem 1.1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            border: 1px solid var(--border-color, #e2e8f0);
-            color: var(--text-gray, #64748b);
-            background: #fff;
-        }
-
-        .filter-tab.active {
-            background: var(--primary-dark, #0a192f);
-            color: #fff;
-            border-color: var(--primary-dark, #0a192f);
-        }
-
-        .media-public-grid {
+        /* --- VIDEO GRID SECTION --- */
+        .video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
         }
 
-        .media-public-card {
-            background: #fff;
-            border-radius: 14px;
+        .video-card {
+            background: var(--card-bg);
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
-            border: 1px solid var(--border-color, #e2e8f0);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
         }
 
-        .media-public-top {
-            height: 160px;
-            background: linear-gradient(135deg, var(--primary-dark, #0a192f), var(--primary-blue, #0f2b4c));
+        .video-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+            border-color: #cbd5e1;
+        }
+
+        .video-thumbnail-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #000;
+        }
+
+        .video-player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 8px;
+            transition: background 0.2s;
+        }
+
+        .video-thumbnail-container:hover .video-overlay {
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        .icon-btn {
+            background: rgba(0, 0, 0, 0.65);
+            border: 1.5px solid rgba(255, 255, 255, 0.85);
+            color: #ffffff;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #f59e0b;
-            font-size: 2.4rem;
-            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
         }
 
-        .media-public-type {
-            position: absolute;
-            top: 0.8rem;
-            left: 0.8rem;
-            background: rgba(255, 255, 255, 0.9);
-            color: var(--primary-dark, #0a192f);
-            font-size: 0.7rem;
+        .icon-btn:hover {
+            background: var(--text-blue);
+            border-color: var(--text-blue);
+            transform: scale(1.08);
+        }
+
+        .video-info {
+            padding: 10px 12px;
+            background: #ffffff;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .truncate-2-lines {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 0.88rem;
             font-weight: 700;
-            text-transform: uppercase;
-            padding: 0.25rem 0.7rem;
-            border-radius: 20px;
+            line-height: 1.3;
+            color: var(--text-blue);
+            margin-bottom: 4px;
         }
 
-        .media-public-body {
-            padding: 1.2rem;
-        }
-
-        .media-public-body h4 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.05rem;
-            color: var(--primary-dark, #0a192f);
-            margin-bottom: 0.4rem;
-        }
-
-        .media-public-body p {
-            font-size: 0.85rem;
-            color: var(--text-gray, #64748b);
-            margin-bottom: 0.8rem;
-            line-height: 1.5;
-        }
-
-        .media-public-body span {
+        .meta-text {
             font-size: 0.75rem;
-            color: var(--text-gray, #64748b);
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
-        .media-play-link {
-            display: inline-flex;
+        /* --- COMPACT AUDIO GRID SECTION --- */
+        .audio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.8rem;
+        }
+
+        .audio-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 6px 12px;
+            /* Slimmer vertical padding */
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            /* Reduced internal gap */
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .audio-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .audio-main-row {
+            display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--primary-dark, #0a192f);
-            text-decoration: none;
-            margin-top: 0.6rem;
+            gap: 10px;
         }
 
-        .media-play-link:hover {
-            color: #f59e0b;
+        .audio-icon {
+            color: var(--text-blue);
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .audio-title {
+            flex-grow: 1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-main);
+        }
+
+        .audio-card .icon-btn {
+            width: 28px;
+            /* Slimmer buttons */
+            height: 28px;
+            font-size: 0.75rem;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+        }
+
+        .audio-card .icon-btn:hover {
+            background: var(--text-blue);
+            border-color: var(--text-blue);
+            color: #ffffff;
+        }
+
+        .audio-meta-row {
+            display: flex;
+            justify-content: space-between;
+            padding-left: 30px;
+            font-size: 0.72rem;
         }
 
         .empty-msg {
-            color: var(--text-gray, #64748b);
-            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
             text-align: center;
-            padding: 3rem;
+            padding: 2rem;
             grid-column: 1/-1;
+        }
+
+        /* --- MOBILE RESPONSIVE STYLING --- */
+        @media (max-width: 640px) {
+            .page-body {
+                padding: 0.8rem;
+            }
+
+            .video-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.6rem;
+            }
+
+            .audio-grid {
+                grid-template-columns: 1fr;
+                gap: 0.6rem;
+            }
+
+            .video-info {
+                padding: 6px 8px;
+            }
+
+            .truncate-2-lines {
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
 
 <body>
     <main class="page-body">
-        <div class="filter-tabs">
-            <div class="filter-tab active" data-filter="all" onclick="setFilter('all')">All</div>
-            <div class="filter-tab" data-filter="video" onclick="setFilter('video')">Videos</div>
-            <div class="filter-tab" data-filter="song" onclick="setFilter('song')">Songs</div>
+
+        <!-- Videos Section -->
+        <h2 class="section-title">Videos</h2>
+        <div class="video-grid" id="videoGrid">
+            <p class="empty-msg">Loading videos...</p>
         </div>
 
-        <div class="media-public-grid" id="mediaPublicGrid">
-            <p class="empty-msg">Loading media...</p>
+        <!-- Audio Section -->
+        <h2 class="section-title">Audio</h2>
+        <div class="audio-grid" id="audioGrid">
+            <p class="empty-msg">Loading audio...</p>
         </div>
+
     </main>
+
     <script>
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allMedia = [];
-        let currentFilter = 'all';
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -192,58 +307,163 @@
             return div.innerHTML;
         }
 
-        function timeAgo(dateStr) {
-            const diff = Date.now() - new Date(dateStr).getTime();
-            const mins = Math.floor(diff / 60000);
-            if (mins < 60) return `${mins} min${mins === 1 ? '' : 's'} ago`;
-            const hrs = Math.floor(mins / 60);
-            if (hrs < 24) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
-            const days = Math.floor(hrs / 24);
-            if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
-            return new Date(dateStr).toLocaleDateString();
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            if (isNaN(date)) return dateStr;
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
         }
 
-        function setFilter(type) {
-            currentFilter = type;
-            document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === type));
-            renderMedia();
+        function formatBytes(bytes, decimals = 2) {
+            if (!bytes || isNaN(bytes) || bytes === 0) return 'Unknown size';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // Fetch file size directly from URL headers if missing in DB
+        async function fetchFileSize(url, elementId) {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                const size = response.headers.get('content-length');
+                const target = document.getElementById(elementId);
+                if (size && target) {
+                    target.textContent = formatBytes(parseInt(size, 10));
+                }
+            } catch (e) {
+                // Keep default fallback text if request fails
+            }
         }
 
         function renderMedia() {
-            const container = document.getElementById('mediaPublicGrid');
-            const items = currentFilter === 'all' ? allMedia : allMedia.filter(m => m.type === currentFilter);
+            const videoContainer = document.getElementById('videoGrid');
+            const audioContainer = document.getElementById('audioGrid');
 
-            if (items.length === 0) {
-                container.innerHTML = '<p class="empty-msg">No media found in this category yet.</p>';
-                return;
+            const videos = allMedia.filter(m => m.type === 'video');
+            const audios = allMedia.filter(m => m.type === 'song' || m.type === 'audio');
+
+            // --- Render Videos ---
+            if (videos.length === 0) {
+                videoContainer.innerHTML = '<p class="empty-msg">No videos available.</p>';
+            } else {
+                videoContainer.innerHTML = videos.map(m => `
+                    <div class="video-card">
+                        <div class="video-thumbnail-container">
+                            <video id="video-${m.id}" src="${m.file_url}" class="video-player" preload="metadata"></video>
+                            <div class="video-overlay" id="overlay-${m.id}">
+                                <button class="icon-btn play-btn" onclick="playVideo('${m.id}')" title="Play Video">
+                                    <i class="fa-solid fa-play"></i>
+                                </button>
+                                <a href="${m.file_url}" download target="_blank" class="icon-btn download-btn" title="Download Video">
+                                    <i class="fa-solid fa-download"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="video-info">
+                            <h4 class="truncate-2-lines" title="${escapeHtml(m.title)}">${escapeHtml(m.title)}</h4>
+                            <div class="meta-text">${formatDate(m.created_at)}</div>
+                        </div>
+                    </div>
+                `).join('');
             }
 
-            container.innerHTML = items.map(m => `
-        <div class="media-public-card">
-            <div class="media-public-top">
-                <span class="media-public-type">${escapeHtml(m.type)}</span>
-                <i class="fa-solid ${m.type === 'video' ? 'fa-circle-play' : 'fa-music'}"></i>
-            </div>
-            <div class="media-public-body">
-                <h4>${escapeHtml(m.title)}</h4>
-                <p>${escapeHtml(m.description)}</p>
-                <span>${timeAgo(m.created_at)}</span><br>
-                <a href="${m.file_url}" target="_blank" class="media-play-link">
-                    <i class="fa-solid ${m.type === 'video' ? 'fa-play' : 'fa-headphones'}"></i>
-                    ${m.type === 'video' ? 'Watch now' : 'Listen now'}
-                </a>
-            </div>
-        </div>
-    `).join('');
+            // --- Render Audio ---
+            if (audios.length === 0) {
+                audioContainer.innerHTML = '<p class="empty-msg">No audio files available.</p>';
+            } else {
+                audioContainer.innerHTML = audios.map(m => {
+                    // Check database properties for file size
+                    const dbSize = m.size || m.file_size || m.bytes;
+                    const sizeDisplay = dbSize ? formatBytes(dbSize) : `<span id="size-${m.id}">Calculating...</span>`;
+
+                    // Fetch live if DB size isn't found
+                    if (!dbSize && m.file_url) {
+                        fetchFileSize(m.file_url, `size-${m.id}`);
+                    }
+
+                    return `
+                        <div class="audio-card">
+                            <div class="audio-main-row">
+                                <i class="fa-solid fa-music audio-icon"></i>
+                                <div class="audio-title" title="${escapeHtml(m.title)}">${escapeHtml(m.title)}</div>
+                                <button class="icon-btn audio-play-btn" onclick="toggleAudio('${m.id}')" id="audio-btn-${m.id}" title="Play Audio">
+                                    <i class="fa-solid fa-play"></i>
+                                </button>
+                                <a href="${m.file_url}" download target="_blank" class="icon-btn download-btn" title="Download Audio">
+                                    <i class="fa-solid fa-download"></i>
+                                </a>
+                            </div>
+                            <div class="audio-meta-row meta-text">
+                                <span>${sizeDisplay}</span>
+                                <span>${formatDate(m.created_at)}</span>
+                            </div>
+                            <audio id="audio-${m.id}" src="${m.file_url}" onended="resetAudioBtn('${m.id}')"></audio>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        window.playVideo = function (id) {
+            pauseAllMedia();
+            const video = document.getElementById(`video-${id}`);
+            const overlay = document.getElementById(`overlay-${id}`);
+
+            if (video) {
+                video.controls = true;
+                video.play();
+                overlay.style.display = 'none';
+            }
+        };
+
+        window.toggleAudio = function (id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const btn = document.getElementById(`audio-btn-${id}`);
+            const icon = btn.querySelector('i');
+
+            if (audio.paused) {
+                pauseAllMedia();
+                audio.play();
+                icon.classList.remove('fa-play');
+                icon.classList.add('fa-pause');
+            } else {
+                audio.pause();
+                icon.classList.remove('fa-pause');
+                icon.classList.add('fa-play');
+            }
+        };
+
+        window.resetAudioBtn = function (id) {
+            const btn = document.getElementById(`audio-btn-${id}`);
+            if (btn) {
+                const icon = btn.querySelector('i');
+                icon.classList.remove('fa-pause');
+                icon.classList.add('fa-play');
+            }
+        };
+
+        function pauseAllMedia() {
+            document.querySelectorAll('video').forEach(v => v.pause());
+            document.querySelectorAll('audio').forEach(a => {
+                a.pause();
+                const id = a.id.replace('audio-', '');
+                resetAudioBtn(id);
+            });
         }
 
         async function loadMedia() {
             const { data, error } = await supabaseClient.from('media').select('*').order('created_at', { ascending: false });
             if (error) {
-                document.getElementById('mediaPublicGrid').innerHTML = `<p class="empty-msg">Could not load media: ${escapeHtml(error.message)}</p>`;
+                document.getElementById('videoGrid').innerHTML = `<p class="empty-msg">Could not load media: ${escapeHtml(error.message)}</p>`;
+                document.getElementById('audioGrid').innerHTML = '';
                 return;
             }
-            allMedia = data || [];
+
+            allMedia = (data || []).map((m, index) => ({ ...m, id: m.id || 'media_' + index }));
             renderMedia();
         }
 
@@ -252,7 +472,6 @@
             if (!session) { window.top.location.href = '../auth.html'; return; }
             loadMedia();
         })();
-
     </script>
 </body>
 

@@ -512,7 +512,8 @@
             if (!textEl || !refEl) return;
 
             try {
-                const response = await fetch("https://beta.ourmanna.com/api/v1/get?format=json&order=daily");
+                // Fetch daily verse explicitly requesting NKJV
+                const response = await fetch("https://beta.ourmanna.com/api/v1/get?format=json&order=daily&version=nkjv");
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -523,11 +524,9 @@
                 if (data && data.verse && data.verse.details) {
                     const verseText = data.verse.details.text.trim();
                     const reference = data.verse.details.reference;
-                    const version = data.verse.details.version || 'NIV';
+                    const version = data.verse.details.version || 'NKJV';
 
                     textEl.textContent = `"${verseText}"`;
-
-                    // Displays reference along with the Bible version
                     refEl.textContent = `${reference} (${version})`;
                 } else {
                     throw new Error("Invalid verse data structure");
@@ -535,7 +534,7 @@
             } catch (err) {
                 console.error("Failed to load daily verse from API:", err);
 
-                // Fallback verse with version included
+                // Fallback verse in exact NKJV translation
                 textEl.textContent = '"Let no one despise your youth, but be an example to the believers in word, in conduct, in love, in spirit, in faith, in purity."';
                 refEl.textContent = "1 Timothy 4:12 (NKJV)";
             }

@@ -38,7 +38,8 @@
 
         h1,
         h2,
-        h3 {
+        h3,
+        h4 {
             font-family: 'Playfair Display', serif;
         }
 
@@ -76,9 +77,25 @@
         .admin-form-card h3,
         .admin-list-card h3 {
             font-family: 'Playfair Display', serif;
-            font-size: 1.15rem;
+            font-size: 1.25rem;
             color: var(--primary-dark, #0a192f);
             margin-bottom: 1.2rem;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 1.2rem 0 0.6rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.4rem;
+        }
+
+        .section-subtitle i {
+            color: var(--accent-gold);
         }
 
         .form-group {
@@ -94,7 +111,6 @@
         }
 
         .form-group input,
-        .form-group textarea,
         .form-group select {
             width: 100%;
             padding: 0.65rem 0.9rem;
@@ -102,11 +118,6 @@
             border-radius: 8px;
             font-family: inherit;
             font-size: 0.9rem;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
         }
 
         .type-toggle {
@@ -140,21 +151,37 @@
             color: var(--primary-dark, #0a192f);
         }
 
+        /* File Drop Box with Embedded Image Preview */
         .file-drop {
             border: 1.5px dashed var(--border-color, #e2e8f0);
             border-radius: 8px;
-            padding: 1.2rem;
+            padding: 0.8rem;
             text-align: center;
             font-size: 0.85rem;
             color: var(--text-gray, #64748b);
             cursor: pointer;
             position: relative;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fafafa;
+            overflow: hidden;
         }
 
-        .file-drop i {
-            font-size: 1.3rem;
+        .file-drop-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .file-drop-content i {
+            font-size: 1.5rem;
             color: #f59e0b;
-            display: block;
             margin-bottom: 0.4rem;
         }
 
@@ -163,6 +190,24 @@
             inset: 0;
             opacity: 0;
             cursor: pointer;
+            z-index: 10;
+        }
+
+        /* Image Thumbnail Preview Inside Drop Box */
+        .drop-preview-img {
+            max-width: 100%;
+            max-height: 135px;
+            border-radius: 6px;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .song-icon-badge {
+            background: var(--primary-dark);
+            color: var(--accent-gold);
+            padding: 1.5rem 2.5rem;
+            border-radius: 10px;
+            font-size: 2rem;
         }
 
         .file-preview-name {
@@ -170,6 +215,41 @@
             color: var(--primary-dark, #0a192f);
             margin-top: 0.5rem;
             font-weight: 600;
+            word-break: break-all;
+        }
+
+        /* Upload Progress Bar */
+        .progress-box {
+            display: none;
+            margin-bottom: 1.1rem;
+        }
+
+        .progress-box.active {
+            display: block;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            color: var(--primary-dark);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #10b981);
+            transition: width 0.2s ease;
         }
 
         .btn-submit {
@@ -214,75 +294,86 @@
             color: #dc2626;
         }
 
-        .media-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1.2rem;
+        /* Clean List Layout (Title + Delete Button Only) */
+        .media-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
-        .media-card {
-            border: 1px solid var(--border-color, #e2e8f0);
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
+        .media-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--off-white);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: background 0.2s ease;
         }
 
-        .media-card-top {
-            height: 130px;
-            background: var(--primary-dark, #0a192f);
+        .media-item-row:hover {
+            background: #f1f5f9;
+        }
+
+        .media-item-title {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            word-break: break-word;
+            padding-right: 1rem;
+        }
+
+        .media-delete-btn-simple {
+            background: #ef4444;
+            color: #ffffff;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #f59e0b;
-            font-size: 2rem;
+            font-size: 0.85rem;
+            transition: opacity 0.2s ease;
+            flex-shrink: 0;
         }
 
-        .media-card-body {
-            padding: 1rem;
+        .media-delete-btn-simple:hover {
+            opacity: 0.85;
         }
 
-        .media-card-body h4 {
-            font-size: 0.9rem;
-            color: var(--primary-dark, #0a192f);
-            margin-bottom: 0.3rem;
-        }
-
-        .media-card-body p {
-            font-size: 0.78rem;
+        .empty-text {
             color: var(--text-gray, #64748b);
-            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+            font-style: italic;
+            padding: 0.4rem 0;
         }
 
-        .media-card-body span {
-            font-size: 0.7rem;
-            color: var(--text-gray, #64748b);
-        }
-
-        .media-type-tag {
-            position: absolute;
-            top: 0.6rem;
-            left: 0.6rem;
-            background: rgba(255, 255, 255, 0.9);
-            color: var(--primary-dark, #0a192f);
-            font-size: 0.68rem;
-            font-weight: 700;
-            padding: 0.2rem 0.6rem;
-            border-radius: 20px;
-            text-transform: uppercase;
-        }
-
-        .media-delete-btn {
-            position: absolute;
-            top: 0.6rem;
-            right: 0.6rem;
-            background: rgba(239, 68, 68, 0.9);
-            color: #fff;
-            border: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
+        /* See More Button Styling */
+        .see-more-btn {
+            background: transparent;
+            border: 1px dashed var(--border-color);
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
-            font-size: 0.75rem;
+            padding: 0.55rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.4rem;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .see-more-btn:hover {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: #f59e0b;
+            color: #f59e0b;
         }
 
         @media (max-width: 900px) {
@@ -296,6 +387,7 @@
 <body>
     <main class="page-body">
         <div class="admin-grid">
+            <!-- Left Panel: Form -->
             <div class="admin-form-card">
                 <h3>Upload Media</h3>
                 <div class="form-msg" id="formMsg"></div>
@@ -316,38 +408,79 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="mediaDescription" placeholder="Describe this video/song..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
                         <label id="fileLabel">Video File</label>
                         <div class="file-drop" id="fileDrop">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                            Click to upload file
-                            <input type="file" id="mediaFile" accept="video/*">
+                            <!-- Drop Zone Content / Image Preview Inside -->
+                            <div class="file-drop-content" id="fileDropContent">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>Click to upload file</span>
+                            </div>
+                            <input type="file" id="mediaFile" accept="video/*" required>
                         </div>
                         <div class="file-preview-name" id="mediaFileName"></div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-box" id="progressBox">
+                        <div class="progress-label">
+                            <span id="progressStatus">Uploading...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="progressBarFill"></div>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn-submit" id="submitMediaBtn">Upload Media</button>
                 </form>
             </div>
 
+            <!-- Right Panel: Separated Lists with See More Pagination -->
             <div class="admin-list-card">
                 <h3>All Media</h3>
-                <div class="media-grid" id="mediaGrid">
-                    <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading...</p>
+
+                <!-- Videos Section -->
+                <div class="section-subtitle">
+                    <i class="fa-solid fa-video"></i> Videos
+                </div>
+                <div class="media-list-container" id="videoList">
+                    <p class="empty-text">Loading videos...</p>
+                </div>
+
+                <!-- Songs Section -->
+                <div class="section-subtitle">
+                    <i class="fa-solid fa-music"></i> Songs
+                </div>
+                <div class="media-list-container" id="songList">
+                    <p class="empty-text">Loading songs...</p>
                 </div>
             </div>
         </div>
     </main>
+
     <script>
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const MAX_FILE_SIZE_MB = 50;
+
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let selectedType = 'video';
+
+        // Global arrays to hold loaded data
+        let currentVideos = [];
+        let currentSongs = [];
+
+        // Tracks expanded state for Videos and Songs
+        let expandedState = { video: false, song: false };
+
+        function resetDropZone() {
+            document.getElementById('fileDropContent').innerHTML = `
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Click to upload file</span>
+            `;
+            document.getElementById('mediaFileName').textContent = '';
+        }
 
         function selectType(type) {
             selectedType = type;
@@ -355,6 +488,9 @@
             document.getElementById('typeSongBtn').classList.toggle('selected', type === 'song');
             document.getElementById('fileLabel').textContent = type === 'video' ? 'Video File' : 'Song File';
             document.getElementById('mediaFile').setAttribute('accept', type === 'video' ? 'video/*' : 'audio/*');
+
+            document.getElementById('mediaFile').value = '';
+            resetDropZone();
         }
 
         function escapeHtml(str) {
@@ -363,9 +499,73 @@
             return div.innerHTML;
         }
 
-        document.getElementById('mediaFile').addEventListener('change', (e) => {
+        // Extracts a frame snapshot from a video file using Canvas
+        function generateVideoSnapshot(file) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+                video.muted = true;
+                video.playsInline = true;
+                const blobUrl = URL.createObjectURL(file);
+                video.src = blobUrl;
+
+                video.onloadeddata = () => {
+                    video.currentTime = Math.min(1, video.duration / 2 || 0);
+                };
+
+                video.onseeked = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth || 320;
+                    canvas.height = video.videoHeight || 180;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imgDataUrl = canvas.toDataURL('image/jpeg');
+                    URL.revokeObjectURL(blobUrl);
+                    resolve(imgDataUrl);
+                };
+
+                video.onerror = () => {
+                    URL.revokeObjectURL(blobUrl);
+                    resolve(null);
+                };
+            });
+        }
+
+        // Generate Image Preview inside the Upload Card
+        document.getElementById('mediaFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            document.getElementById('mediaFileName').textContent = file ? file.name : '';
+            const nameEl = document.getElementById('mediaFileName');
+            const dropContent = document.getElementById('fileDropContent');
+
+            if (!file) {
+                resetDropZone();
+                return;
+            }
+
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            nameEl.textContent = `${file.name} (${sizeMB} MB)`;
+
+            if (file.type.startsWith('video/')) {
+                dropContent.innerHTML = `<span style="font-size:0.75rem; color:#64748b; margin-bottom:0.2rem;">Generating preview...</span>`;
+                const imageSrc = await generateVideoSnapshot(file);
+                if (imageSrc) {
+                    dropContent.innerHTML = `<img src="${imageSrc}" class="drop-preview-img" alt="Video Preview">`;
+                } else {
+                    dropContent.innerHTML = `
+                        <div class="song-icon-badge"><i class="fa-solid fa-file-video"></i></div>
+                    `;
+                }
+            } else if (file.type.startsWith('audio/')) {
+                dropContent.innerHTML = `
+                    <div class="song-icon-badge"><i class="fa-solid fa-music"></i></div>
+                `;
+            }
+
+            if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                showMsg(`File size is ${sizeMB} MB. Maximum limit is ${MAX_FILE_SIZE_MB} MB. Please compress the file.`, 'error');
+            } else {
+                showMsg('', '');
+            }
         });
 
         function showMsg(text, type) {
@@ -374,11 +574,70 @@
             el.className = `form-msg ${type}`;
         }
 
+        async function uploadFileWithProgress(filePath, file) {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const token = session ? session.access_token : SUPABASE_KEY;
+
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                const url = `${SUPABASE_URL}/storage/v1/object/media-files/${filePath}`;
+
+                const progressBox = document.getElementById('progressBox');
+                const progressBarFill = document.getElementById('progressBarFill');
+                const progressPercent = document.getElementById('progressPercent');
+
+                if (progressBox) progressBox.classList.add('active');
+
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable && progressBarFill && progressPercent) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressBarFill.style.width = `${percent}%`;
+                        progressPercent.textContent = `${percent}%`;
+                    }
+                });
+
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        if (progressBox) progressBox.classList.remove('active');
+
+                        if (xhr.status === 200 || xhr.status === 201) {
+                            resolve(true);
+                        } else {
+                            try {
+                                const res = JSON.parse(xhr.responseText);
+                                reject(new Error(res.message || res.error || `Upload failed with status ${xhr.status}`));
+                            } catch (e) {
+                                reject(new Error(`Server rejected upload with HTTP ${xhr.status}`));
+                            }
+                        }
+                    }
+                };
+
+                xhr.onerror = () => {
+                    if (progressBox) progressBox.classList.remove('active');
+                    reject(new Error('Network error occurred during upload.'));
+                };
+
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                xhr.setRequestHeader('apikey', SUPABASE_KEY);
+                xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+                xhr.setRequestHeader('x-upsert', 'true');
+                xhr.send(file);
+            });
+        }
+
         document.getElementById('mediaForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitMediaBtn');
             const file = document.getElementById('mediaFile').files[0];
             if (!file) { showMsg('Please choose a file to upload.', 'error'); return; }
+
+            if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                showMsg(`File size is ${sizeMB} MB. Maximum limit is ${MAX_FILE_SIZE_MB} MB.`, 'error');
+                return;
+            }
 
             btn.disabled = true;
             btn.textContent = 'Uploading...';
@@ -386,22 +645,29 @@
 
             try {
                 const title = document.getElementById('mediaTitle').value.trim();
-                const description = document.getElementById('mediaDescription').value.trim();
-                const filePath = `${Date.now()}_${file.name}`;
 
-                const { error: uploadError } = await supabaseClient.storage.from('media-files').upload(filePath, file);
-                if (uploadError) throw new Error('Upload failed: ' + uploadError.message);
+                const sanitizedFileName = file.name
+                    .replace(/[—–]/g, '-')
+                    .replace(/[^a-zA-Z0-9._-]/g, '_')
+                    .replace(/_+/g, '_');
+
+                const filePath = `${Date.now()}_${sanitizedFileName}`;
+
+                await uploadFileWithProgress(filePath, file);
 
                 const { data: publicUrlData } = supabaseClient.storage.from('media-files').getPublicUrl(filePath);
 
                 const { error: insertError } = await supabaseClient.from('media').insert({
-                    type: selectedType, title, description, file_url: publicUrlData.publicUrl
+                    type: selectedType,
+                    title,
+                    file_url: publicUrlData.publicUrl
                 });
+
                 if (insertError) throw new Error(insertError.message);
 
                 showMsg('Media uploaded successfully!', 'success');
                 document.getElementById('mediaForm').reset();
-                document.getElementById('mediaFileName').textContent = '';
+                resetDropZone();
                 loadMedia();
             } catch (err) {
                 showMsg(err.message, 'error');
@@ -418,24 +684,71 @@
             loadMedia();
         }
 
-        async function loadMedia() {
-            const container = document.getElementById('mediaGrid');
-            const { data, error } = await supabaseClient.from('media').select('*').order('created_at', { ascending: false });
-            if (error) { container.innerHTML = `<p style="color:#dc2626; font-size:0.9rem;">${escapeHtml(error.message)}</p>`; return; }
-            if (!data || data.length === 0) { container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No media uploaded yet.</p>'; return; }
+        // Toggles expanding / collapsing lists
+        function toggleSectionExpand(type) {
+            expandedState[type] = !expandedState[type];
+            if (type === 'video') {
+                renderMediaList('videoList', currentVideos, 'video');
+            } else {
+                renderMediaList('songList', currentSongs, 'song');
+            }
+        }
 
-            container.innerHTML = data.map(m => `
-        <div class="media-card">
-            <span class="media-type-tag">${escapeHtml(m.type)}</span>
-            <button class="media-delete-btn" onclick="deleteMedia('${m.id}')"><i class="fa-solid fa-trash"></i></button>
-            <div class="media-card-top"><i class="fa-solid ${m.type === 'video' ? 'fa-play' : 'fa-music'}"></i></div>
-            <div class="media-card-body">
-                <h4>${escapeHtml(m.title)}</h4>
-                <p>${escapeHtml(m.description)}</p>
-                <span>${new Date(m.created_at).toLocaleDateString()}</span>
-            </div>
-        </div>
-    `).join('');
+        // Renders media items + optional "See More" button when length > 4
+        function renderMediaList(containerId, items, type) {
+            const container = document.getElementById(containerId);
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `<p class="empty-text">No ${type}s uploaded yet.</p>`;
+                return;
+            }
+
+            const isExpanded = expandedState[type];
+            const visibleItems = isExpanded ? items : items.slice(0, 4);
+            const hasMore = items.length > 4;
+
+            let html = visibleItems.map(m => `
+                <div class="media-item-row">
+                    <span class="media-item-title">${escapeHtml(m.title)}</span>
+                    <button class="media-delete-btn-simple" onclick="deleteMedia('${m.id}')" title="Delete ${type}">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            if (hasMore) {
+                const remainingCount = items.length - 4;
+                const btnText = isExpanded ? 'See Less' : `See More (${remainingCount} more)`;
+                const iconClass = isExpanded ? 'fa-chevron-up' : 'fa-chevron-down';
+
+                html += `
+                    <button class="see-more-btn" onclick="toggleSectionExpand('${type}')">
+                        <span>${btnText}</span>
+                        <i class="fa-solid ${iconClass}"></i>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function loadMedia() {
+            const videoContainer = document.getElementById('videoList');
+            const songContainer = document.getElementById('songList');
+
+            const { data, error } = await supabaseClient.from('media').select('*').order('created_at', { ascending: false });
+
+            if (error) {
+                videoContainer.innerHTML = `<p style="color:#dc2626; font-size:0.85rem;">${escapeHtml(error.message)}</p>`;
+                songContainer.innerHTML = `<p style="color:#dc2626; font-size:0.85rem;">${escapeHtml(error.message)}</p>`;
+                return;
+            }
+
+            currentVideos = (data || []).filter(m => m.type === 'video');
+            currentSongs = (data || []).filter(m => m.type === 'song');
+
+            renderMediaList('videoList', currentVideos, 'video');
+            renderMediaList('songList', currentSongs, 'song');
         }
 
         (async () => {
@@ -443,7 +756,6 @@
             if (!session) { window.top.location.href = '../../auth.html'; return; }
             loadMedia();
         })();
-
     </script>
 </body>
 
