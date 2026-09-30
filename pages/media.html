@@ -43,18 +43,103 @@
             margin: 0 auto;
         }
 
+        /* --- CENTERED HEADER & SEARCH SECTION --- */
+        .media-header {
+            margin-bottom: 0.2rem;
+            padding-bottom: 1.5rem;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1.2rem;
+        }
+
+        .media-header-info h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.4rem;
+        }
+
+        .media-header-info p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 520px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .search-container i.search-icon {
+            position: absolute;
+            left: 1.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem 2.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            color: var(--text-main);
+            background: #f8fafc;
+            transition: var(--transition);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--text-blue);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.1);
+        }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: none;
+            padding: 0.2rem;
+            border-radius: 50%;
+            transition: color 0.2s;
+        }
+
+        .search-clear-btn:hover {
+            color: var(--text-main);
+        }
+
+        /* --- SECTION TITLES --- */
         h2.section-title {
             font-family: 'Playfair Display', serif;
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-main);
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
             margin-top: 1.5rem;
             padding-bottom: 0.4rem;
             border-bottom: 2px solid var(--border-color);
         }
 
-        h2.section-title:first-child {
+        h2.section-title:first-of-type {
             margin-top: 0;
         }
 
@@ -175,17 +260,16 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 0.8rem;
+            margin-bottom: 2.5rem;
         }
 
         .audio-card {
             background: var(--card-bg);
             border-radius: 8px;
             padding: 6px 12px;
-            /* Slimmer vertical padding */
             display: flex;
             flex-direction: column;
             gap: 2px;
-            /* Reduced internal gap */
             border: 1px solid var(--border-color);
             box-shadow: var(--shadow);
             transition: var(--transition);
@@ -221,7 +305,6 @@
 
         .audio-card .icon-btn {
             width: 28px;
-            /* Slimmer buttons */
             height: 28px;
             font-size: 0.75rem;
             background: #f1f5f9;
@@ -253,7 +336,37 @@
         /* --- MOBILE RESPONSIVE STYLING --- */
         @media (max-width: 640px) {
             .page-body {
-                padding: 0.8rem;
+                padding: 1rem 0.8rem;
+            }
+
+            .media-header {
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+            }
+
+            .media-header-info h1 {
+                font-size: 1.5rem;
+            }
+
+            .media-header-info p {
+                font-size: 0.85rem;
+            }
+
+            .search-container {
+                max-width: 100%;
+            }
+
+            .search-input {
+                padding: 0.7rem 2.4rem;
+                font-size: 0.85rem;
+            }
+
+            .search-container i.search-icon {
+                left: 0.9rem;
+            }
+
+            .search-clear-btn {
+                right: 0.8rem;
             }
 
             .video-grid {
@@ -280,17 +393,39 @@
 <body>
     <main class="page-body">
 
+        <!-- Centered Header & Search -->
+        <header class="media-header">
+            <div class="media-header-info">
+                <h1>Media Library</h1>
+                <p>Explore, listen, and download our latest videos and audio recordings.</p>
+            </div>
+
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search song or video by title..."
+                    oninput="handleSearch()">
+                <button type="button" id="clearSearchBtn" class="search-clear-btn" onclick="clearSearch()"
+                    title="Clear Search">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </header>
+
         <!-- Videos Section -->
-        <h2 class="section-title">Videos</h2>
-        <div class="video-grid" id="videoGrid">
-            <p class="empty-msg">Loading videos...</p>
-        </div>
+        <section>
+            <h2 class="section-title">Videos</h2>
+            <div class="video-grid" id="videoGrid">
+                <p class="empty-msg">Loading videos...</p>
+            </div>
+        </section>
 
         <!-- Audio Section -->
-        <h2 class="section-title">Audio</h2>
-        <div class="audio-grid" id="audioGrid">
-            <p class="empty-msg">Loading audio...</p>
-        </div>
+        <section>
+            <h2 class="section-title">Audio</h2>
+            <div class="audio-grid" id="audioGrid">
+                <p class="empty-msg">Loading audio...</p>
+            </div>
+        </section>
 
     </main>
 
@@ -300,6 +435,7 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allMedia = [];
+        let searchQuery = '';
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -335,20 +471,44 @@
                     target.textContent = formatBytes(parseInt(size, 10));
                 }
             } catch (e) {
-                // Keep default fallback text if request fails
+                // Fallback preserved
             }
+        }
+
+        // Search Input Handlers
+        function handleSearch() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            searchQuery = input.value.trim().toLowerCase();
+
+            clearBtn.style.display = searchQuery ? 'block' : 'none';
+            renderMedia();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            handleSearch();
+            input.focus();
         }
 
         function renderMedia() {
             const videoContainer = document.getElementById('videoGrid');
             const audioContainer = document.getElementById('audioGrid');
 
-            const videos = allMedia.filter(m => m.type === 'video');
-            const audios = allMedia.filter(m => m.type === 'song' || m.type === 'audio');
+            // Filter items based on title matching search input
+            const filteredMedia = allMedia.filter(m =>
+                !searchQuery || (m.title && m.title.toLowerCase().includes(searchQuery))
+            );
 
-            // --- Render Videos ---
+            const videos = filteredMedia.filter(m => m.type === 'video');
+            const audios = filteredMedia.filter(m => m.type === 'song' || m.type === 'audio');
+
+            // --- Render All Videos ---
             if (videos.length === 0) {
-                videoContainer.innerHTML = '<p class="empty-msg">No videos available.</p>';
+                videoContainer.innerHTML = searchQuery
+                    ? '<p class="empty-msg">No videos found matching your search.</p>'
+                    : '<p class="empty-msg">No videos available.</p>';
             } else {
                 videoContainer.innerHTML = videos.map(m => `
                     <div class="video-card">
@@ -371,16 +531,16 @@
                 `).join('');
             }
 
-            // --- Render Audio ---
+            // --- Render All Audio ---
             if (audios.length === 0) {
-                audioContainer.innerHTML = '<p class="empty-msg">No audio files available.</p>';
+                audioContainer.innerHTML = searchQuery
+                    ? '<p class="empty-msg">No audio found matching your search.</p>'
+                    : '<p class="empty-msg">No audio files available.</p>';
             } else {
                 audioContainer.innerHTML = audios.map(m => {
-                    // Check database properties for file size
                     const dbSize = m.size || m.file_size || m.bytes;
                     const sizeDisplay = dbSize ? formatBytes(dbSize) : `<span id="size-${m.id}">Calculating...</span>`;
 
-                    // Fetch live if DB size isn't found
                     if (!dbSize && m.file_url) {
                         fetchFileSize(m.file_url, `size-${m.id}`);
                     }

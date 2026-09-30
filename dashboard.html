@@ -292,59 +292,6 @@
             color: var(--text-gray, #64748b);
         }
 
-        @media (max-width: 768px) {
-            .db-section-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .verse-card {
-                grid-column: span 1;
-            }
-
-            .db-stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 1rem;
-            }
-
-            .db-stat-card {
-                padding: 1.1rem;
-            }
-
-            .db-stat-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 0.95rem;
-                margin-bottom: 0.7rem;
-            }
-
-            .db-stat-card h3 {
-                font-size: 1.4rem;
-            }
-
-            .db-stat-card p {
-                font-size: 0.75rem;
-            }
-
-            .iframe-content-wrap {
-                margin-top: 17px;
-                margin-bottom: 90px;
-                border-bottom: 10px solid #d7dbe1;
-
-
-            }
-
-            .mobile-sidebar-toggle {
-                font-size: 1.4rem;
-                width: 42px;
-                height: 42px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: var(--off-white, #f8fafc);
-                border-radius: 10px;
-            }
-        }
-
         /* Admin panel block - orange highlighted panel style */
         .admin-block {
             border-radius: 10px;
@@ -411,43 +358,61 @@
             color: #fff !important;
         }
 
-        /* Persistent shell: lock the full height chain so only the iframe
-           scrolls internally — sidebar and topbar never move or resize. */
+        /* Persistent shell layout */
         html,
         body {
             height: 100%;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
         }
 
         .dashboard-layout {
             height: 100vh;
+            height: 100dvh;
+            display: flex;
+            width: 100%;
+            overflow: hidden;
         }
 
         .sidebar {
             height: 100vh;
+            height: 100dvh;
+            flex-shrink: 0;
         }
 
         .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             height: 100vh;
+            height: 100dvh;
             max-height: 100vh;
+            max-height: 100dvh;
             overflow: hidden;
+            min-width: 0;
+        }
+
+        .topbar {
+            flex-shrink: 0 !important;
         }
 
         .iframe-content-wrap {
-            flex: 1;
-            display: flex;
-            min-height: 0;
-            overflow: hidden;
-            margin-top: -10px;
-            margin-bottom: 60px;
+            flex: 1 1 0% !important;
+            display: flex !important;
+            min-height: 0 !important;
+            height: 0 !important;
+            width: 100% !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         #contentFrame {
-
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            border: none !important;
+            display: block !important;
         }
 
         /* Container Card */
@@ -492,12 +457,11 @@
             transition: transform 0.3s ease;
         }
 
-        /* Submenu Panel (Dark Charcoal) */
+        /* Submenu Panel */
         .sidebar-submenu {
             max-height: 0;
             overflow: hidden;
             background-color: #2c2c2e;
-            /* Dark gray matching screenshot */
             transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
@@ -505,13 +469,11 @@
             border-bottom-right-radius: 12px;
         }
 
-        /* Submenu Links (Amber Text) */
+        /* Submenu Links */
         .sidebar-submenu .sub-link {
             display: block;
             padding: 12px 16px 12px 42px;
-            /* Indented sub-items */
             color: #f5a623;
-            /* Bright amber text */
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 500;
@@ -522,30 +484,72 @@
         .sidebar-submenu .sub-link:hover,
         .sidebar-submenu .sub-link.active {
             background-color: #453823;
-            /* Dark brownish-amber highlight */
             color: #ffbe4a;
         }
 
-        /* --- ACTIVE / OPEN STATE --- */
-
-        /* Bright Amber Header when open */
+        /* Active State */
         .sidebar-dropdown.active .sidebar-dropdown-btn {
             background-color: #f19e00;
-            /* Exact amber yellow color */
             color: #0b1320;
-            /* Dark navy/black text and icons */
             border-radius: 12px 12px 0 0;
-            /* Keep top rounded, flatten bottom */
         }
 
-        /* Chevron Rotation */
         .sidebar-dropdown.active .dropdown-arrow {
             transform: rotate(90deg);
         }
 
-        /* Expand Submenu */
         .sidebar-dropdown.active .sidebar-submenu {
             max-height: 200px;
+        }
+
+        @media (max-width: 768px) {
+            .db-section-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .verse-card {
+                grid-column: span 1;
+            }
+
+            .db-stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            .db-stat-card {
+                padding: 1.1rem;
+            }
+
+            .db-stat-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 0.95rem;
+                margin-bottom: 0.7rem;
+            }
+
+            .db-stat-card h3 {
+                font-size: 1.4rem;
+            }
+
+            .db-stat-card p {
+                font-size: 0.75rem;
+            }
+
+            .iframe-content-wrap {
+                margin: 0;
+                border-bottom: none;
+            }
+
+            .mobile-sidebar-toggle {
+                font-size: 1.4rem;
+                width: 42px;
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--off-white, #f8fafc);
+                border-radius: 10px;
+            }
         }
     </style>
 </head>
@@ -664,7 +668,7 @@
                     </button>
                     <div class="welcome-text">
                         <span id="welcomeName">Welcome back 👋</span>
-                        <p>Here's what's happening in Kimangu AY today.</p>
+                        <p id="welcomeDesc">Here's what's happening in Kimangu AY today.</p>
                     </div>
                 </div>
 
@@ -743,7 +747,6 @@
         async function loadUserProfile() {
             const { data: { session } } = await supabaseClient.auth.getSession();
 
-            // No one is logged in — send them back to sign in
             if (!session) {
                 window.location.href = 'auth.html';
                 return;
@@ -773,55 +776,67 @@
                 profile.category ? profile.category.charAt(0).toUpperCase() + profile.category.slice(1) + ' Member' : 'Kimangu AY Member';
             document.getElementById('sidebarAvatar').textContent = initials;
             document.getElementById('topbarAvatar').textContent = initials;
-
-            // DEV MODE: Admin Panel is shown to everyone for testing.
-            // Before launch, wrap the Admin Panel nav block in a check for
-            // profile.account_type === 'admin' to restrict it properly.
         }
 
         loadUserProfile();
+
         function toggleSidebarDropdown(button) {
             const dropdown = button.parentElement;
 
-            // Optional: Close other open menus
             document.querySelectorAll('.sidebar-dropdown.active').forEach(openDropdown => {
                 if (openDropdown !== dropdown) {
                     openDropdown.classList.remove('active');
                 }
             });
 
-            // Toggle current menu
             dropdown.classList.toggle('active');
         }
 
         // ===================== PERSISTENT SHELL NAVIGATION =====================
-        // Clicking a sidebar link swaps only the iframe's content — the
-        // sidebar and topbar never reload.
         const contentFrame = document.getElementById('contentFrame');
-        const welcomeNameEl = document.getElementById('welcomeName');
-        const welcomeDescEl = document.querySelector('.welcome-text p');
+
+        // Dynamically inject bottom padding into loaded iframe pages so elements are never cut off
+        function applyIframeBottomPadding() {
+            try {
+                const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+                if (iframeDoc && iframeDoc.head) {
+                    let styleTag = iframeDoc.getElementById('custom-iframe-padding');
+                    if (!styleTag) {
+                        styleTag = iframeDoc.createElement('style');
+                        styleTag.id = 'custom-iframe-padding';
+                        iframeDoc.head.appendChild(styleTag);
+                    }
+                    styleTag.textContent = `
+                        html {
+                            height: auto !important;
+                            min-height: 100% !important;
+                        }
+                        body {
+                            min-height: 100% !important;
+                            padding-bottom: 70px !important;
+                            box-sizing: border-box !important;
+                            overflow-y: auto !important;
+                        }
+                    `;
+                }
+            } catch (err) {
+                console.warn('Iframe style injection notice:', err);
+            }
+        }
+
+        contentFrame.addEventListener('load', applyIframeBottomPadding);
 
         document.querySelectorAll('.sidebar-nav a.sidebar-link[data-page]').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const targetPage = link.getAttribute('data-page');
-                const title = link.getAttribute('data-title');
-                const desc = link.getAttribute('data-desc');
 
                 contentFrame.src = targetPage;
 
                 document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
 
-                if (title === '__HOME__') {
-                    welcomeNameEl.textContent = homeWelcomeText;
-                    welcomeDescEl.textContent = "Here's what's happening in Kimangu AY today.";
-                } else {
-                    if (title) welcomeNameEl.textContent = title;
-                    if (desc) welcomeDescEl.textContent = desc;
-                }
-
-                // Close the mobile sidebar after choosing a link
+                // Close mobile sidebar on selection
                 sidebar.classList.remove('active');
                 sidebarOverlay.classList.remove('active');
             });
