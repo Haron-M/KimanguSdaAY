@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Dashboard | Kimangu AY</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
@@ -362,6 +362,7 @@
         html,
         body {
             height: 100%;
+            height: -webkit-fill-available;
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -370,6 +371,7 @@
         .dashboard-layout {
             height: 100vh;
             height: 100dvh;
+            height: -webkit-fill-available;
             display: flex;
             width: 100%;
             overflow: hidden;
@@ -378,6 +380,7 @@
         .sidebar {
             height: 100vh;
             height: 100dvh;
+            height: -webkit-fill-available;
             flex-shrink: 0;
         }
 
@@ -387,6 +390,7 @@
             flex-direction: column;
             height: 100vh;
             height: 100dvh;
+            height: -webkit-fill-available;
             max-height: 100vh;
             max-height: 100dvh;
             overflow: hidden;
@@ -406,6 +410,7 @@
             overflow: hidden !important;
             margin: 0 !important;
             padding: 0 !important;
+            -webkit-overflow-scrolling: touch;
         }
 
         #contentFrame {
@@ -795,7 +800,7 @@
         // ===================== PERSISTENT SHELL NAVIGATION =====================
         const contentFrame = document.getElementById('contentFrame');
 
-        // Dynamically inject bottom padding into loaded iframe pages so elements are never cut off
+        // Dynamically inject safe bottom padding into loaded iframe pages so elements are never obscured on mobile screens
         function applyIframeBottomPadding() {
             try {
                 const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
@@ -813,9 +818,10 @@
                         }
                         body {
                             min-height: 100% !important;
-                            padding-bottom: 70px !important;
+                            padding-bottom: max(100px, calc(70px + env(safe-area-inset-bottom))) !important;
                             box-sizing: border-box !important;
                             overflow-y: auto !important;
+                            -webkit-overflow-scrolling: touch !important;
                         }
                     `;
                 }
