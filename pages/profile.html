@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile & Account</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: #0a192f;
+            padding: 2rem 1.5rem;
+        }
+
+        .profile-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(10, 25, 47, 0.06);
+            border: 1px solid #e2e8f0;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-header h2 {
+            font-size: 1.5rem;
+            color: #0a192f;
+            margin-bottom: 0.3rem;
+        }
+
+        .profile-header p {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* Avatar Upload Section */
+        .avatar-upload-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .avatar-preview {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: #f59e0b;
+            color: #0a192f;
+            font-size: 2.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 4px solid #f8fafc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-btn {
+            background: #0a192f;
+            color: #ffffff;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .upload-btn:hover {
+            background: #1e293b;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        /* User Details Display */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+        }
+
+        .detail-item {
+            background: #f8fafc;
+            padding: 1rem 1.2rem;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .detail-item label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-item span {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0a192f;
+        }
+
+        .status-msg {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-msg.success {
+            color: #16a34a;
+        }
+
+        .status-msg.error {
+            color: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <h2>User Profile</h2>
+            <p>View your details and update your profile picture</p>
+        </div>
+
+        <div class="avatar-upload-box">
+            <div class="avatar-preview" id="avatarPreview">--</div>
+            <label for="imageInput" class="upload-btn">
+                <i class="fa-solid fa-camera"></i> Upload Image
+            </label>
+            <input type="file" id="imageInput" accept="image/*">
+            <div id="statusMsg" class="status-msg"></div>
+        </div>
+
+        <!-- Database Fields (full_name, phone, category) -->
+        <div class="details-grid">
+            <div class="detail-item">
+                <label>Full Name</label>
+                <span id="displayFullName">Loading...</span>
+            </div>
+
+            <div class="detail-item">
+                <label>Phone Number</label>
+                <span id="displayPhone">Loading...</span>
+            </div>
+
+            <div class="detail-item">
+                <label>Category</label>
+                <span id="displayCategory">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+
+        function getInitials(name) {
+            if (!name) return '--';
+            const parts = name.trim().split(/\s+/);
+            const first = parts[0] ? parts[0][0] : '';
+            const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+            return (first + last).toUpperCase();
+        }
+
+        async function loadProfileData() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) return;
+
+            currentUser = session.user;
+
+            // Fetch full_name, phone, category, avatar_url from database
+            const { data: profile, error } = await supabaseClient
+                .from('profiles')
+                .select('full_name, phone, category, avatar_url')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (error) {
+                console.error('Error fetching profile details:', error);
+                return;
+            }
+
+            document.getElementById('displayFullName').textContent = profile.full_name || 'N/A';
+            document.getElementById('displayPhone').textContent = profile.phone || 'N/A';
+            document.getElementById('displayCategory').textContent = profile.category || 'N/A';
+
+            const previewEl = document.getElementById('avatarPreview');
+            if (profile.avatar_url) {
+                previewEl.innerHTML = `<img src="${profile.avatar_url}" alt="Profile">`;
+            } else {
+                previewEl.textContent = getInitials(profile.full_name);
+            }
+        }
+
+        // Upload Profile Image & Persist in Database
+        document.getElementById('imageInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            const statusMsg = document.getElementById('statusMsg');
+            if (!file || !currentUser) return;
+
+            statusMsg.className = 'status-msg';
+            statusMsg.textContent = 'Saving image to database...';
+
+            try {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const base64Image = reader.result;
+
+                    // Save Base64 image URL in Supabase database column avatar_url
+                    const { error } = await supabaseClient
+                        .from('profiles')
+                        .update({ avatar_url: base64Image })
+                        .eq('id', currentUser.id);
+
+                    if (error) throw error;
+
+                    // Update local preview image
+                    document.getElementById('avatarPreview').innerHTML = `<img src="${base64Image}" alt="Profile">`;
+                    statusMsg.className = 'status-msg success';
+                    statusMsg.textContent = 'Profile picture updated and saved permanently!';
+
+                    // Send signal to parent window (dashboard.html) to update topbar avatar instantly
+                    window.parent.postMessage('profileUpdated', '*');
+                };
+            } catch (err) {
+                console.error('Database update failed:', err);
+                statusMsg.className = 'status-msg error';
+                statusMsg.textContent = 'Failed to save image to database.';
+            }
+        });
+
+        loadProfileData();
+    </script>
+
+</body>
+
+</html>

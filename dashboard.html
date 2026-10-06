@@ -13,6 +13,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        /* ===================== HIDE ALL SCROLLBARS ===================== */
+        * {
+            -ms-overflow-style: none !important;
+            /* IE and Edge */
+            scrollbar-width: none !important;
+            /* Firefox */
+        }
+
+        *::-webkit-scrollbar {
+            display: none !important;
+            /* Chrome, Safari, Opera */
+            width: 0 !important;
+            height: 0 !important;
+        }
+
         .db-stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -140,7 +155,25 @@
             color: #f59e0b;
         }
 
-        /* Announcements */
+        /* Notifications Styling */
+        .notif-badge {
+            display: none;
+        }
+
+        .notif-item.read {
+            opacity: 0.6;
+        }
+
+        .mark-read-btn {
+            cursor: pointer;
+            color: var(--primary-blue, #0f2b4c);
+            font-weight: 600;
+        }
+
+        .mark-read-btn:hover {
+            text-decoration: underline;
+        }
+
         .announcement-item {
             display: flex;
             gap: 0.9rem;
@@ -292,7 +325,7 @@
             color: var(--text-gray, #64748b);
         }
 
-        /* Admin panel block - orange highlighted panel style */
+        /* Admin panel block */
         .admin-block {
             border-radius: 10px;
             overflow: hidden;
@@ -377,11 +410,76 @@
             overflow: hidden;
         }
 
+        /* Sidebar Styling */
         .sidebar {
             height: 100vh;
             height: 100dvh;
             height: -webkit-fill-available;
             flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* ===================== USER PROFILE CARD (IMAGE 2 STYLE) ===================== */
+        .sidebar-profile {
+            margin: 10px 14px 16px 14px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+        }
+
+        .profile-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #f59e0b;
+            color: #0a192f;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .profile-info h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .profile-info p {
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            margin: 3px 0 0 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .main-content {
@@ -485,14 +583,12 @@
             transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        /* Submenu Hover / Active State */
         .sidebar-submenu .sub-link:hover,
         .sidebar-submenu .sub-link.active {
             background-color: #453823;
             color: #ffbe4a;
         }
 
-        /* Active State */
         .sidebar-dropdown.active .sidebar-dropdown-btn {
             background-color: #f19e00;
             color: #0b1320;
@@ -555,6 +651,59 @@
                 background: var(--off-white, #f8fafc);
                 border-radius: 10px;
             }
+        }
+
+        /* ===================== TOPBAR AVATAR TOOLTIP ===================== */
+        .avatar-tooltip-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .avatar-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            width: max-content;
+            background-color: #0a192f;
+            color: #ffffff;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            position: absolute;
+            z-index: 1000;
+            top: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
+        }
+
+        .avatar-tooltip::after {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent #0a192f transparent;
+        }
+
+        .avatar-tooltip-container:hover .avatar-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .topbar-avatar img,
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
     </style>
 </head>
@@ -620,6 +769,7 @@
                             data-desc="Upload lessons, guides and documents for members.">Upload Resources</a>
                     </div>
                 </div>
+
                 <!-- Treasury Desk Accordion Dropdown -->
                 <div class="sidebar-dropdown">
                     <button type="button" class="sidebar-dropdown-btn" onclick="toggleSidebarDropdown(this)">
@@ -644,18 +794,18 @@
                     </div>
                 </div>
 
-
                 <p class="nav-group-label">Session</p>
                 <a href="#" class="sidebar-link logout-link" id="logoutLink">
                     <i class="fa-solid fa-right-from-bracket"></i> Log Out
                 </a>
             </nav>
 
+            <!-- Bottom Profile Card (Image 2 Style) -->
             <div class="sidebar-profile">
                 <div class="profile-avatar" id="sidebarAvatar">--</div>
                 <div class="profile-info">
                     <h4 id="sidebarFullName">Loading...</h4>
-                    <p id="sidebarCategory">Kimangu AY Member</p>
+                    <p id="sidebarLocation">loading... KE 📍</p>
                 </div>
             </div>
         </aside>
@@ -681,48 +831,26 @@
                     <div class="notif-wrap">
                         <button class="notif-btn" id="notifBtn">
                             <i class="fa-solid fa-bell"></i>
-                            <span class="notif-badge">3</span>
+                            <span class="notif-badge" id="notifBadge">0</span>
                         </button>
 
                         <div class="notif-dropdown" id="notifDropdown">
                             <div class="notif-dropdown-header">
                                 <h4>Notifications</h4>
-                                <span>Mark all read</span>
+                                <span class="mark-read-btn" id="markAllReadBtn">Mark all read</span>
                             </div>
-                            <div class="notif-list">
-                                <div class="notif-item unread">
-                                    <div class="notif-icon"><i class="fa-solid fa-calendar-days"></i></div>
-                                    <div class="notif-content">
-                                        <p>New event added: <strong>AI Upskilling & Tech Sabbath</strong> on Oct 15.</p>
-                                        <span>10 minutes ago</span>
-                                    </div>
-                                </div>
-                                <div class="notif-item unread">
-                                    <div class="notif-icon"><i class="fa-solid fa-users"></i></div>
-                                    <div class="notif-content">
-                                        <p>3 new members joined Kimangu AY this week.</p>
-                                        <span>2 hours ago</span>
-                                    </div>
-                                </div>
-                                <div class="notif-item unread">
-                                    <div class="notif-icon"><i class="fa-solid fa-book-open"></i></div>
-                                    <div class="notif-content">
-                                        <p>New Bible Lab resource uploaded to the library.</p>
-                                        <span>Yesterday</span>
-                                    </div>
-                                </div>
-                                <div class="notif-item">
-                                    <div class="notif-icon"><i class="fa-solid fa-comment"></i></div>
-                                    <div class="notif-content">
-                                        <p>Your prayer request was received by the AY leadership team.</p>
-                                        <span>2 days ago</span>
-                                    </div>
+                            <div class="notif-list" id="notifList">
+                                <div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">
+                                    Loading schedules...
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="topbar-avatar" id="topbarAvatar">--</div>
+                    <div class="avatar-tooltip-container" id="topbarAvatarContainer">
+                        <div class="topbar-avatar" id="topbarAvatar">--</div>
+                        <span class="avatar-tooltip">add profile</span>
+                    </div>
                 </div>
             </header>
 
@@ -740,6 +868,8 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let homeWelcomeText = 'Welcome back 👋';
+        let currentUserId = null;
+        let activeSchedules = [];
 
         function getInitials(fullName) {
             if (!fullName) return '--';
@@ -749,6 +879,226 @@
             return (first + last).toUpperCase();
         }
 
+        // Safe HTML utility
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // Time calculations for "time ago" display
+        function formatTimeAgo(dateString) {
+            if (!dateString) return 'Recently';
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            const days = Math.floor(hours / 24);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+
+        // ===================== DYNAMIC LOCATION & COUNTY FETCHING =====================
+        async function fetchUserCounty() {
+            const locElement = document.getElementById('sidebarLocation');
+
+            // Helper to format county and country code neatly
+            function formatCountyText(countyName, countryCode) {
+                if (!countyName) return 'Location Unavailable 📍';
+
+                let cleanCounty = countyName.trim();
+                if (!cleanCounty.toLowerCase().includes('county')) {
+                    cleanCounty += ' County';
+                }
+                const code = countryCode ? `, ${countryCode}` : '';
+                return `${cleanCounty}${code} 📍`;
+            }
+
+            // IP-based Lookup (Triggered when GPS/Location permission is OFF or Denied)
+            async function fetchByIP() {
+                try {
+                    const res = await fetch('https://ipapi.co/json/');
+                    const data = await res.json();
+                    if (data && (data.region || data.city)) {
+                        const region = data.region || data.city;
+                        locElement.textContent = formatCountyText(region, data.country_code);
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('IP location fetch failed:', err);
+                }
+                // Final fallback when both GPS and IP lookup fail
+                locElement.textContent = 'Location Unavailable 📍';
+            }
+
+            // Tier 1: Try Device GPS Geolocation
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        try {
+                            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+                            const data = await res.json();
+
+                            const county = data.principalSubdivision || data.city;
+                            if (county) {
+                                locElement.textContent = formatCountyText(county, data.countryCode);
+                            } else {
+                                await fetchByIP();
+                            }
+                        } catch (e) {
+                            // Reverse geocoding failed -> fallback to IP lookup
+                            await fetchByIP();
+                        }
+                    },
+                    async (error) => {
+                        // Location permission denied or disabled -> fallback to IP lookup
+                        await fetchByIP();
+                    },
+                    { timeout: 5000 } // 5-second timeout before falling back to IP lookup
+                );
+            } else {
+                // Browser does not support geolocation -> fallback to IP lookup
+                await fetchByIP();
+            }
+        }
+
+        // ===================== SCHEDULE NOTIFICATIONS SYSTEM =====================
+        const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+
+        function getReadStorageKey(userId) {
+            return `read_schedules_${userId}`;
+        }
+
+        function getReadState(userId) {
+            if (!userId) return {};
+            try {
+                return JSON.parse(localStorage.getItem(getReadStorageKey(userId))) || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveReadState(userId, state) {
+            if (!userId) return;
+            localStorage.setItem(getReadStorageKey(userId), JSON.stringify(state));
+        }
+
+        async function fetchAndRenderScheduleNotifications(userId) {
+            try {
+                const { data: schedules, error } = await supabaseClient
+                    .from('schedules')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (error) {
+                    console.error('Error fetching schedule notifications:', error);
+                    document.getElementById('notifList').innerHTML =
+                        '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">Failed to load notifications.</div>';
+                    return;
+                }
+
+                activeSchedules = schedules || [];
+                renderScheduleNotifications(activeSchedules, userId);
+            } catch (err) {
+                console.error('Notification system exception:', err);
+            }
+        }
+
+        function renderScheduleNotifications(schedules, userId) {
+            const readState = getReadState(userId);
+            const now = Date.now();
+
+            const notifBadge = document.getElementById('notifBadge');
+            const notifList = document.getElementById('notifList');
+
+            let unreadCount = 0;
+            let visibleHtml = '';
+
+            schedules.forEach(item => {
+                const readTimestamp = readState[item.id];
+                const isRead = readTimestamp !== undefined;
+
+                if (isRead) {
+                    const elapsed = now - readTimestamp;
+                    if (elapsed >= SIX_HOURS_MS) {
+                        return;
+                    }
+                } else {
+                    unreadCount++;
+                }
+
+                const title = item.title || item.duty_name || item.event_title || 'New Schedule Assigned';
+                const description = item.description || item.location || (item.date ? `Date: ${item.date}` : 'Check your schedule for details.');
+                const timeAgoStr = formatTimeAgo(item.created_at);
+
+                visibleHtml += `
+                    <div class="notif-item ${isRead ? 'read' : 'unread'}">
+                        <div class="notif-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                        <div class="notif-content">
+                            <p>New schedule: <strong>${escapeHtml(title)}</strong> - ${escapeHtml(description)}</p>
+                            <span>${timeAgoStr}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (unreadCount > 0) {
+                notifBadge.textContent = unreadCount;
+                notifBadge.style.display = 'inline-block';
+            } else {
+                notifBadge.textContent = '0';
+                notifBadge.style.display = 'none';
+            }
+
+            if (visibleHtml) {
+                notifList.innerHTML = visibleHtml;
+            } else {
+                notifList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">No new schedule notifications</div>';
+            }
+        }
+
+        function handleMarkAllAsRead() {
+            if (!currentUserId || !activeSchedules.length) return;
+
+            const readState = getReadState(currentUserId);
+            const now = Date.now();
+
+            activeSchedules.forEach(item => {
+                if (!readState[item.id]) {
+                    readState[item.id] = now;
+                }
+            });
+
+            saveReadState(currentUserId, readState);
+            renderScheduleNotifications(activeSchedules, currentUserId);
+        }
+        // Helper to manage Topbar (Image or Initials) and Sidebar (Initials Only)
+        function updateAvatarUI(avatarUrl, initials) {
+            const topbarEl = document.getElementById('topbarAvatar');
+            const sidebarEl = document.getElementById('sidebarAvatar');
+
+            // Sidebar Avatar: ALWAYS displays initials only
+            sidebarEl.textContent = initials;
+
+            // Topbar Avatar: Displays uploaded image if available, otherwise falls back to initials
+            if (avatarUrl && avatarUrl.trim() !== '') {
+                topbarEl.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="Profile Picture">`;
+            } else {
+                topbarEl.textContent = initials;
+            }
+        }
+
+        // Fetch Profile Data from Supabase
         async function loadUserProfile() {
             const { data: { session } } = await supabaseClient.auth.getSession();
 
@@ -757,12 +1107,13 @@
                 return;
             }
 
-            const userId = session.user.id;
+            currentUserId = session.user.id;
 
+            // Retrieve full_name, phone, category, and stored avatar_url from database
             const { data: profile, error } = await supabaseClient
                 .from('profiles')
-                .select('full_name, category, account_type')
-                .eq('id', userId)
+                .select('full_name, phone, category, avatar_url')
+                .eq('id', currentUserId)
                 .single();
 
             if (error || !profile) {
@@ -776,31 +1127,33 @@
 
             homeWelcomeText = `Welcome back, ${firstName} 👋`;
             document.getElementById('welcomeName').textContent = homeWelcomeText;
-            document.getElementById('sidebarFullName').textContent = fullName;
-            document.getElementById('sidebarCategory').textContent =
-                profile.category ? profile.category.charAt(0).toUpperCase() + profile.category.slice(1) + ' Member' : 'Kimangu AY Member';
-            document.getElementById('sidebarAvatar').textContent = initials;
-            document.getElementById('topbarAvatar').textContent = initials;
+            document.getElementById('sidebarFullName').textContent = firstName;
+
+            // Apply the avatar rules
+            updateAvatarUI(profile.avatar_url, initials);
+
+            fetchAndRenderScheduleNotifications(currentUserId);
+            fetchUserCounty();
         }
+        // Open Accounts page when clicking the topbar avatar
+        document.getElementById('topbarAvatarContainer').addEventListener('click', () => {
+            document.getElementById('contentFrame').src = 'pages/profile.html';
 
-        loadUserProfile();
+            // Highlight Accounts in sidebar
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            const accountsLink = document.querySelector('a[data-title="Accounts"]');
+            if (accountsLink) accountsLink.classList.add('active');
+        });
 
-        function toggleSidebarDropdown(button) {
-            const dropdown = button.parentElement;
-
-            document.querySelectorAll('.sidebar-dropdown.active').forEach(openDropdown => {
-                if (openDropdown !== dropdown) {
-                    openDropdown.classList.remove('active');
-                }
-            });
-
-            dropdown.classList.toggle('active');
-        }
-
+        // Listen for profile updates from iframe
+        window.addEventListener('message', (event) => {
+            if (event.data === 'profileUpdated') {
+                loadUserProfile();
+            }
+        });
         // ===================== PERSISTENT SHELL NAVIGATION =====================
         const contentFrame = document.getElementById('contentFrame');
 
-        // Dynamically inject safe bottom padding into loaded iframe pages so elements are never obscured on mobile screens
         function applyIframeBottomPadding() {
             try {
                 const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
@@ -842,7 +1195,6 @@
                 document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
 
-                // Close mobile sidebar on selection
                 sidebar.classList.remove('active');
                 sidebarOverlay.classList.remove('active');
             });
