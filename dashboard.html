@@ -13,21 +13,19 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* ===================== HIDE ALL SCROLLBARS ===================== */
+        /* ===== Hide all scrollbars ===== */
         * {
             -ms-overflow-style: none !important;
-            /* IE and Edge */
             scrollbar-width: none !important;
-            /* Firefox */
         }
 
         *::-webkit-scrollbar {
             display: none !important;
-            /* Chrome, Safari, Opera */
             width: 0 !important;
             height: 0 !important;
         }
 
+        /* ===== Stats ===== */
         .db-stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -87,6 +85,7 @@
             z-index: 1;
         }
 
+        /* ===== Cards ===== */
         .db-section-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -130,7 +129,7 @@
             color: #fff;
         }
 
-        /* Verse of the day */
+        /* ===== Verse of the day ===== */
         .verse-card {
             background: var(--primary-dark, #0a192f);
             color: #fff;
@@ -155,7 +154,7 @@
             color: #f59e0b;
         }
 
-        /* Notifications Styling */
+        /* ===== Notifications ===== */
         .notif-badge {
             display: none;
         }
@@ -211,7 +210,7 @@
             color: var(--text-gray, #64748b);
         }
 
-        /* Upcoming events */
+        /* ===== Upcoming events ===== */
         .db-event-item {
             display: flex;
             align-items: center;
@@ -259,7 +258,7 @@
             color: var(--text-gray, #64748b);
         }
 
-        /* Quick links */
+        /* ===== Quick links ===== */
         .quicklinks-header {
             display: flex;
             justify-content: space-between;
@@ -325,7 +324,7 @@
             color: var(--text-gray, #64748b);
         }
 
-        /* Admin panel block */
+        /* ===== Admin panel block ===== */
         .admin-block {
             border-radius: 10px;
             overflow: hidden;
@@ -391,7 +390,7 @@
             color: #fff !important;
         }
 
-        /* Persistent shell layout */
+        /* ===== Persistent shell layout ===== */
         html,
         body {
             height: 100%;
@@ -410,7 +409,6 @@
             overflow: hidden;
         }
 
-        /* Sidebar Styling */
         .sidebar {
             height: 100vh;
             height: 100dvh;
@@ -426,7 +424,7 @@
             overflow-y: auto;
         }
 
-        /* ===================== USER PROFILE CARD (IMAGE 2 STYLE) ===================== */
+        /* ===== Sidebar profile card ===== */
         .sidebar-profile {
             margin: 10px 14px 16px 14px;
             padding: 12px 16px;
@@ -518,7 +516,7 @@
             display: block !important;
         }
 
-        /* Container Card */
+        /* ===== Treasury Desk dropdown ===== */
         .sidebar-dropdown {
             width: 100%;
             border-radius: 12px;
@@ -527,7 +525,6 @@
             transition: all 0.2s ease-in-out;
         }
 
-        /* Default / Closed State Button */
         .sidebar-dropdown-btn {
             width: 100%;
             display: flex;
@@ -560,7 +557,6 @@
             transition: transform 0.3s ease;
         }
 
-        /* Submenu Panel */
         .sidebar-submenu {
             max-height: 0;
             overflow: hidden;
@@ -572,7 +568,6 @@
             border-bottom-right-radius: 12px;
         }
 
-        /* Submenu Links */
         .sidebar-submenu .sub-link {
             display: block;
             padding: 12px 16px 12px 42px;
@@ -603,6 +598,181 @@
             max-height: 200px;
         }
 
+        /* ===== Topbar avatar + tooltip ===== */
+        .avatar-tooltip-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .avatar-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            width: max-content;
+            background-color: #0a192f;
+            color: #ffffff;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            position: absolute;
+            z-index: 1000;
+            top: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
+        }
+
+        .avatar-tooltip::after {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent #0a192f transparent;
+        }
+
+        .avatar-tooltip-container:hover .avatar-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .avatar-tooltip-container.open .avatar-tooltip {
+            display: none;
+        }
+
+        .topbar-avatar img,
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* ===== Avatar panel ===== */
+        .avatar-wrap {
+            position: relative;
+        }
+
+        .avatar-panel {
+            display: none;
+            grid-template-columns: auto 1fr;
+            gap: 1.2rem;
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: min(360px, calc(100vw - 24px));
+            background: #fff;
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 14px;
+            padding: 1.2rem;
+            box-shadow: 0 10px 30px rgba(10, 25, 47, 0.15);
+            z-index: 2000;
+        }
+
+        .avatar-panel.open {
+            display: grid;
+        }
+
+        .ap-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            width: 120px;
+        }
+
+        .ap-preview {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            background: #f59e0b;
+            color: #0a192f;
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .ap-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .ap-choose,
+        .ap-save {
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+
+        .ap-choose {
+            border: 1px dashed #cbd5e1;
+            background: #f8fafc;
+            color: #0a192f;
+        }
+
+        .ap-save {
+            border: none;
+            background: #0a192f;
+            color: #fff;
+        }
+
+        .ap-save:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .ap-right {
+            min-width: 0;
+            align-self: center;
+        }
+
+        .ap-right label {
+            display: block;
+            font-size: 0.72rem;
+            color: #64748b;
+            margin-bottom: 0.15rem;
+        }
+
+        .ap-right p {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #0a192f;
+            margin: 0 0 0.8rem;
+            word-break: break-word;
+        }
+
+        .ap-status {
+            grid-column: 1 / -1;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .ap-status.success {
+            color: #16a34a;
+        }
+
+        .ap-status.error {
+            color: #dc2626;
+        }
+
+        /* ===== Mobile ===== */
         @media (max-width: 768px) {
             .db-section-grid {
                 grid-template-columns: 1fr;
@@ -651,59 +821,6 @@
                 background: var(--off-white, #f8fafc);
                 border-radius: 10px;
             }
-        }
-
-        /* ===================== TOPBAR AVATAR TOOLTIP ===================== */
-        .avatar-tooltip-container {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-        }
-
-        .avatar-tooltip {
-            visibility: hidden;
-            opacity: 0;
-            width: max-content;
-            background-color: #0a192f;
-            color: #ffffff;
-            text-align: center;
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            position: absolute;
-            z-index: 1000;
-            top: 120%;
-            left: 50%;
-            transform: translateX(-50%);
-            transition: opacity 0.2s ease, visibility 0.2s ease;
-            white-space: nowrap;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            pointer-events: none;
-        }
-
-        .avatar-tooltip::after {
-            content: "";
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: transparent transparent #0a192f transparent;
-        }
-
-        .avatar-tooltip-container:hover .avatar-tooltip {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .topbar-avatar img,
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
         }
     </style>
 </head>
@@ -770,9 +887,9 @@
                     </div>
                 </div>
 
-                <!-- Treasury Desk Accordion Dropdown -->
-                <div class="sidebar-dropdown">
-                    <button type="button" class="sidebar-dropdown-btn" onclick="toggleSidebarDropdown(this)">
+                <!-- Treasury Desk accordion dropdown -->
+                <div class="sidebar-dropdown" id="treasuryDropdown">
+                    <button type="button" class="sidebar-dropdown-btn" id="treasuryBtn">
                         <div class="dropdown-title">
                             <i class="fa-solid fa-coins"></i>
                             <span>Treasury Desk</span>
@@ -790,7 +907,8 @@
                             Transaction History
                         </a>
                         <a href="report-analysis.html" class="sidebar-link sub-link"
-                            data-page="pages/report-analysis.html">Report Analysis</a>
+                            data-page="pages/report-analysis.html" data-title="Report Analysis"
+                            data-desc="Review treasury reports and analysis.">Report Analysis</a>
                     </div>
                 </div>
 
@@ -800,7 +918,7 @@
                 </a>
             </nav>
 
-            <!-- Bottom Profile Card (Image 2 Style) -->
+            <!-- Bottom profile card -->
             <div class="sidebar-profile">
                 <div class="profile-avatar" id="sidebarAvatar">--</div>
                 <div class="profile-info">
@@ -847,9 +965,29 @@
                         </div>
                     </div>
 
-                    <div class="avatar-tooltip-container" id="topbarAvatarContainer">
-                        <div class="topbar-avatar" id="topbarAvatar">--</div>
-                        <span class="avatar-tooltip">add profile</span>
+                    <!-- Avatar + upload panel -->
+                    <div class="avatar-wrap" id="avatarWrap">
+                        <div class="avatar-tooltip-container" id="topbarAvatarContainer">
+                            <div class="topbar-avatar" id="topbarAvatar">--</div>
+                            <span class="avatar-tooltip">profile</span>
+                        </div>
+
+                        <div class="avatar-panel" id="avatarPanel">
+                            <div class="ap-left">
+                                <div class="ap-preview" id="apPreview">--</div>
+                                <label for="apInput" class="ap-choose"><i class="fa-solid fa-image"></i> Choose
+                                    image</label>
+                                <input type="file" id="apInput" accept="image/*" hidden>
+                                <button type="button" class="ap-save" id="apSave" disabled>Upload</button>
+                            </div>
+                            <div class="ap-right">
+                                <label>Name</label>
+                                <p id="apName">--</p>
+                                <label>Phone</label>
+                                <p id="apPhone">--</p>
+                            </div>
+                            <div class="ap-status" id="apStatus"></div>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -870,7 +1008,23 @@
         let homeWelcomeText = 'Welcome back 👋';
         let currentUserId = null;
         let activeSchedules = [];
+        let pendingAvatar = null;
 
+        // ===================== DOM REFERENCES =====================
+        const contentFrame = document.getElementById('contentFrame');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const notifBtn = document.getElementById('notifBtn');
+        const notifDropdown = document.getElementById('notifDropdown');
+        const avatarWrap = document.getElementById('avatarWrap');
+        const avatarPanel = document.getElementById('avatarPanel');
+        const avatarBox = document.getElementById('topbarAvatarContainer');
+        const apInput = document.getElementById('apInput');
+        const apSave = document.getElementById('apSave');
+        const apStatus = document.getElementById('apStatus');
+
+        // ===================== HELPERS =====================
         function getInitials(fullName) {
             if (!fullName) return '--';
             const parts = fullName.trim().split(/\s+/);
@@ -879,7 +1033,6 @@
             return (first + last).toUpperCase();
         }
 
-        // Safe HTML utility
         function escapeHtml(str) {
             if (!str) return '';
             return String(str)
@@ -889,13 +1042,9 @@
                 .replace(/"/g, '&quot;');
         }
 
-        // Time calculations for "time ago" display
         function formatTimeAgo(dateString) {
             if (!dateString) return 'Recently';
-            const date = new Date(dateString);
-            const now = new Date();
-            const seconds = Math.floor((now - date) / 1000);
-
+            const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
             if (seconds < 60) return 'Just now';
             const minutes = Math.floor(seconds / 60);
             if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
@@ -905,49 +1054,51 @@
             return `${days} day${days > 1 ? 's' : ''} ago`;
         }
 
-        // ===================== DYNAMIC LOCATION & COUNTY FETCHING =====================
+        // ===================== TREASURY DESK DROPDOWN =====================
+        function toggleSidebarDropdown(btn) {
+            const dropdown = btn.closest('.sidebar-dropdown');
+            if (dropdown) dropdown.classList.toggle('active');
+        }
+
+        const treasuryBtn = document.getElementById('treasuryBtn');
+        if (treasuryBtn) {
+            treasuryBtn.addEventListener('click', () => toggleSidebarDropdown(treasuryBtn));
+        }
+
+        // ===================== LOCATION / COUNTY =====================
         async function fetchUserCounty() {
             const locElement = document.getElementById('sidebarLocation');
+            if (!locElement) return;
 
-            // Helper to format county and country code neatly
             function formatCountyText(countyName, countryCode) {
                 if (!countyName) return 'Location Unavailable 📍';
-
                 let cleanCounty = countyName.trim();
-                if (!cleanCounty.toLowerCase().includes('county')) {
-                    cleanCounty += ' County';
-                }
+                if (!cleanCounty.toLowerCase().includes('county')) cleanCounty += ' County';
                 const code = countryCode ? `, ${countryCode}` : '';
                 return `${cleanCounty}${code} 📍`;
             }
 
-            // IP-based Lookup (Triggered when GPS/Location permission is OFF or Denied)
             async function fetchByIP() {
                 try {
                     const res = await fetch('https://ipapi.co/json/');
                     const data = await res.json();
                     if (data && (data.region || data.city)) {
-                        const region = data.region || data.city;
-                        locElement.textContent = formatCountyText(region, data.country_code);
+                        locElement.textContent = formatCountyText(data.region || data.city, data.country_code);
                         return;
                     }
                 } catch (err) {
                     console.warn('IP location fetch failed:', err);
                 }
-                // Final fallback when both GPS and IP lookup fail
                 locElement.textContent = 'Location Unavailable 📍';
             }
 
-            // Tier 1: Try Device GPS Geolocation
-            if ("geolocation" in navigator) {
+            if ('geolocation' in navigator) {
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
+                        const { latitude, longitude } = position.coords;
                         try {
-                            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+                            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
                             const data = await res.json();
-
                             const county = data.principalSubdivision || data.city;
                             if (county) {
                                 locElement.textContent = formatCountyText(county, data.countryCode);
@@ -955,28 +1106,21 @@
                                 await fetchByIP();
                             }
                         } catch (e) {
-                            // Reverse geocoding failed -> fallback to IP lookup
                             await fetchByIP();
                         }
                     },
-                    async (error) => {
-                        // Location permission denied or disabled -> fallback to IP lookup
-                        await fetchByIP();
-                    },
-                    { timeout: 5000 } // 5-second timeout before falling back to IP lookup
+                    async () => { await fetchByIP(); },
+                    { timeout: 5000 }
                 );
             } else {
-                // Browser does not support geolocation -> fallback to IP lookup
                 await fetchByIP();
             }
         }
 
-        // ===================== SCHEDULE NOTIFICATIONS SYSTEM =====================
+        // ===================== SCHEDULE NOTIFICATIONS =====================
         const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
-        function getReadStorageKey(userId) {
-            return `read_schedules_${userId}`;
-        }
+        function getReadStorageKey(userId) { return `read_schedules_${userId}`; }
 
         function getReadState(userId) {
             if (!userId) return {};
@@ -1002,8 +1146,10 @@
 
                 if (error) {
                     console.error('Error fetching schedule notifications:', error);
-                    document.getElementById('notifList').innerHTML =
-                        '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">Failed to load notifications.</div>';
+                    const notifList = document.getElementById('notifList');
+                    if (notifList) {
+                        notifList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">Failed to load notifications.</div>';
+                    }
                     return;
                 }
 
@@ -1017,9 +1163,9 @@
         function renderScheduleNotifications(schedules, userId) {
             const readState = getReadState(userId);
             const now = Date.now();
-
             const notifBadge = document.getElementById('notifBadge');
             const notifList = document.getElementById('notifList');
+            if (!notifList || !notifBadge) return;
 
             let unreadCount = 0;
             let visibleHtml = '';
@@ -1029,27 +1175,22 @@
                 const isRead = readTimestamp !== undefined;
 
                 if (isRead) {
-                    const elapsed = now - readTimestamp;
-                    if (elapsed >= SIX_HOURS_MS) {
-                        return;
-                    }
+                    if (now - readTimestamp >= SIX_HOURS_MS) return;
                 } else {
                     unreadCount++;
                 }
 
                 const title = item.title || item.duty_name || item.event_title || 'New Schedule Assigned';
                 const description = item.description || item.location || (item.date ? `Date: ${item.date}` : 'Check your schedule for details.');
-                const timeAgoStr = formatTimeAgo(item.created_at);
 
                 visibleHtml += `
-                    <div class="notif-item ${isRead ? 'read' : 'unread'}">
-                        <div class="notif-icon"><i class="fa-solid fa-calendar-day"></i></div>
-                        <div class="notif-content">
-                            <p>New schedule: <strong>${escapeHtml(title)}</strong> - ${escapeHtml(description)}</p>
-                            <span>${timeAgoStr}</span>
-                        </div>
+                <div class="notif-item ${isRead ? 'read' : 'unread'}">
+                    <div class="notif-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                    <div class="notif-content">
+                        <p>New schedule: <strong>${escapeHtml(title)}</strong> - ${escapeHtml(description)}</p>
+                        <span>${formatTimeAgo(item.created_at)}</span>
                     </div>
-                `;
+                </div>`;
             });
 
             if (unreadCount > 0) {
@@ -1060,46 +1201,42 @@
                 notifBadge.style.display = 'none';
             }
 
-            if (visibleHtml) {
-                notifList.innerHTML = visibleHtml;
-            } else {
-                notifList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">No new schedule notifications</div>';
-            }
+            notifList.innerHTML = visibleHtml ||
+                '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">No new schedule notifications</div>';
         }
 
         function handleMarkAllAsRead() {
             if (!currentUserId || !activeSchedules.length) return;
-
             const readState = getReadState(currentUserId);
             const now = Date.now();
-
             activeSchedules.forEach(item => {
-                if (!readState[item.id]) {
-                    readState[item.id] = now;
-                }
+                if (!readState[item.id]) readState[item.id] = now;
             });
-
             saveReadState(currentUserId, readState);
             renderScheduleNotifications(activeSchedules, currentUserId);
         }
-        // Rules:
-        // 1. Topbar Avatar = Uploaded image if exists, otherwise Initials
-        // 2. Sidebar Avatar = ALWAYS Initials only
-        function updateAvatarUI(avatarUrl, initials) {
-            const topbarEl = document.getElementById('topbarAvatar');
-            const sidebarEl = document.getElementById('sidebarAvatar');
 
-            // Sidebar Avatar ALWAYS displays initials
-            if (sidebarEl) sidebarEl.textContent = initials;
+        const markAllReadBtn = document.getElementById('markAllReadBtn');
+        if (markAllReadBtn) markAllReadBtn.addEventListener('click', handleMarkAllAsRead);
 
-            // Topbar Avatar displays image if available, else initials
-            if (topbarEl) {
-                if (avatarUrl && avatarUrl.trim() !== '') {
-                    topbarEl.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="Profile Picture" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-                } else {
-                    topbarEl.textContent = initials;
-                }
+        // ===================== AVATAR & PROFILE =====================
+        // Topbar + panel preview: uploaded image if it exists, otherwise initials.
+        // Sidebar avatar: always initials.
+        function paintAvatar(el, url, initials) {
+            if (!el) return;
+            if (url && url.trim() !== '') {
+                el.innerHTML = `<img src="${escapeHtml(url)}" alt="Profile picture">`;
+            } else {
+                el.textContent = initials;
             }
+        }
+
+        function updateAvatarUI(avatarUrl, initials) {
+            const sidebarEl = document.getElementById('sidebarAvatar');
+            if (sidebarEl) sidebarEl.textContent = initials;
+            paintAvatar(document.getElementById('topbarAvatar'), avatarUrl, initials);
+            paintAvatar(document.getElementById('apPreview'), avatarUrl, initials);
+            if (apSave) apSave.textContent = avatarUrl ? 'Change' : 'Upload';
         }
 
         async function loadUserProfile() {
@@ -1112,15 +1249,14 @@
 
             currentUserId = session.user.id;
 
-            // 1. Fallback values from user session metadata
             let fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Member';
             let avatarUrl = null;
+            let phone = session.user.phone || session.user.user_metadata?.phone || '';
 
-            // 2. Attempt fetching profile details from database
             try {
                 const { data: profile, error } = await supabaseClient
                     .from('profiles')
-                    .select('full_name, avatar_url')
+                    .select('full_name, phone, avatar_url')
                     .eq('id', currentUserId)
                     .maybeSingle();
 
@@ -1128,49 +1264,120 @@
                     console.warn('Profile fetch warning:', error.message);
                 } else if (profile) {
                     if (profile.full_name) fullName = profile.full_name;
+                    if (profile.phone) phone = profile.phone;
                     if (profile.avatar_url) avatarUrl = profile.avatar_url;
                 }
             } catch (err) {
                 console.error('Database connection error:', err);
             }
 
-            // 3. Extract name parts and initials
             const firstName = fullName.trim().split(/\s+/)[0] || 'Member';
             const initials = getInitials(fullName);
 
-            // 4. Update DOM Elements
             homeWelcomeText = `Welcome back, ${firstName} 👋`;
 
             const welcomeNameEl = document.getElementById('welcomeName');
             const sidebarNameEl = document.getElementById('sidebarFullName');
-
             if (welcomeNameEl) welcomeNameEl.textContent = homeWelcomeText;
             if (sidebarNameEl) sidebarNameEl.textContent = firstName;
 
-            // 5. Update Avatars
             updateAvatarUI(avatarUrl, initials);
 
-            // 6. Load location & notifications
-            if (typeof fetchAndRenderScheduleNotifications === 'function') {
-                fetchAndRenderScheduleNotifications(currentUserId);
-            }
-            if (typeof fetchUserCounty === 'function') {
-                fetchUserCounty();
-            }
+            document.getElementById('apName').textContent = fullName;
+            document.getElementById('apPhone').textContent = phone || 'Not added yet';
+
+            fetchAndRenderScheduleNotifications(currentUserId);
+            fetchUserCounty();
         }
 
-        // Listen for updates from accounts.html iframe
-        window.addEventListener('message', (event) => {
-            if (event.data === 'profileUpdated') {
-                loadUserProfile();
+        // ===================== AVATAR PANEL =====================
+        function setApStatus(msg, type = '') {
+            apStatus.textContent = msg;
+            apStatus.className = 'ap-status ' + type;
+        }
+
+        function closeAvatarPanel() {
+            avatarPanel.classList.remove('open');
+            avatarBox.classList.remove('open');
+        }
+
+        function compressImage(file, max = 250, quality = 0.85) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, max / Math.max(img.width, img.height));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    URL.revokeObjectURL(img.src);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        avatarBox.addEventListener('click', () => {
+            const open = avatarPanel.classList.toggle('open');
+            avatarBox.classList.toggle('open', open);
+            if (open && notifDropdown) notifDropdown.classList.remove('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!avatarWrap.contains(e.target)) closeAvatarPanel();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeAvatarPanel();
+        });
+
+        apInput.addEventListener('change', async () => {
+            const file = apInput.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                setApStatus('Choose an image file.', 'error');
+                return;
+            }
+            try {
+                pendingAvatar = await compressImage(file);
+                paintAvatar(document.getElementById('apPreview'), pendingAvatar, '');
+                apSave.disabled = false;
+                setApStatus('');
+            } catch (err) {
+                setApStatus('Could not read that image.', 'error');
             }
         });
 
-        // Call profile loader on page ready
-        loadUserProfile();
-        // ===================== PERSISTENT SHELL NAVIGATION =====================
-        const contentFrame = document.getElementById('contentFrame');
+        apSave.addEventListener('click', async () => {
+            if (!pendingAvatar || !currentUserId) return;
+            apSave.disabled = true;
+            setApStatus('Saving…');
 
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .update({ avatar_url: pendingAvatar })
+                .eq('id', currentUserId)
+                .select('id');
+
+            if (error || !data || !data.length) {
+                apSave.disabled = false;
+                setApStatus(error?.message || 'Not saved. Check the update policy on profiles.', 'error');
+                return;
+            }
+
+            pendingAvatar = null;
+            apInput.value = '';
+            setApStatus('Photo saved.', 'success');
+            loadUserProfile();
+        });
+
+        // Refresh when an iframe page (e.g. accounts) updates the profile
+        window.addEventListener('message', (event) => {
+            if (event.data === 'profileUpdated') loadUserProfile();
+        });
+
+        // ===================== PERSISTENT SHELL NAVIGATION =====================
         function applyIframeBottomPadding() {
             try {
                 const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
@@ -1182,18 +1389,14 @@
                         iframeDoc.head.appendChild(styleTag);
                     }
                     styleTag.textContent = `
-                        html {
-                            height: auto !important;
-                            min-height: 100% !important;
-                        }
-                        body {
-                            min-height: 100% !important;
-                            padding-bottom: max(150px, calc(90px + env(safe-area-inset-bottom))) !important;
-                            box-sizing: border-box !important;
-                            overflow-y: auto !important;
-                            -webkit-overflow-scrolling: touch !important;
-                        }
-                    `;
+                    html { height: auto !important; min-height: 100% !important; }
+                    body {
+                        min-height: 100% !important;
+                        padding-bottom: max(150px, calc(90px + env(safe-area-inset-bottom))) !important;
+                        box-sizing: border-box !important;
+                        overflow-y: auto !important;
+                        -webkit-overflow-scrolling: touch !important;
+                    }`;
                 }
             } catch (err) {
                 console.warn('Iframe style injection notice:', err);
@@ -1205,9 +1408,7 @@
         document.querySelectorAll('.sidebar-nav a.sidebar-link[data-page]').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const targetPage = link.getAttribute('data-page');
-
-                contentFrame.src = targetPage;
+                contentFrame.src = link.getAttribute('data-page');
 
                 document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
@@ -1220,49 +1421,53 @@
         // Admin submenu toggle
         const adminToggle = document.getElementById('adminToggle');
         const adminSubmenu = document.getElementById('adminSubmenu');
-        adminToggle.addEventListener('click', () => {
-            adminToggle.classList.toggle('open');
-            adminSubmenu.classList.toggle('open');
-        });
+        if (adminToggle && adminSubmenu) {
+            adminToggle.addEventListener('click', () => {
+                adminToggle.classList.toggle('open');
+                adminSubmenu.classList.toggle('open');
+            });
+        }
 
         // Notification dropdown toggle
-        const notifBtn = document.getElementById('notifBtn');
-        const notifDropdown = document.getElementById('notifDropdown');
+        if (notifBtn && notifDropdown) {
+            notifBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeAvatarPanel();
+                notifDropdown.classList.toggle('active');
+            });
 
-        notifBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notifDropdown.classList.toggle('active');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
-                notifDropdown.classList.remove('active');
-            }
-        });
+            document.addEventListener('click', (e) => {
+                if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+                    notifDropdown.classList.remove('active');
+                }
+            });
+        }
 
         // Mobile sidebar toggle
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.add('active');
-            sidebarOverlay.classList.add('active');
-        });
-
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-            sidebarOverlay.classList.remove('active');
-        });
+        if (sidebarToggle && sidebar && sidebarOverlay) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.add('active');
+                sidebarOverlay.classList.add('active');
+            });
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
 
         // Logout
-        document.getElementById('logoutLink').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await supabaseClient.auth.signOut();
-            window.location.href = 'index.html';
-        });
-    </script>
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await supabaseClient.auth.signOut();
+                window.location.href = 'index.html';
+            });
+        }
 
+        // ===================== START =====================
+        loadUserProfile();
+    </script>
 </body>
 
 </html>
