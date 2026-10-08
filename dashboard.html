@@ -671,6 +671,23 @@
             background: linear-gradient(180deg, #0f172a, #1e3a5f);
         }
 
+        /* The circle itself floats up and down */
+        @keyframes chipBob {
+
+            0%,
+            100% {
+                transform: translateY(3px);
+            }
+
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+
+        .greeting-icon {
+            animation: chipBob 5.5s ease-in-out infinite;
+        }
+
         /* Animations: all loop continuously */
         .sun-rays,
         .sun-core,
@@ -683,46 +700,38 @@
         }
 
         @keyframes sunRiseLoop {
-            0% {
-                transform: translateY(15px);
-                opacity: 0;
-            }
 
-            18% {
-                opacity: 1;
-            }
-
-            55%,
-            88% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
+            0%,
             100% {
-                transform: translateY(0);
-                opacity: 0;
+                transform: translateY(7px);
+            }
+
+            50% {
+                transform: translateY(-4px);
             }
         }
 
         @keyframes sunSetLoop {
-            0% {
-                transform: translateY(-2px);
-                opacity: 0;
-            }
 
-            14% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
-            72% {
-                transform: translateY(14px);
-                opacity: 1;
-            }
-
+            0%,
             100% {
-                transform: translateY(16px);
-                opacity: 0;
+                transform: translateY(-1px);
+            }
+
+            50% {
+                transform: translateY(14px);
+            }
+        }
+
+        @keyframes sunFloat {
+
+            0%,
+            100% {
+                transform: translateY(5px);
+            }
+
+            50% {
+                transform: translateY(-5px);
             }
         }
 
@@ -774,11 +783,11 @@
 
             0%,
             100% {
-                transform: translateY(0) rotate(-5deg);
+                transform: translateY(2px) rotate(-5deg);
             }
 
             50% {
-                transform: translateY(-1.2px) rotate(5deg);
+                transform: translateY(-2px) rotate(5deg);
             }
         }
 
@@ -797,11 +806,15 @@
         }
 
         .sun-rise {
-            animation: sunRiseLoop 5s ease-out infinite;
+            animation: sunRiseLoop 6s ease-in-out infinite;
         }
 
         .sun-set {
-            animation: sunSetLoop 5.5s ease-in-out infinite;
+            animation: sunSetLoop 7s ease-in-out infinite;
+        }
+
+        .sun-float {
+            animation: sunFloat 4.5s ease-in-out infinite;
         }
 
         .sun-rays {
@@ -1040,6 +1053,103 @@
             border-top-left-radius: 3px;
             transform: translateX(-50%) rotate(45deg);
             z-index: 2001;
+        }
+
+        /* ===== Location gate (blocks the dashboard until location is on) ===== */
+        .loc-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.2rem;
+            background: rgba(10, 25, 47, 0.86);
+            backdrop-filter: blur(6px);
+        }
+
+        .loc-gate[hidden] {
+            display: none;
+        }
+
+        .loc-gate-card {
+            width: min(420px, 100%);
+            background: #fff;
+            border-radius: 18px;
+            padding: 2rem 1.6rem;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        .loc-gate-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            animation: chipBob 3.5s ease-in-out infinite;
+        }
+
+        .loc-gate-card h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: #0a192f;
+            margin: 0 0 0.6rem;
+        }
+
+        .loc-gate-card p {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin: 0 0 1.2rem;
+        }
+
+        .loc-gate-card p.loc-gate-help {
+            margin: 1rem 0 0;
+            color: #b45309;
+            font-size: 0.82rem;
+        }
+
+        .loc-gate-card p.loc-gate-help[hidden] {
+            display: none;
+        }
+
+        .loc-gate-btn {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            background: #f59e0b;
+            color: #0a192f;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .loc-gate-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .loc-gate-skip {
+            margin-top: 0.9rem;
+            background: none;
+            border: none;
+            color: #64748b;
+            font-family: inherit;
+            font-size: 0.82rem;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .loc-gate-skip[hidden] {
+            display: none;
         }
 
         /* ===== Mobile ===== */
@@ -1287,6 +1397,20 @@
         </div>
     </div>
 
+    <!-- Location gate: shown until the user turns location on -->
+    <div class="loc-gate" id="locGate" role="dialog" aria-modal="true" aria-labelledby="locGateTitle" hidden>
+        <div class="loc-gate-card">
+            <div class="loc-gate-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <h2 id="locGateTitle">Turn on your location</h2>
+            <p>Kimangu AY needs your location to continue. Your county is saved to your profile so we know where you are
+                signing in from.</p>
+            <button type="button" class="loc-gate-btn" id="locGateBtn">Enable location</button>
+            <p class="loc-gate-help" id="locGateHelp" hidden></p>
+            <button type="button" class="loc-gate-skip" id="locGateSkip" hidden>Continue with approximate
+                location</button>
+        </div>
+    </div>
+
     <script>
         // ===================== SUPABASE SETUP =====================
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
@@ -1353,7 +1477,7 @@
                 <g clip-path="url(#clipSkyRise)">
                     <g class="sun-rise">
                         <circle class="sun-halo" cx="24" cy="36" r="16" fill="#fde68a"/>
-                        <path d="M13 36a11 11 0 0 1 22 0z" fill="#f59e0b"/>
+                        <circle cx="24" cy="36" r="11" fill="#f59e0b"/>
                         <path class="ray-fade" d="M6.7 24L11 26.5M14 16.7L16.5 21M24 14v5M34 16.7L31.5 21M41.3 24L37 26.5" stroke="#f59e0b" stroke-width="2.6" stroke-linecap="round" fill="none"/>
                     </g>
                 </g>
@@ -1363,9 +1487,11 @@
 
         const ICON_SUN = `
             <svg viewBox="0 0 48 48">
-                <circle class="sun-halo" cx="24" cy="24" r="15" fill="#fde68a"/>
-                <path class="sun-rays" d="M36 24h5M32.5 32.5L36 36M24 36v5M15.5 32.5L12 36M12 24H7M15.5 15.5L12 12M24 12V7M32.5 15.5L36 12" stroke="#f59e0b" stroke-width="2.8" stroke-linecap="round" fill="none"/>
-                <circle class="sun-core" cx="24" cy="24" r="8.5" fill="#fbbf24"/>
+                <g class="sun-float">
+                    <circle class="sun-halo" cx="24" cy="24" r="15" fill="#fde68a"/>
+                    <path class="sun-rays" d="M36 24h5M32.5 32.5L36 36M24 36v5M15.5 32.5L12 36M12 24H7M15.5 15.5L12 12M24 12V7M32.5 15.5L36 12" stroke="#f59e0b" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+                    <circle class="sun-core" cx="24" cy="24" r="8.5" fill="#fbbf24"/>
+                </g>
             </svg>`;
 
         const ICON_SUNSET = `
@@ -1492,7 +1618,8 @@
             return null;
         }
 
-        // Browser IP address -> { place, county, country }. Tries several free services in turn.
+        // Browser IP address -> { place, county, country }.
+        // Asks several free IP services at once and uses the answer most of them agree on.
         async function lookupByIP() {
             const providers = [
                 async () => {
@@ -1516,74 +1643,300 @@
                 }
             ];
 
-            for (const provider of providers) {
+            const settled = await Promise.allSettled(providers.map(fn => fn()));
+            const votes = new Map();
+
+            settled.forEach((result, order) => {
+                if (result.status !== 'fulfilled' || !result.value || !result.value.county) return;
+                const key = result.value.county.toLowerCase().replace(/\s*county$/i, '').trim();
+                const entry = votes.get(key) || { count: 0, order, value: result.value };
+                entry.count += 1;
+                votes.set(key, entry);
+            });
+
+            if (!votes.size) return null;
+
+            const best = [...votes.values()].sort((a, b) => b.count - a.count || a.order - b.order)[0];
+            return { place: '', county: best.value.county, country: best.value.country || '' };
+        }
+
+        // County only (no ward or town): "Bungoma County, KE"
+        function formatLocation({ place, county, country }) {
+            const countyText = withCounty(county, country);
+            const parts = [];
+            if (countyText) {
+                parts.push(countyText);
+            } else if (place) {
+                parts.push(place.trim()); // no county available (e.g. outside Kenya): fall back to the town
+            }
+            if (country) parts.push(country);
+            return parts.join(', ');
+        }
+
+        // Older saved values may still include a ward ("Ward, Bungoma County, KE"): keep from the county onward
+        function countyOnly(text) {
+            const parts = (text || '').split(',').map(part => part.trim()).filter(Boolean);
+            const i = parts.findIndex(part => /county/i.test(part));
+            return (i > 0 ? parts.slice(i) : parts).join(', ');
+        }
+
+        // ---- Saved location + IP check (Supabase `profiles` table) ----
+        // Needs the columns: last_ip, location_text, location_source, location_updated_at
+        const ALLOW_SKIP = false;   // true = always offer "Continue with approximate location" on the gate
+        let gateIP = null;          // IP address seen when the gate was opened
+        let gateSoftFailures = 0;   // device could not locate (not a permission problem); 2 in a row unlock the skip button
+
+        const locGate = document.getElementById('locGate');
+        const locGateBtn = document.getElementById('locGateBtn');
+        const locGateHelp = document.getElementById('locGateHelp');
+        const locGateSkip = document.getElementById('locGateSkip');
+
+        function getPosition(options) {
+            return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, options));
+        }
+
+        // Quick network/Wi-Fi fix first (most reliable on laptops), then a high-accuracy GPS fix.
+        async function getBestPosition() {
+            try {
+                return await getPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+            } catch (err) {
+                if (err.code === 1) throw err; // permission denied: retrying will not help
+                return await getPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+            }
+        }
+
+        async function getGeoPermissionState() {
+            try {
+                if (navigator.permissions && navigator.permissions.query) {
+                    return (await navigator.permissions.query({ name: 'geolocation' })).state; // granted | prompt | denied
+                }
+            } catch (err) { /* not supported */ }
+            return 'prompt';
+        }
+
+        // The browser's current public IP address
+        async function getCurrentIP() {
+            const sources = [
+                async () => (await fetchJson('https://api.ipify.org?format=json')).ip,
+                async () => (await fetchJson('https://ipwho.is/')).ip,
+                async () => (await fetchJson('https://ipapi.co/json/')).ip
+            ];
+            for (const get of sources) {
                 try {
-                    const r = await provider();
-                    if (r && r.county) return { place: '', county: r.county, country: r.country || '' };
+                    const ip = await get();
+                    if (ip) return ip;
                 } catch (err) {
-                    console.warn('IP location provider failed:', err);
+                    console.warn('IP address lookup failed:', err);
                 }
             }
             return null;
         }
 
-        function formatLocation({ place, county, country }) {
-            const countyText = withCounty(county, country);
-            const parts = [];
-            const bareCounty = (county || '').replace(/\s*county$/i, '').trim().toLowerCase();
-            if (place && place.trim().toLowerCase() !== bareCounty) parts.push(place.trim());
-            if (countyText) parts.push(countyText);
-            if (country) parts.push(country);
-            return parts.join(', ');
+        async function loadStoredLocation() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('last_ip, location_text, location_source')
+                    .eq('id', currentUserId)
+                    .maybeSingle();
+                if (error) {
+                    console.warn('Could not read saved location (did you add the columns?):', error.message);
+                    return null;
+                }
+                return data;
+            } catch (err) {
+                console.warn('Saved location lookup failed:', err);
+                return null;
+            }
         }
 
-        async function showIPLocation() {
-            setLocationText('Locating…');
+        async function persistLocation(text, source, ip) {
+            if (!currentUserId) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        location_text: text,
+                        location_source: source,
+                        last_ip: ip || null,
+                        location_updated_at: new Date().toISOString()
+                    })
+                    .eq('id', currentUserId)
+                    .select('id');
+                if (error || !data || !data.length) {
+                    console.warn('Could not save location to the database:', error ? error.message : 'no row updated');
+                }
+            } catch (err) {
+                console.warn('Saving location failed:', err);
+            }
+        }
+
+        // Exact position from the browser -> "Town, County, KE". Throws if it cannot.
+        async function fetchExactLocation() {
+            const position = await getBestPosition();
+            const info = await reverseGeocode(position.coords.latitude, position.coords.longitude);
+            const text = info ? formatLocation(info) : '';
+            if (!text) throw new Error('Could not look up the town');
+            return text;
+        }
+
+        function locationLabel(text, source) {
+            return (source === 'ip' && MARK_IP_LOCATION_AS_APPROX ? '≈ ' : '') + countyOnly(text);
+        }
+
+        // "How to turn location on" depends on the device: mobile browsers have no address-bar shortcut
+        function getLocationHelpText() {
+            const ua = navigator.userAgent || '';
+            const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isAndroid = /Android/i.test(ua);
+
+            if (isIOS) {
+                return 'Location is blocked. Open your phone Settings, go to Privacy & Security, then Location Services, turn it on and allow your browser to use it. Come back here and press the button again.';
+            }
+            if (isAndroid) {
+                return 'Location is blocked. Swipe down and turn on Location, then open your browser menu, go to Settings, then Site settings, then Location, and allow this site. Come back here and press the button again.';
+            }
+            return 'Location is blocked for this site. Click the lock icon in the address bar, set Location to Allow, then press the button again.';
+        }
+
+        function showGate() {
+            locGate.hidden = false;
+            locGateSkip.hidden = !(ALLOW_SKIP || gateSoftFailures >= 2);
+        }
+
+        function hideGate() { locGate.hidden = true; }
+
+        function setGateHelp(msg) {
+            locGateHelp.textContent = msg || '';
+            locGateHelp.hidden = !msg;
+        }
+
+        async function finishLocation(text, source, ip) {
+            setLocationText(locationLabel(text, source), `${text}: saved to your profile. Click to refresh.`);
+            hideGate();
+            await persistLocation(text, source, ip);
+        }
+
+        async function useApproximateLocation(ip) {
             const info = await lookupByIP();
             const text = info ? formatLocation(info) : '';
             if (text) {
-                setLocationText(
-                    (MARK_IP_LOCATION_AS_APPROX ? '≈ ' : '') + text,
-                    `${text}: approximate, based on your internet connection. Allow location access in your browser for your exact position, then click here.`
-                );
+                await finishLocation(text, 'ip', ip);
             } else {
                 setLocationText('Location unavailable', 'Could not work out your location. Click to retry.');
+                hideGate();
             }
         }
 
-        function requestLocation() {
-            if (!locElement || locating) return;
-            locating = true;
-            const done = () => { locating = false; };
+        // Gets a fresh location. If the browser already allows location this happens silently;
+        // otherwise the full-screen gate opens and stays until the user turns location on.
+        async function acquireLocation(ip) {
+            gateIP = ip;
 
             if (!('geolocation' in navigator)) {
-                showIPLocation().finally(done);
+                await useApproximateLocation(ip);
                 return;
             }
 
-            setLocationText('Locating…');
+            if (await getGeoPermissionState() === 'granted') {
+                try {
+                    await finishLocation(await fetchExactLocation(), 'gps', ip);
+                    return;
+                } catch (err) {
+                    console.warn('Silent location refresh failed:', err && err.code, err && err.message);
+                    gateSoftFailures++;
+                }
+            }
 
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const info = await reverseGeocode(position.coords.latitude, position.coords.longitude);
-                    const text = info ? formatLocation(info) : '';
-                    if (text) {
-                        setLocationText(text, `${text} (click to refresh)`);
-                    } else {
-                        await showIPLocation();
-                    }
-                    done();
-                },
-                async () => {
-                    // Blocked, timed out or unavailable: fall back to IP address
-                    await showIPLocation();
-                    done();
-                },
-                { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-            );
+            setLocationText('Location needed');
+            locGateBtn.textContent = 'Enable location';
+            showGate();
         }
 
-        if (locElement) locElement.addEventListener('click', requestLocation);
+        // Runs after login: compare the IP with the one saved in the database
+        async function initLocation() {
+            if (!locElement || !currentUserId || locating) return;
+            locating = true;
+            try {
+                setLocationText('Locating…');
+                const [currentIP, stored] = await Promise.all([getCurrentIP(), loadStoredLocation()]);
+                const hasSaved = !!(stored && stored.location_text);
+
+                // Same IP as last time (or IP unknown) and a saved location: show it from the database
+                if (hasSaved && (!currentIP || stored.last_ip === currentIP)) {
+                    setLocationText(
+                        locationLabel(stored.location_text, stored.location_source),
+                        `${countyOnly(stored.location_text)}: saved to your profile. Click to refresh.`
+                    );
+                    return;
+                }
+
+                // First login, or the IP address changed: location must be fetched again
+                await acquireLocation(currentIP);
+            } finally {
+                locating = false;
+            }
+        }
+
+        // Gate button: this click is what makes the browser show its permission prompt
+        locGateBtn.addEventListener('click', async () => {
+            locGateBtn.disabled = true;
+            locGateBtn.textContent = 'Getting your location…';
+            setGateHelp('');
+            try {
+                const text = await fetchExactLocation();
+                gateSoftFailures = 0;
+                await finishLocation(text, 'gps', gateIP || await getCurrentIP());
+            } catch (err) {
+                console.warn('Location attempt failed:', err && err.code, err && err.message);
+                if (err && err.code === 1) {
+                    setGateHelp(getLocationHelpText());
+                } else {
+                    gateSoftFailures++;
+                    setGateHelp(
+                        err && err.code === 2 ? 'Your device could not find its position. Make sure Location is switched on in your device settings, then try again.'
+                            : err && err.code === 3 ? 'That took too long. Please try again.'
+                                : 'We could not work out your town. Please try again.'
+                    );
+                }
+                showGate();
+                locGateBtn.textContent = 'Try again';
+            } finally {
+                locGateBtn.disabled = false;
+            }
+        });
+
+        // Safety valve for devices that cannot locate at all (hidden unless needed)
+        locGateSkip.addEventListener('click', async () => {
+            locGateSkip.disabled = true;
+            await useApproximateLocation(gateIP || await getCurrentIP());
+            locGateSkip.disabled = false;
+        });
+
+        // Clicking the location text in the sidebar refreshes it
+        if (locElement) {
+            locElement.addEventListener('click', async () => {
+                if (locating || !currentUserId) return;
+                locating = true;
+                try {
+                    setLocationText('Locating…');
+                    await acquireLocation(await getCurrentIP());
+                } finally {
+                    locating = false;
+                }
+            });
+        }
+
+        // If the user switches location to Allow while the gate is open, continue automatically
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' })
+                .then((status) => {
+                    status.onchange = () => {
+                        if (status.state === 'granted' && !locGate.hidden && !locGateBtn.disabled) locGateBtn.click();
+                    };
+                })
+                .catch(() => { /* permissions API not supported */ });
+        }
 
         // ===================== SCHEDULE NOTIFICATIONS =====================
         const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
@@ -1975,8 +2328,7 @@
         // ===================== START =====================
         renderGreeting();
         setInterval(renderGreeting, 60 * 1000); // pick up period changes (e.g. morning -> noon)
-        loadUserProfile();
-        requestLocation();
+        loadUserProfile().then(initLocation);
     </script>
 </body>
 

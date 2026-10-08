@@ -904,7 +904,7 @@
                     </div>
 
                     <form id="depositForm">
-                        <span class="tr-label">Select Member (Database)</span>
+                        <span class="tr-label">Select Members</span>
                         <div class="select-wrap">
                             <select id="depositUser" required>
                                 <option value="">-- Select Member here --</option>
@@ -1000,9 +1000,9 @@
             return div.innerHTML;
         }
 
-       function generateTransactionId(tx) {
-    return tx.transaction_code || "—";
-}
+        function generateTransactionId(tx) {
+            return tx.transaction_code || "—";
+        }
 
         function showToast(message, isError = false) {
             const container = document.getElementById('toastContainer');
@@ -1039,7 +1039,7 @@
                 select.innerHTML = '<option value="">Could not load members</option>';
                 return;
             }
-            select.innerHTML = '<option value="">-- Select Member from Database --</option>' +
+            select.innerHTML = '<option value="">-- Select Member here --</option>' +
                 data.map(p => `<option value="${p.id}">${escapeHtml(p.full_name || 'Unnamed')}</option>`).join('');
         }
 
