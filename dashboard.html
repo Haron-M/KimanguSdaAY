@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* ===== Hide all scrollbars ===== */
+        /* Hide all scrollbars while preserving scroll functionality */
         * {
             -ms-overflow-style: none !important;
             scrollbar-width: none !important;
@@ -25,306 +25,60 @@
             height: 0 !important;
         }
 
-        /* ===== Stats ===== */
-        .db-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .db-stat-card {
+        /* Topbar Avatar Tooltip */
+        .avatar-tooltip-container {
             position: relative;
-            background: var(--white, #fff);
-            border-radius: 14px;
-            padding: 1.6rem;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
-            border: 1px solid var(--border-color, #e2e8f0);
-        }
-
-        .db-stat-card::after {
-            content: '';
-            position: absolute;
-            bottom: -30px;
-            right: -30px;
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: rgba(245, 158, 11, 0.08);
-        }
-
-        .db-stat-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: var(--primary-dark, #0a192f);
-            color: #f59e0b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .db-stat-card h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.9rem;
-            color: var(--primary-dark, #0a192f);
-            position: relative;
-            z-index: 1;
-        }
-
-        .db-stat-card p {
-            font-size: 0.85rem;
-            color: var(--text-gray, #64748b);
-            margin-top: 0.3rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ===== Cards ===== */
-        .db-section-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .db-card {
-            background: var(--white, #fff);
-            border-radius: 14px;
-            padding: 1.6rem;
-            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
-            border: 1px solid var(--border-color, #e2e8f0);
-        }
-
-        .db-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.2rem;
-        }
-
-        .db-card-header h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.15rem;
-            color: var(--primary-dark, #0a192f);
-        }
-
-        .db-card-pill {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--primary-dark, #0a192f);
-            background: rgba(245, 158, 11, 0.12);
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            text-decoration: none;
-        }
-
-        .db-card-pill:hover {
-            background: #f59e0b;
-            color: #fff;
-        }
-
-        /* ===== Verse of the day ===== */
-        .verse-card {
-            background: var(--primary-dark, #0a192f);
-            color: #fff;
-            grid-column: span 2;
-        }
-
-        .verse-card .db-card-header h3 {
-            color: #f59e0b;
-        }
-
-        .verse-text {
-            font-family: 'Playfair Display', serif;
-            font-style: italic;
-            font-size: 1.3rem;
-            line-height: 1.5;
-            margin-bottom: 0.8rem;
-        }
-
-        .verse-ref {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #f59e0b;
-        }
-
-        /* ===== Notifications ===== */
-        .notif-badge {
-            display: none;
-        }
-
-        .notif-item.read {
-            opacity: 0.6;
-        }
-
-        .mark-read-btn {
+            display: inline-block;
             cursor: pointer;
-            color: var(--primary-blue, #0f2b4c);
-            font-weight: 600;
         }
 
-        .mark-read-btn:hover {
-            text-decoration: underline;
-        }
-
-        .announcement-item {
-            display: flex;
-            gap: 0.9rem;
-            padding: 0.9rem 0;
-            border-bottom: 1px solid var(--border-color, #e2e8f0);
-        }
-
-        .announcement-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .announcement-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(15, 43, 76, 0.08);
-            color: var(--primary-blue, #0f2b4c);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-        }
-
-        .announcement-content p {
-            font-size: 0.9rem;
-            color: var(--primary-dark, #0a192f);
-            margin-bottom: 0.2rem;
-            line-height: 1.4;
-        }
-
-        .announcement-content span {
-            font-size: 0.75rem;
-            color: var(--text-gray, #64748b);
-        }
-
-        /* ===== Upcoming events ===== */
-        .db-event-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.9rem 0;
-            border-bottom: 1px solid var(--border-color, #e2e8f0);
-        }
-
-        .db-event-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .db-event-date {
-            background: var(--off-white, #f8fafc);
-            border: 1px solid var(--border-color, #e2e8f0);
-            border-radius: 8px;
+        .avatar-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            width: max-content;
+            background-color: #0a192f;
+            color: #ffffff;
             text-align: center;
-            padding: 0.4rem 0.7rem;
-            flex-shrink: 0;
-            min-width: 52px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            position: absolute;
+            z-index: 1000;
+            top: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
         }
 
-        .db-event-date span {
-            display: block;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            color: var(--text-gray, #64748b);
-            font-weight: 700;
+        .avatar-tooltip::after {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent #0a192f transparent;
         }
 
-        .db-event-date strong {
-            font-size: 1.1rem;
-            color: var(--primary-dark, #0a192f);
+        .avatar-tooltip-container:hover .avatar-tooltip {
+            visibility: visible;
+            opacity: 1;
         }
 
-        .db-event-info h4 {
-            font-size: 0.9rem;
-            color: var(--primary-dark, #0a192f);
-            margin-bottom: 0.15rem;
+        .topbar-avatar img,
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
-        .db-event-info p {
-            font-size: 0.78rem;
-            color: var(--text-gray, #64748b);
-        }
-
-        /* ===== Quick links ===== */
-        .quicklinks-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 2rem 0 1.2rem;
-        }
-
-        .quicklinks-header h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            color: var(--primary-dark, #0a192f);
-        }
-
-        .quicklinks-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .quicklink-card {
-            background: var(--white, #fff);
-            border-radius: 14px;
-            padding: 1.4rem;
-            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
-            border: 1px solid var(--border-color, #e2e8f0);
-            display: block;
-            transition: all 0.3s ease;
-        }
-
-        .quicklink-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(10, 25, 47, 0.1);
-        }
-
-        .quicklink-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            color: #fff;
-        }
-
-        .quicklink-icon.resources {
-            background: #8b5cf6;
-        }
-
-        .quicklink-icon.media {
-            background: #3b82f6;
-        }
-
-        .quicklink-card h4 {
-            font-size: 0.95rem;
-            color: var(--primary-dark, #0a192f);
-            margin-bottom: 0.3rem;
-        }
-
-        .quicklink-card p {
-            font-size: 0.8rem;
-            color: var(--text-gray, #64748b);
-        }
-
-        /* ===== Admin panel block ===== */
+        /* Admin panel block */
         .admin-block {
             border-radius: 10px;
             overflow: hidden;
@@ -390,7 +144,7 @@
             color: #fff !important;
         }
 
-        /* ===== Persistent shell layout ===== */
+        /* Persistent shell layout */
         html,
         body {
             height: 100%;
@@ -424,7 +178,7 @@
             overflow-y: auto;
         }
 
-        /* ===== Sidebar profile card ===== */
+        /* User profile card */
         .sidebar-profile {
             margin: 10px 14px 16px 14px;
             padding: 12px 16px;
@@ -516,7 +270,7 @@
             display: block !important;
         }
 
-        /* ===== Treasury Desk dropdown ===== */
+        /* Treasury Dropdown */
         .sidebar-dropdown {
             width: 100%;
             border-radius: 12px;
@@ -598,226 +352,7 @@
             max-height: 200px;
         }
 
-        /* ===== Topbar avatar + tooltip ===== */
-        .avatar-tooltip-container {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-        }
-
-        .avatar-tooltip {
-            visibility: hidden;
-            opacity: 0;
-            width: max-content;
-            background-color: #0a192f;
-            color: #ffffff;
-            text-align: center;
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            position: absolute;
-            z-index: 1000;
-            top: 120%;
-            left: 50%;
-            transform: translateX(-50%);
-            transition: opacity 0.2s ease, visibility 0.2s ease;
-            white-space: nowrap;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            pointer-events: none;
-        }
-
-        .avatar-tooltip::after {
-            content: "";
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: transparent transparent #0a192f transparent;
-        }
-
-        .avatar-tooltip-container:hover .avatar-tooltip {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .avatar-tooltip-container.open .avatar-tooltip {
-            display: none;
-        }
-
-        .topbar-avatar img,
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        /* ===== Avatar panel ===== */
-        .avatar-wrap {
-            position: relative;
-        }
-
-        .avatar-panel {
-            display: none;
-            grid-template-columns: auto auto;
-            gap: 1.5rem;
-            position: absolute;
-            top: calc(100% + 12px);
-            right: 0;
-            width: max-content;
-            max-width: calc(100vw - 24px);
-            background: #fff;
-            border: 1px solid var(--border-color, #e2e8f0);
-            border-radius: 14px;
-            padding: 1.2rem;
-            box-shadow: 0 10px 30px rgba(10, 25, 47, 0.15);
-            z-index: 2000;
-        }
-
-        .avatar-panel.open {
-            display: grid;
-        }
-
-        .ap-left {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.6rem;
-            width: 120px;
-        }
-
-        .ap-preview {
-            width: 84px;
-            height: 84px;
-            border-radius: 50%;
-            background: #f59e0b;
-            color: #0a192f;
-            font-size: 1.6rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .ap-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .ap-choose,
-        .ap-save {
-            width: 100%;
-            text-align: center;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.78rem;
-            font-weight: 600;
-            border-radius: 8px;
-            padding: 0.5rem;
-        }
-
-        .ap-choose {
-            border: 1px dashed #cbd5e1;
-            background: #f8fafc;
-            color: #0a192f;
-        }
-
-        .ap-save {
-            border: none;
-            background: #0a192f;
-            color: #fff;
-        }
-
-        .ap-save:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
-
-        .ap-right {
-            min-width: 0;
-            align-self: center;
-        }
-
-        .ap-right label {
-            display: block;
-            font-size: 0.72rem;
-            color: #64748b;
-            margin-bottom: 0.15rem;
-        }
-
-        .ap-right p {
-            font-size: 0.92rem;
-            font-weight: 600;
-            color: #0a192f;
-            margin: 0 0 0.8rem;
-            word-break: break-word;
-        }
-
-        .ap-status {
-            grid-column: 1 / -1;
-            width: 0;
-            min-width: 100%;
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .ap-status:empty {
-            display: none;
-        }
-
-        .ap-status.success {
-            color: #16a34a;
-        }
-
-        .ap-status.error {
-            color: #dc2626;
-        }
-
-        /* ===== Mobile ===== */
         @media (max-width: 768px) {
-            .db-section-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .verse-card {
-                grid-column: span 1;
-            }
-
-            .db-stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 1rem;
-            }
-
-            .db-stat-card {
-                padding: 1.1rem;
-            }
-
-            .db-stat-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 0.95rem;
-                margin-bottom: 0.7rem;
-            }
-
-            .db-stat-card h3 {
-                font-size: 1.4rem;
-            }
-
-            .db-stat-card p {
-                font-size: 0.75rem;
-            }
-
-            .iframe-content-wrap {
-                margin: 0;
-                border-bottom: none;
-            }
-
             .mobile-sidebar-toggle {
                 font-size: 1.4rem;
                 width: 42px;
@@ -836,7 +371,7 @@
 
     <div class="dashboard-layout">
 
-        <!-- ===================== SIDEBAR ===================== -->
+        <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
                 <div class="sidebar-logo-wrap">
@@ -851,23 +386,19 @@
 
             <nav class="sidebar-nav">
                 <p class="nav-group-label">Main</p>
-                <a href="dashboard.html" class="sidebar-link active" data-page="pages/home.html" data-title="__HOME__">
+                <a href="pages/home.html" class="sidebar-link active" data-page="pages/home.html">
                     <i class="fa-solid fa-house"></i> Home
                 </a>
-                <a href="media.html" class="sidebar-link" data-page="pages/media.html" data-title="Media"
-                    data-desc="Watch videos and listen to songs from Kimangu AY.">
+                <a href="pages/media.html" class="sidebar-link" data-page="pages/media.html">
                     <i class="fa-solid fa-photo-film"></i> Media Center
                 </a>
-                <a href="resources.html" class="sidebar-link" data-page="pages/resources.html" data-title="Resources"
-                    data-desc="Lessons, study guides and documents for members.">
+                <a href="pages/resources.html" class="sidebar-link" data-page="pages/resources.html">
                     <i class="fa-solid fa-book-bible"></i> Resources
                 </a>
-                <a href="schedules.html" class="sidebar-link" data-page="pages/schedules.html" data-title="My Schedules"
-                    data-desc="Your personal event and duty schedule.">
+                <a href="pages/schedules.html" class="sidebar-link" data-page="pages/schedules.html">
                     <i class="fa-solid fa-calendar-day"></i> My Schedules
                 </a>
-                <a href="accounts.html" class="sidebar-link" data-page="pages/accounts.html" data-title="Accounts"
-                    data-desc="Manage your profile and account settings.">
+                <a href="pages/accounts.html" class="sidebar-link" data-page="pages/accounts.html">
                     <i class="fa-solid fa-user"></i> Accounts
                 </a>
 
@@ -878,25 +409,22 @@
                         <i class="fa-solid fa-chevron-right admin-chevron" id="adminChevron"></i>
                     </button>
                     <div class="admin-submenu" id="adminSubmenu">
-                        <a href="admin/members.html" class="sidebar-link sub-link" data-page="pages/admin/members.html"
-                            data-title="Members" data-desc="All members who have registered on the platform.">Members
-                            joined</a>
-                        <a href="admin/events.html" class="sidebar-link sub-link" data-page="pages/admin/events.html"
-                            data-title="Events" data-desc="Create and manage upcoming events.">Create Events</a>
-                        <a href="admin/announcements.html" class="sidebar-link sub-link"
-                            data-page="pages/admin/announcements.html" data-title="Announcements"
-                            data-desc="Post updates for all members to see.">Publish Announcements</a>
-                        <a href="admin/media.html" class="sidebar-link sub-link" data-page="pages/admin/media.html"
-                            data-title="Media" data-desc="Upload videos and songs for members.">Upload Media</a>
-                        <a href="admin/resources.html" class="sidebar-link sub-link"
-                            data-page="pages/admin/resources.html" data-title="Resources"
-                            data-desc="Upload lessons, guides and documents for members.">Upload Resources</a>
+                        <a href="pages/admin/members.html" class="sidebar-link sub-link"
+                            data-page="pages/admin/members.html">Members joined</a>
+                        <a href="pages/admin/events.html" class="sidebar-link sub-link"
+                            data-page="pages/admin/events.html">Create Events</a>
+                        <a href="pages/admin/announcements.html" class="sidebar-link sub-link"
+                            data-page="pages/admin/announcements.html">Publish Announcements</a>
+                        <a href="pages/admin/media.html" class="sidebar-link sub-link"
+                            data-page="pages/admin/media.html">Upload Media</a>
+                        <a href="pages/admin/resources.html" class="sidebar-link sub-link"
+                            data-page="pages/admin/resources.html">Upload Resources</a>
                     </div>
                 </div>
 
-                <!-- Treasury Desk accordion dropdown -->
+                <!-- Treasury Desk Accordion Dropdown -->
                 <div class="sidebar-dropdown" id="treasuryDropdown">
-                    <button type="button" class="sidebar-dropdown-btn" id="treasuryBtn">
+                    <button type="button" class="sidebar-dropdown-btn" onclick="toggleSidebarDropdown(this)">
                         <div class="dropdown-title">
                             <i class="fa-solid fa-coins"></i>
                             <span>Treasury Desk</span>
@@ -905,17 +433,12 @@
                     </button>
 
                     <div class="sidebar-submenu">
-                        <a href="treasury.html" class="sidebar-link sub-link" data-page="pages/treasury.html"
-                            data-title="Payment" data-desc="Make payments and contributions.">
-                            Payment
-                        </a>
-                        <a href="transactions.html" class="sidebar-link sub-link" data-page="pages/transactions.html"
-                            data-title="Transaction History" data-desc="View your payment history and receipts.">
-                            Transaction History
-                        </a>
-                        <a href="report-analysis.html" class="sidebar-link sub-link"
-                            data-page="pages/report-analysis.html" data-title="Report Analysis"
-                            data-desc="Review treasury reports and analysis.">Report Analysis</a>
+                        <a href="pages/treasury.html" class="sidebar-link sub-link"
+                            data-page="pages/treasury.html">Payment</a>
+                        <a href="pages/transactions.html" class="sidebar-link sub-link"
+                            data-page="pages/transactions.html">Transaction History</a>
+                        <a href="pages/report-analysis.html" class="sidebar-link sub-link"
+                            data-page="pages/report-analysis.html">Report Analysis</a>
                     </div>
                 </div>
 
@@ -925,19 +448,19 @@
                 </a>
             </nav>
 
-            <!-- Bottom profile card -->
+            <!-- Bottom Profile Card -->
             <div class="sidebar-profile">
                 <div class="profile-avatar" id="sidebarAvatar">--</div>
                 <div class="profile-info">
                     <h4 id="sidebarFullName">Loading...</h4>
-                    <p id="sidebarLocation">loading... KE 📍</p>
+                    <p id="sidebarLocation">Detecting location... 📍</p>
                 </div>
             </div>
         </aside>
 
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- ===================== MAIN CONTENT ===================== -->
+        <!-- MAIN CONTENT -->
         <div class="main-content">
 
             <!-- TOPBAR -->
@@ -972,29 +495,9 @@
                         </div>
                     </div>
 
-                    <!-- Avatar + upload panel -->
-                    <div class="avatar-wrap" id="avatarWrap">
-                        <div class="avatar-tooltip-container" id="topbarAvatarContainer">
-                            <div class="topbar-avatar" id="topbarAvatar">--</div>
-                            <span class="avatar-tooltip">profile</span>
-                        </div>
-
-                        <div class="avatar-panel" id="avatarPanel">
-                            <div class="ap-left">
-                                <div class="ap-preview" id="apPreview">--</div>
-                                <label for="apInput" class="ap-choose"><i class="fa-solid fa-image"></i> Choose
-                                    image</label>
-                                <input type="file" id="apInput" accept="image/*" hidden>
-                                <button type="button" class="ap-save" id="apSave" disabled>Upload</button>
-                            </div>
-                            <div class="ap-right">
-                                <label>Name</label>
-                                <p id="apName">--</p>
-                                <label>Phone</label>
-                                <p id="apPhone">--</p>
-                            </div>
-                            <div class="ap-status" id="apStatus"></div>
-                        </div>
+                    <div class="avatar-tooltip-container" id="topbarAvatarContainer">
+                        <div class="topbar-avatar" id="topbarAvatar">--</div>
+                        <span class="avatar-tooltip">add profile</span>
                     </div>
                 </div>
             </header>
@@ -1007,7 +510,6 @@
     </div>
 
     <script>
-        // ===================== SUPABASE SETUP =====================
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1015,23 +517,7 @@
         let homeWelcomeText = 'Welcome back 👋';
         let currentUserId = null;
         let activeSchedules = [];
-        let pendingAvatar = null;
 
-        // ===================== DOM REFERENCES =====================
-        const contentFrame = document.getElementById('contentFrame');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        const notifBtn = document.getElementById('notifBtn');
-        const notifDropdown = document.getElementById('notifDropdown');
-        const avatarWrap = document.getElementById('avatarWrap');
-        const avatarPanel = document.getElementById('avatarPanel');
-        const avatarBox = document.getElementById('topbarAvatarContainer');
-        const apInput = document.getElementById('apInput');
-        const apSave = document.getElementById('apSave');
-        const apStatus = document.getElementById('apStatus');
-
-        // ===================== HELPERS =====================
         function getInitials(fullName) {
             if (!fullName) return '--';
             const parts = fullName.trim().split(/\s+/);
@@ -1051,7 +537,10 @@
 
         function formatTimeAgo(dateString) {
             if (!dateString) return 'Recently';
-            const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
             if (seconds < 60) return 'Just now';
             const minutes = Math.floor(seconds / 60);
             if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
@@ -1061,18 +550,7 @@
             return `${days} day${days > 1 ? 's' : ''} ago`;
         }
 
-        // ===================== TREASURY DESK DROPDOWN =====================
-        function toggleSidebarDropdown(btn) {
-            const dropdown = btn.closest('.sidebar-dropdown');
-            if (dropdown) dropdown.classList.toggle('active');
-        }
-
-        const treasuryBtn = document.getElementById('treasuryBtn');
-        if (treasuryBtn) {
-            treasuryBtn.addEventListener('click', () => toggleSidebarDropdown(treasuryBtn));
-        }
-
-        // ===================== LOCATION / COUNTY =====================
+        // Location & County Fetching
         async function fetchUserCounty() {
             const locElement = document.getElementById('sidebarLocation');
             if (!locElement) return;
@@ -1080,7 +558,9 @@
             function formatCountyText(countyName, countryCode) {
                 if (!countyName) return 'Location Unavailable 📍';
                 let cleanCounty = countyName.trim();
-                if (!cleanCounty.toLowerCase().includes('county')) cleanCounty += ' County';
+                if (!cleanCounty.toLowerCase().includes('county')) {
+                    cleanCounty += ' County';
+                }
                 const code = countryCode ? `, ${countryCode}` : '';
                 return `${cleanCounty}${code} 📍`;
             }
@@ -1090,7 +570,8 @@
                     const res = await fetch('https://ipapi.co/json/');
                     const data = await res.json();
                     if (data && (data.region || data.city)) {
-                        locElement.textContent = formatCountyText(data.region || data.city, data.country_code);
+                        const region = data.region || data.city;
+                        locElement.textContent = formatCountyText(region, data.country_code);
                         return;
                     }
                 } catch (err) {
@@ -1099,12 +580,13 @@
                 locElement.textContent = 'Location Unavailable 📍';
             }
 
-            if ('geolocation' in navigator) {
+            if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
-                        const { latitude, longitude } = position.coords;
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
                         try {
-                            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+                            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
                             const data = await res.json();
                             const county = data.principalSubdivision || data.city;
                             if (county) {
@@ -1116,7 +598,7 @@
                             await fetchByIP();
                         }
                     },
-                    async () => { await fetchByIP(); },
+                    async (error) => { await fetchByIP(); },
                     { timeout: 5000 }
                 );
             } else {
@@ -1124,10 +606,12 @@
             }
         }
 
-        // ===================== SCHEDULE NOTIFICATIONS =====================
+        // Schedule Notifications System
         const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
-        function getReadStorageKey(userId) { return `read_schedules_${userId}`; }
+        function getReadStorageKey(userId) {
+            return `read_schedules_${userId}`;
+        }
 
         function getReadState(userId) {
             if (!userId) return {};
@@ -1151,9 +635,9 @@
                     .order('created_at', { ascending: false })
                     .limit(20);
 
+                const notifList = document.getElementById('notifList');
                 if (error) {
                     console.error('Error fetching schedule notifications:', error);
-                    const notifList = document.getElementById('notifList');
                     if (notifList) {
                         notifList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">Failed to load notifications.</div>';
                     }
@@ -1170,6 +654,7 @@
         function renderScheduleNotifications(schedules, userId) {
             const readState = getReadState(userId);
             const now = Date.now();
+
             const notifBadge = document.getElementById('notifBadge');
             const notifList = document.getElementById('notifList');
             if (!notifList || !notifBadge) return;
@@ -1182,22 +667,25 @@
                 const isRead = readTimestamp !== undefined;
 
                 if (isRead) {
-                    if (now - readTimestamp >= SIX_HOURS_MS) return;
+                    const elapsed = now - readTimestamp;
+                    if (elapsed >= SIX_HOURS_MS) return;
                 } else {
                     unreadCount++;
                 }
 
                 const title = item.title || item.duty_name || item.event_title || 'New Schedule Assigned';
                 const description = item.description || item.location || (item.date ? `Date: ${item.date}` : 'Check your schedule for details.');
+                const timeAgoStr = formatTimeAgo(item.created_at);
 
                 visibleHtml += `
-                <div class="notif-item ${isRead ? 'read' : 'unread'}">
-                    <div class="notif-icon"><i class="fa-solid fa-calendar-day"></i></div>
-                    <div class="notif-content">
-                        <p>New schedule: <strong>${escapeHtml(title)}</strong> - ${escapeHtml(description)}</p>
-                        <span>${formatTimeAgo(item.created_at)}</span>
+                    <div class="notif-item ${isRead ? 'read' : 'unread'}">
+                        <div class="notif-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                        <div class="notif-content">
+                            <p>New schedule: <strong>${escapeHtml(title)}</strong> - ${escapeHtml(description)}</p>
+                            <span>${timeAgoStr}</span>
+                        </div>
                     </div>
-                </div>`;
+                `;
             });
 
             if (unreadCount > 0) {
@@ -1208,42 +696,43 @@
                 notifBadge.style.display = 'none';
             }
 
-            notifList.innerHTML = visibleHtml ||
-                '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">No new schedule notifications</div>';
+            if (visibleHtml) {
+                notifList.innerHTML = visibleHtml;
+            } else {
+                notifList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">No new schedule notifications</div>';
+            }
         }
 
         function handleMarkAllAsRead() {
             if (!currentUserId || !activeSchedules.length) return;
+
             const readState = getReadState(currentUserId);
             const now = Date.now();
+
             activeSchedules.forEach(item => {
-                if (!readState[item.id]) readState[item.id] = now;
+                if (!readState[item.id]) {
+                    readState[item.id] = now;
+                }
             });
+
             saveReadState(currentUserId, readState);
             renderScheduleNotifications(activeSchedules, currentUserId);
         }
 
-        const markAllReadBtn = document.getElementById('markAllReadBtn');
-        if (markAllReadBtn) markAllReadBtn.addEventListener('click', handleMarkAllAsRead);
-
-        // ===================== AVATAR & PROFILE =====================
-        // Topbar + panel preview: uploaded image if it exists, otherwise initials.
-        // Sidebar avatar: always initials.
-        function paintAvatar(el, url, initials) {
-            if (!el) return;
-            if (url && url.trim() !== '') {
-                el.innerHTML = `<img src="${escapeHtml(url)}" alt="Profile picture">`;
-            } else {
-                el.textContent = initials;
-            }
-        }
-
+        // Avatar & User Profile Management
         function updateAvatarUI(avatarUrl, initials) {
+            const topbarEl = document.getElementById('topbarAvatar');
             const sidebarEl = document.getElementById('sidebarAvatar');
+
             if (sidebarEl) sidebarEl.textContent = initials;
-            paintAvatar(document.getElementById('topbarAvatar'), avatarUrl, initials);
-            paintAvatar(document.getElementById('apPreview'), avatarUrl, initials);
-            if (apSave) apSave.textContent = avatarUrl ? 'Change' : 'Upload';
+
+            if (topbarEl) {
+                if (avatarUrl && avatarUrl.trim() !== '') {
+                    topbarEl.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="Profile Picture" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                } else {
+                    topbarEl.textContent = initials;
+                }
+            }
         }
 
         async function loadUserProfile() {
@@ -1258,12 +747,11 @@
 
             let fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Member';
             let avatarUrl = null;
-            let phone = session.user.phone || session.user.user_metadata?.phone || '';
 
             try {
                 const { data: profile, error } = await supabaseClient
                     .from('profiles')
-                    .select('full_name, phone, avatar_url')
+                    .select('full_name, avatar_url')
                     .eq('id', currentUserId)
                     .maybeSingle();
 
@@ -1271,7 +759,6 @@
                     console.warn('Profile fetch warning:', error.message);
                 } else if (profile) {
                     if (profile.full_name) fullName = profile.full_name;
-                    if (profile.phone) phone = profile.phone;
                     if (profile.avatar_url) avatarUrl = profile.avatar_url;
                 }
             } catch (err) {
@@ -1285,106 +772,82 @@
 
             const welcomeNameEl = document.getElementById('welcomeName');
             const sidebarNameEl = document.getElementById('sidebarFullName');
+
             if (welcomeNameEl) welcomeNameEl.textContent = homeWelcomeText;
             if (sidebarNameEl) sidebarNameEl.textContent = firstName;
 
             updateAvatarUI(avatarUrl, initials);
 
-            document.getElementById('apName').textContent = fullName;
-            document.getElementById('apPhone').textContent = phone || 'Not added yet';
-
-            fetchAndRenderScheduleNotifications(currentUserId);
-            fetchUserCounty();
+            if (typeof fetchAndRenderScheduleNotifications === 'function') {
+                fetchAndRenderScheduleNotifications(currentUserId);
+            }
+            if (typeof fetchUserCounty === 'function') {
+                fetchUserCounty();
+            }
         }
 
-        // ===================== AVATAR PANEL =====================
-        function setApStatus(msg, type = '') {
-            apStatus.textContent = msg;
-            apStatus.className = 'ap-status ' + type;
+        // Navigation Handler (Updates iframe and moves active gold highlight)
+        function navigateToSidebarPage(targetPage) {
+            const frame = document.getElementById('contentFrame');
+            if (!frame) return;
+
+            frame.src = targetPage;
+
+            // Remove active class from all sidebar links and dropdowns
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            document.querySelectorAll('.sidebar-dropdown').forEach(d => d.classList.remove('active'));
+
+            // Clean target path for comparison (e.g. 'pages/schedules.html' -> 'schedules.html')
+            const cleanTarget = targetPage.replace(/^pages\//, '').replace(/^\//, '');
+
+            const allLinks = Array.from(document.querySelectorAll('.sidebar-link'));
+            const matchingLink = allLinks.find(link => {
+                const pageAttr = link.getAttribute('data-page') || link.getAttribute('href') || '';
+                if (!pageAttr) return false;
+                const cleanPage = pageAttr.replace(/^pages\//, '').replace(/^\//, '');
+                return cleanTarget === cleanPage;
+            });
+
+            if (matchingLink) {
+                matchingLink.classList.add('active');
+
+                // If link is inside a dropdown or submenu, open parent automatically
+                const dropdownParent = matchingLink.closest('.sidebar-dropdown');
+                if (dropdownParent) {
+                    dropdownParent.classList.add('active');
+                }
+
+                const adminSubmenu = matchingLink.closest('.admin-submenu');
+                if (adminSubmenu) {
+                    adminSubmenu.classList.add('open');
+                    const adminToggle = document.getElementById('adminToggle');
+                    if (adminToggle) adminToggle.classList.add('open');
+                }
+            }
         }
 
-        function closeAvatarPanel() {
-            avatarPanel.classList.remove('open');
-            avatarBox.classList.remove('open');
-        }
-
-        function compressImage(file, max = 250, quality = 0.85) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    const scale = Math.min(1, max / Math.max(img.width, img.height));
-                    const canvas = document.createElement('canvas');
-                    canvas.width = Math.round(img.width * scale);
-                    canvas.height = Math.round(img.height * scale);
-                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                    URL.revokeObjectURL(img.src);
-                    resolve(canvas.toDataURL('image/jpeg', quality));
-                };
-                img.onerror = reject;
-                img.src = URL.createObjectURL(file);
+        // Topbar Avatar Click Event
+        const topbarAvatarBox = document.getElementById('topbarAvatarContainer') || document.getElementById('topbarAvatar');
+        if (topbarAvatarBox) {
+            topbarAvatarBox.addEventListener('click', () => {
+                navigateToSidebarPage('pages/accounts.html');
             });
         }
 
-        avatarBox.addEventListener('click', () => {
-            const open = avatarPanel.classList.toggle('open');
-            avatarBox.classList.toggle('open', open);
-            if (open && notifDropdown) notifDropdown.classList.remove('active');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!avatarWrap.contains(e.target)) closeAvatarPanel();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeAvatarPanel();
-        });
-
-        apInput.addEventListener('change', async () => {
-            const file = apInput.files[0];
-            if (!file) return;
-            if (!file.type.startsWith('image/')) {
-                setApStatus('Choose an image file.', 'error');
-                return;
-            }
-            try {
-                pendingAvatar = await compressImage(file);
-                paintAvatar(document.getElementById('apPreview'), pendingAvatar, '');
-                apSave.disabled = false;
-                setApStatus('');
-            } catch (err) {
-                setApStatus('Could not read that image.', 'error');
-            }
-        });
-
-        apSave.addEventListener('click', async () => {
-            if (!pendingAvatar || !currentUserId) return;
-            apSave.disabled = true;
-            setApStatus('Saving…');
-
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .update({ avatar_url: pendingAvatar })
-                .eq('id', currentUserId)
-                .select('id');
-
-            if (error || !data || !data.length) {
-                apSave.disabled = false;
-                setApStatus(error?.message || 'Not saved. Check the update policy on profiles.', 'error');
-                return;
-            }
-
-            pendingAvatar = null;
-            apInput.value = '';
-            setApStatus('Photo saved.', 'success');
-            loadUserProfile();
-        });
-
-        // Refresh when an iframe page (e.g. accounts) updates the profile
+        // Global message listener for iframe postMessages
         window.addEventListener('message', (event) => {
-            if (event.data === 'profileUpdated') loadUserProfile();
+            if (event.data === 'profileUpdated') {
+                loadUserProfile();
+            } else if (event.data && event.data.type === 'navigate') {
+                navigateToSidebarPage(event.data.page);
+            }
         });
 
-        // ===================== PERSISTENT SHELL NAVIGATION =====================
+        loadUserProfile();
+
+        // Persistent Shell iFrame Navigation
+        const contentFrame = document.getElementById('contentFrame');
+
         function applyIframeBottomPadding() {
             try {
                 const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
@@ -1396,36 +859,50 @@
                         iframeDoc.head.appendChild(styleTag);
                     }
                     styleTag.textContent = `
-                    html { height: auto !important; min-height: 100% !important; }
-                    body {
-                        min-height: 100% !important;
-                        padding-bottom: max(150px, calc(90px + env(safe-area-inset-bottom))) !important;
-                        box-sizing: border-box !important;
-                        overflow-y: auto !important;
-                        -webkit-overflow-scrolling: touch !important;
-                    }`;
+                        html { height: auto !important; min-height: 100% !important; }
+                        body {
+                            min-height: 100% !important;
+                            padding-bottom: max(150px, calc(90px + env(safe-area-inset-bottom))) !important;
+                            box-sizing: border-box !important;
+                            overflow-y: auto !important;
+                            -webkit-overflow-scrolling: touch !important;
+                        }
+                    `;
                 }
             } catch (err) {
-                console.warn('Iframe style injection notice:', err);
+                console.warn('Iframe style notice:', err);
             }
         }
 
-        contentFrame.addEventListener('load', applyIframeBottomPadding);
+        if (contentFrame) {
+            contentFrame.addEventListener('load', applyIframeBottomPadding);
+        }
 
-        document.querySelectorAll('.sidebar-nav a.sidebar-link[data-page]').forEach(link => {
+        // Direct Sidebar Link Click Handlers
+        document.querySelectorAll('.sidebar-nav .sidebar-link[data-page]').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                contentFrame.src = link.getAttribute('data-page');
+                const targetPage = link.getAttribute('data-page');
+                navigateToSidebarPage(targetPage);
 
-                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-
-                sidebar.classList.remove('active');
-                sidebarOverlay.classList.remove('active');
+                const sidebarEl = document.getElementById('sidebar');
+                const overlayEl = document.getElementById('sidebarOverlay');
+                if (sidebarEl) sidebarEl.classList.remove('active');
+                if (overlayEl) overlayEl.classList.remove('active');
             });
         });
 
-        // Admin submenu toggle
+        function toggleSidebarDropdown(button) {
+            const dropdown = button.parentElement;
+            document.querySelectorAll('.sidebar-dropdown.active').forEach(openDropdown => {
+                if (openDropdown !== dropdown) {
+                    openDropdown.classList.remove('active');
+                }
+            });
+            dropdown.classList.toggle('active');
+        }
+
+        // Admin Submenu Toggle
         const adminToggle = document.getElementById('adminToggle');
         const adminSubmenu = document.getElementById('adminSubmenu');
         if (adminToggle && adminSubmenu) {
@@ -1435,11 +912,12 @@
             });
         }
 
-        // Notification dropdown toggle
+        // Notification Dropdown Toggle
+        const notifBtn = document.getElementById('notifBtn');
+        const notifDropdown = document.getElementById('notifDropdown');
         if (notifBtn && notifDropdown) {
             notifBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                closeAvatarPanel();
                 notifDropdown.classList.toggle('active');
             });
 
@@ -1450,19 +928,30 @@
             });
         }
 
-        // Mobile sidebar toggle
+        // Mark All Read Button
+        const markAllReadBtn = document.getElementById('markAllReadBtn');
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', handleMarkAllAsRead);
+        }
+
+        // Mobile Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
         if (sidebarToggle && sidebar && sidebarOverlay) {
             sidebarToggle.addEventListener('click', () => {
                 sidebar.classList.add('active');
                 sidebarOverlay.classList.add('active');
             });
+
             sidebarOverlay.addEventListener('click', () => {
                 sidebar.classList.remove('active');
                 sidebarOverlay.classList.remove('active');
             });
         }
 
-        // Logout
+        // Logout Link
         const logoutLink = document.getElementById('logoutLink');
         if (logoutLink) {
             logoutLink.addEventListener('click', async (e) => {
@@ -1471,9 +960,6 @@
                 window.location.href = 'index.html';
             });
         }
-
-        // ===================== START =====================
-        loadUserProfile();
     </script>
 </body>
 

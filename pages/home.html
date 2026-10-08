@@ -57,7 +57,7 @@
             }
         }
 
-        /* ===================== DASHBOARD CONTENT SECTIONS ===================== */
+        /* ===================== STAT CARDS ===================== */
         .db-stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -73,6 +73,16 @@
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
             border: 1px solid var(--border-color, #e2e8f0);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .db-stat-card.clickable-card {
+            cursor: pointer;
+        }
+
+        .db-stat-card.clickable-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(10, 25, 47, 0.1);
         }
 
         .db-stat-card::after {
@@ -86,6 +96,15 @@
             background: rgba(245, 158, 11, 0.08);
         }
 
+        .db-stat-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
         .db-stat-icon {
             width: 42px;
             height: 42px;
@@ -96,9 +115,25 @@
             align-items: center;
             justify-content: center;
             font-size: 1.1rem;
-            margin-bottom: 1rem;
-            position: relative;
-            z-index: 1;
+        }
+
+        .db-stat-arrow {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(10, 25, 47, 0.05);
+            color: var(--primary-dark, #0a192f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+
+        .clickable-card:hover .db-stat-arrow {
+            background: #f59e0b;
+            color: #ffffff;
+            transform: translateX(3px);
         }
 
         .db-stat-card h3 {
@@ -118,6 +153,7 @@
             z-index: 1;
         }
 
+        /* ===================== SECTION CARDS ===================== */
         .db-section-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -131,6 +167,8 @@
             padding: 1.6rem;
             box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
             border: 1px solid var(--border-color, #e2e8f0);
+            display: flex;
+            flex-direction: column;
         }
 
         .db-card-header {
@@ -146,19 +184,22 @@
             color: var(--primary-dark, #0a192f);
         }
 
+        /* Top-Right "View" Pill Style */
         .db-card-pill {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--primary-dark, #0a192f);
-            background: rgba(245, 158, 11, 0.12);
-            padding: 0.3rem 0.8rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #0f2b4c;
+            background: rgba(15, 43, 76, 0.08);
+            padding: 0.3rem 0.9rem;
             border-radius: 20px;
-            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            user-select: none;
         }
 
         .db-card-pill:hover {
             background: #f59e0b;
-            color: #fff;
+            color: #ffffff;
         }
 
         /* Verse of the day */
@@ -293,7 +334,53 @@
             color: var(--accent-gold, #f59e0b);
         }
 
-        /* Quick links */
+        /* Collapsible List Containers & See More Button */
+        .extra-items-container {
+            display: none;
+        }
+
+        .extra-items-container.expanded {
+            display: block;
+        }
+
+        .see-more-wrap {
+            margin-top: auto;
+            padding-top: 1rem;
+            text-align: center;
+        }
+
+        .see-more-btn {
+            background: rgba(10, 25, 47, 0.04);
+            border: 1px solid var(--border-color, #e2e8f0);
+            color: var(--primary-dark, #0a192f);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .see-more-btn:hover {
+            background: var(--primary-dark, #0a192f);
+            color: #ffffff;
+            border-color: var(--primary-dark, #0a192f);
+        }
+
+        .see-more-btn i {
+            font-size: 0.75rem;
+            transition: transform 0.3s ease;
+        }
+
+        .see-more-btn.expanded i {
+            transform: rotate(180deg);
+        }
+
+        /* ===================== QUICK LINKS ===================== */
         .quicklinks-header {
             display: flex;
             justify-content: space-between;
@@ -321,6 +408,7 @@
             border: 1px solid var(--border-color, #e2e8f0);
             display: block;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .quicklink-card:hover {
@@ -346,6 +434,10 @@
 
         .quicklink-icon.media {
             background: #3b82f6;
+        }
+
+        .quicklink-icon.accounts {
+            background: #10b981;
         }
 
         .quicklink-card h4 {
@@ -381,7 +473,6 @@
                 width: 36px;
                 height: 36px;
                 font-size: 0.95rem;
-                margin-bottom: 0.7rem;
             }
 
             .db-stat-card h3 {
@@ -390,17 +481,6 @@
 
             .db-stat-card p {
                 font-size: 0.75rem;
-            }
-
-            .mobile-sidebar-toggle {
-                font-size: 1.4rem;
-                width: 42px;
-                height: 42px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: var(--off-white, #f8fafc);
-                border-radius: 10px;
             }
         }
     </style>
@@ -412,22 +492,35 @@
         <!-- TOP STAT CARDS -->
         <div class="db-stats-grid">
             <div class="db-stat-card">
-                <div class="db-stat-icon"><i class="fa-solid fa-wallet"></i></div>
+                <div class="db-stat-header-row">
+                    <div class="db-stat-icon"><i class="fa-solid fa-wallet"></i></div>
+                </div>
                 <h3 id="statBalance">KSh 0</h3>
                 <p>Account Balance</p>
             </div>
+
             <div class="db-stat-card">
-                <div class="db-stat-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                <div class="db-stat-header-row">
+                    <div class="db-stat-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                </div>
                 <h3 id="statContribution">KSh 0</h3>
                 <p>My Total Contribution</p>
             </div>
-            <div class="db-stat-card">
-                <div class="db-stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+
+            <!-- Clickable Schedules Card -->
+            <div class="db-stat-card clickable-card" onclick="navigateToParentPage('pages/schedules.html')">
+                <div class="db-stat-header-row">
+                    <div class="db-stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                    <div class="db-stat-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                </div>
                 <h3 id="statSchedules">0</h3>
                 <p>My Schedules</p>
             </div>
+
             <div class="db-stat-card">
-                <div class="db-stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                <div class="db-stat-header-row">
+                    <div class="db-stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                </div>
                 <h3 id="statEvents">0</h3>
                 <p>Total Events</p>
             </div>
@@ -446,25 +539,40 @@
 
         <!-- ANNOUNCEMENTS + UPCOMING EVENTS -->
         <div class="db-section-grid">
+
+            <!-- Announcements Card -->
             <div class="db-card">
                 <div class="db-card-header">
                     <h3>Announcements</h3>
-                    <a href="#" class="db-card-pill">View all</a>
+                    <span class="db-card-pill" onclick="toggleAnnouncements()">View</span>
                 </div>
 
                 <div id="announcementsList">
                     <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading announcements...</p>
                 </div>
+
+                <div class="see-more-wrap" id="announcementsSeeMoreWrap" style="display: none;">
+                    <button class="see-more-btn" id="announcementsSeeMoreBtn" onclick="toggleAnnouncements()">
+                        <span>See More</span> <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                </div>
             </div>
 
+            <!-- Upcoming Events Card -->
             <div class="db-card">
                 <div class="db-card-header">
                     <h3>Upcoming Events</h3>
-                    <a href="#" class="db-card-pill">See all</a>
+                    <span class="db-card-pill" onclick="toggleEvents()">View</span>
                 </div>
 
                 <div id="upcomingEventsList">
                     <p style="color:var(--text-gray,#64748b); font-size:0.9rem;">Loading events...</p>
+                </div>
+
+                <div class="see-more-wrap" id="eventsSeeMoreWrap" style="display: none;">
+                    <button class="see-more-btn" id="eventsSeeMoreBtn" onclick="toggleEvents()">
+                        <span>See More</span> <i class="fa-solid fa-chevron-down"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -474,23 +582,40 @@
             <h3>Quick Links</h3>
         </div>
         <div class="quicklinks-grid">
-            <a href="#" class="quicklink-card">
+            <div class="quicklink-card" onclick="navigateToParentPage('pages/resources.html');">
                 <div class="quicklink-icon resources"><i class="fa-solid fa-book-open"></i></div>
                 <h4>Resources</h4>
                 <p>Bible study guides, sermon notes and study materials.</p>
-            </a>
-            <a href="#" class="quicklink-card">
+            </div>
+
+            <div class="quicklink-card" onclick="navigateToParentPage('pages/media.html');">
                 <div class="quicklink-icon media"><i class="fa-solid fa-photo-film"></i></div>
                 <h4>Media</h4>
                 <p>Photos, sermon recordings and event highlights.</p>
-            </a>
+            </div>
+
+            <div class="quicklink-card" onclick="navigateToParentPage('pages/accounts.html');">
+                <div class="quicklink-icon accounts"><i class="fa-solid fa-user-gear"></i></div>
+                <h4>Accounts</h4>
+                <p>Manage your profile, personal details and account settings.</p>
+            </div>
         </div>
 
     </main>
+
     <script>
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Notify parent dashboard shell to navigate AND move active gold highlight
+        function navigateToParentPage(pageUrl) {
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({ type: 'navigate', page: pageUrl }, '*');
+            } else {
+                window.location.href = pageUrl;
+            }
+        }
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -505,6 +630,7 @@
                 maximumFractionDigits: 2
             });
         }
+
         async function loadVerseOfTheDay() {
             const textEl = document.getElementById("verseText");
             const refEl = document.getElementById("verseRef");
@@ -512,34 +638,25 @@
             if (!textEl || !refEl) return;
 
             try {
-                // Fetch daily verse explicitly requesting NKJV
                 const response = await fetch("https://beta.ourmanna.com/api/v1/get?format=json&order=daily&version=nkjv");
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
                 const data = await response.json();
-
                 if (data && data.verse && data.verse.details) {
-                    const verseText = data.verse.details.text.trim();
-                    const reference = data.verse.details.reference;
-                    const version = data.verse.details.version || 'NKJV';
-
-                    textEl.textContent = `"${verseText}"`;
-                    refEl.textContent = `${reference} (${version})`;
+                    textEl.textContent = `"${data.verse.details.text.trim()}"`;
+                    refEl.textContent = `${data.verse.details.reference} (${data.verse.details.version || 'NKJV'})`;
                 } else {
-                    throw new Error("Invalid verse data structure");
+                    throw new Error("Invalid verse data");
                 }
             } catch (err) {
-                console.error("Failed to load daily verse from API:", err);
-
-                // Fallback verse in exact NKJV translation
+                console.error("Failed to load daily verse:", err);
                 textEl.textContent = '"Let no one despise your youth, but be an example to the believers in word, in conduct, in love, in spirit, in faith, in purity."';
                 refEl.textContent = "1 Timothy 4:12 (NKJV)";
             }
         }
+
         function formatTime(t) {
+            if (!t) return '';
             const [h, m] = t.split(':');
             const hour = parseInt(h, 10);
             const suffix = hour >= 12 ? 'PM' : 'AM';
@@ -556,6 +673,7 @@
             const days = Math.floor(hrs / 24);
             return `${days} day${days === 1 ? '' : 's'} ago`;
         }
+
         async function loadDashboardStats(userId) {
             loadVerseOfTheDay();
             const el = document.getElementById("statBalance");
@@ -564,9 +682,7 @@
             const INITIAL_BALANCE = 0;
 
             try {
-                // IMPORTANT: Replace 'transactions' below with your exact Supabase table name!
                 const TABLE_NAME = 'transactions';
-
                 const [
                     { data: transactions, error: txError },
                     { count: schedulesCount, error: schedError },
@@ -577,22 +693,12 @@
                     supabaseClient.from('events').select('*', { count: 'exact', head: true })
                 ]);
 
-                // --- DEBUG LOGS (Check your browser console F12) ---
-                console.log("Supabase Transaction Fetch Error:", txError);
-                console.log("Fetched Raw Transactions:", transactions);
-
                 if (txError) {
-                    console.error("Treasury calculation error:", txError);
-                    if (el) {
-                        el.innerText = "KSh —";
-                        el.title = txError.message || "Error fetching financial data";
-                    }
+                    if (el) el.innerText = "KSh —";
                     return;
                 }
 
                 const txList = transactions || [];
-
-                // Calculate Totals
                 const totalDeposits = txList
                     .filter(tx => String(tx.type).trim().toLowerCase() === 'deposit')
                     .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
@@ -601,99 +707,178 @@
                     .filter(tx => String(tx.type).trim().toLowerCase() === 'expenditure')
                     .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
 
-                console.log(`Calculated Deposits: KSh ${totalDeposits}`);
-                console.log(`Calculated Expenditures: KSh ${totalExpenditures}`);
-
                 const netBalance = INITIAL_BALANCE + totalDeposits - totalExpenditures;
+                if (el) el.innerText = formatKSh(netBalance);
 
-                if (el) {
-                    el.innerText = formatKSh(netBalance);
-                    el.removeAttribute("title");
-                }
-
-                // Calculate User Specific Contribution
                 const myTotalContribution = txList
                     .filter(tx => tx.user_id === userId && String(tx.type).trim().toLowerCase() === 'deposit')
                     .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
 
                 const contribEl = document.getElementById('statContribution');
-                if (contribEl) {
-                    contribEl.textContent = `KSh ${myTotalContribution.toLocaleString()}`;
-                }
+                if (contribEl) contribEl.textContent = `KSh ${myTotalContribution.toLocaleString()}`;
 
-                // Update Schedules Count
                 const schedEl = document.getElementById('statSchedules');
-                if (schedEl) {
-                    schedEl.textContent = (!schedError && schedulesCount !== null) ? schedulesCount : '0';
-                }
+                if (schedEl) schedEl.textContent = (!schedError && schedulesCount !== null) ? schedulesCount : '0';
 
-                // Update Events Count
                 const eventsEl = document.getElementById('statEvents');
-                if (eventsEl) {
-                    eventsEl.textContent = (!eventsError && eventsCount !== null) ? eventsCount : '0';
-                }
+                if (eventsEl) eventsEl.textContent = (!eventsError && eventsCount !== null) ? eventsCount : '0';
 
             } catch (err) {
-                console.error("Unexpected error loading dashboard:", err);
+                console.error("Error loading stats:", err);
                 if (el) el.innerText = "KSh —";
             }
         }
-        async function loadUpcomingEvents() {
-            const container = document.getElementById('upcomingEventsList');
-            const today = new Date().toISOString().split('T')[0];
 
-            const { data: events, error } = await supabaseClient
-                .from('events').select('*').gte('event_date', today)
-                .order('event_date', { ascending: true }).limit(5);
+        // Announcements Handling
+        async function loadAnnouncements() {
+            const container = document.getElementById('announcementsList');
+            const seeMoreWrap = document.getElementById('announcementsSeeMoreWrap');
 
-            if (error) { console.error('Could not load events:', error); return; }
+            const { data: items, error } = await supabaseClient
+                .from('announcements')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(20);
 
-            if (!events || events.length === 0) {
-                container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No upcoming events yet.</p>';
+            if (error || !items || items.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No announcements yet.</p>';
+                seeMoreWrap.style.display = 'none';
                 return;
             }
 
-            container.innerHTML = events.map(ev => {
+            const visibleItems = items.slice(0, 3);
+            const hiddenItems = items.slice(3);
+
+            let html = visibleItems.map(a => `
+                <div class="announcement-item">
+                    <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                    <div class="announcement-content">
+                        <p>${escapeHtml(a.title)} — ${escapeHtml(a.content)}</p>
+                        <span>${timeAgo(a.created_at)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            if (hiddenItems.length > 0) {
+                html += `
+                    <div class="extra-items-container" id="extraAnnouncements">
+                        ${hiddenItems.map(a => `
+                            <div class="announcement-item">
+                                <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                                <div class="announcement-content">
+                                    <p>${escapeHtml(a.title)} —${escapeHtml(a.content)}</p>
+                                    <span>${timeAgo(a.created_at)}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                seeMoreWrap.style.display = 'block';
+            } else {
+                seeMoreWrap.style.display = 'none';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleAnnouncements() {
+            const extraBox = document.getElementById('extraAnnouncements');
+            const btn = document.getElementById('announcementsSeeMoreBtn');
+            if (!extraBox) return;
+
+            const isExpanded = extraBox.classList.contains('expanded');
+            if (isExpanded) {
+                extraBox.classList.remove('expanded');
+                if (btn) {
+                    btn.classList.remove('expanded');
+                    btn.querySelector('span').textContent = 'See More';
+                }
+            } else {
+                extraBox.classList.add('expanded');
+                if (btn) {
+                    btn.classList.add('expanded');
+                    btn.querySelector('span').textContent = 'See Less';
+                }
+            }
+        }
+
+        // Upcoming Events Handling
+        async function loadUpcomingEvents() {
+            const container = document.getElementById('upcomingEventsList');
+            const seeMoreWrap = document.getElementById('eventsSeeMoreWrap');
+            const today = new Date().toISOString().split('T')[0];
+
+            const { data: events, error } = await supabaseClient
+                .from('events')
+                .select('*')
+                .gte('event_date', today)
+                .order('event_date', { ascending: true })
+                .limit(20);
+
+            if (error || !events || events.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No upcoming events yet.</p>';
+                seeMoreWrap.style.display = 'none';
+                return;
+            }
+
+            function renderEventCard(ev) {
                 const d = new Date(ev.event_date + 'T00:00:00');
                 const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
                 const day = d.getDate();
                 const startLabel = ev.start_time ? formatTime(ev.start_time) : '';
                 const endLabel = ev.end_time ? formatTime(ev.end_time) : '';
                 const timeRange = startLabel && endLabel ? `${startLabel} - ${endLabel}` : (startLabel || endLabel || '');
+
                 return `
-            <div class="db-event-item">
-                <div class="db-event-date"><span>${month}</span><strong>${day}</strong></div>
-                <div class="db-event-info">
-                    <h4>${escapeHtml(ev.title)}</h4>
-                    ${ev.content ? `<p class="db-event-desc">${escapeHtml(ev.content)}</p>` : ''}
-                    <p class="db-event-time"><i class="fa-regular fa-clock"></i> ${timeRange}</p>
-                </div>
-            </div>
-        `;
-            }).join('');
-        }
-
-        async function loadAnnouncements() {
-            const container = document.getElementById('announcementsList');
-            const { data: items, error } = await supabaseClient
-                .from('announcements').select('*').order('created_at', { ascending: false }).limit(5);
-
-            if (error) { console.error('Could not load announcements:', error); return; }
-
-            if (!items || items.length === 0) {
-                container.innerHTML = '<p style="color:var(--text-gray,#64748b); font-size:0.9rem;">No announcements yet.</p>';
-                return;
+                    <div class="db-event-item">
+                        <div class="db-event-date"><span>${month}</span><strong>${day}</strong></div>
+                        <div class="db-event-info">
+                            <h4>${escapeHtml(ev.title)}</h4>
+                            ${ev.content ? `<p class="db-event-desc">${escapeHtml(ev.content)}</p>` : ''}
+                            ${timeRange ? `<p class="db-event-time"><i class="fa-regular fa-clock"></i> ${timeRange}</p>` : ''}
+                        </div>
+                    </div>
+                `;
             }
 
-            container.innerHTML = items.map(a => `
-        <div class="announcement-item">
-            <div class="announcement-icon"><i class="fa-solid fa-bullhorn"></i></div>
-            <div class="announcement-content">
-                <p>${escapeHtml(a.title)} — ${escapeHtml(a.content)}</p>
-                <span>${timeAgo(a.created_at)}</span>
-            </div>
-        </div>
-    `).join('');
+            const visibleEvents = events.slice(0, 3);
+            const hiddenEvents = events.slice(3);
+
+            let html = visibleEvents.map(renderEventCard).join('');
+
+            if (hiddenEvents.length > 0) {
+                html += `
+                    <div class="extra-items-container" id="extraEvents">
+                        ${hiddenEvents.map(renderEventCard).join('')}
+                    </div>
+                `;
+                seeMoreWrap.style.display = 'block';
+            } else {
+                seeMoreWrap.style.display = 'none';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleEvents() {
+            const extraBox = document.getElementById('extraEvents');
+            const btn = document.getElementById('eventsSeeMoreBtn');
+            if (!extraBox) return;
+
+            const isExpanded = extraBox.classList.contains('expanded');
+            if (isExpanded) {
+                extraBox.classList.remove('expanded');
+                if (btn) {
+                    btn.classList.remove('expanded');
+                    btn.querySelector('span').textContent = 'See More';
+                }
+            } else {
+                extraBox.classList.add('expanded');
+                if (btn) {
+                    btn.classList.add('expanded');
+                    btn.querySelector('span').textContent = 'See Less';
+                }
+            }
         }
 
         (async () => {
