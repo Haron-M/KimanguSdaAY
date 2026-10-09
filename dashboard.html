@@ -1055,6 +1055,126 @@
             z-index: 2001;
         }
 
+        /* ===== Payment toast (top right, 15 seconds) ===== */
+        #payToastStack {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 6000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: min(380px, calc(100vw - 32px));
+            pointer-events: none;
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+
+        .pay-toast {
+            pointer-events: auto;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            gap: 0.8rem;
+            align-items: flex-start;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            box-shadow: 0 10px 28px rgba(10, 25, 47, 0.18);
+            animation: payToastIn 0.35s ease-out both;
+        }
+
+        .pay-toast.leaving {
+            animation: payToastOut 0.3s ease-in forwards;
+        }
+
+        .pay-toast-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+        }
+
+        .pay-toast-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pay-toast-body strong {
+            display: block;
+            font-size: 0.78rem;
+            color: #0a192f;
+            margin-bottom: 2px;
+        }
+
+        .pay-toast-body p {
+            font-size: 0.82rem;
+            color: #334155;
+            line-height: 1.45;
+            margin: 0;
+        }
+
+        .pay-toast-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 2px;
+        }
+
+        .pay-toast-close:hover {
+            color: #0a192f;
+        }
+
+        .pay-toast-bar {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 100%;
+            background: #16a34a;
+            transform-origin: left;
+            animation: payToastBar 15s linear forwards;
+        }
+
+        @keyframes payToastIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        @keyframes payToastOut {
+            to {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+        }
+
+        @keyframes payToastBar {
+            to {
+                transform: scaleX(0);
+            }
+        }
+
+        .pay-notif-icon {
+            background: #dcfce7 !important;
+            color: #16a34a !important;
+        }
+
         /* ===== Location gate (blocks the dashboard until location is on) ===== */
         .loc-gate {
             position: fixed;
@@ -1396,6 +1516,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Payment toasts appear here (top right) -->
+    <div id="payToastStack" aria-live="polite"></div>
 
     <!-- Location gate: shown until the user turns location on -->
     <div class="loc-gate" id="locGate" role="dialog" aria-modal="true" aria-labelledby="locGateTitle" hidden>
@@ -1938,9 +2061,21 @@
                 .catch(() => { /* permissions API not supported */ });
         }
 
-        // ===================== SCHEDULE NOTIFICATIONS =====================
-        const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+        // ===================== NOTIFICATIONS (schedules + payments) =====================
+        const SIX_HOURS_MS = 6 * 60 * 60 * 1000;     // a notification disappears 6 hours after the user saw it
+        const TOAST_MS = 15 * 1000;                  // login toast stays for 15 seconds
+        const MAX_LOGIN_TOASTS = 3;                  // more than this are summarised in one extra toast
+        const PAYMENT_NOTIF_MAX_AGE_DAYS = 7;        // only payments from the last 7 days become notifications
+        const PAYMENT_NOTIF_LIMIT = 20;
+        const INCOME_TYPES = new Set(['deposit', 'income', 'revenue']);
 
+        let activePayments = [];
+        let notifSeenKeys = new Set();   // seen while the dropdown is open: keep the unread look until it closes
+        let notifLoadFailed = false;
+        let loginToastsShown = false;
+        let paymentChannel = null;
+
+        // ---- read / toast bookkeeping (stored per browser) ----
         function getReadStorageKey(userId) { return `read_schedules_${userId}`; }
 
         function getReadState(userId) {
@@ -1957,61 +2092,268 @@
             localStorage.setItem(getReadStorageKey(userId), JSON.stringify(state));
         }
 
-        async function fetchAndRenderScheduleNotifications(userId) {
+        function getToastedKey(userId) { return `toasted_payments_${userId}`; }
+
+        function getToastedState(userId) {
             try {
-                const { data: schedules, error } = await supabaseClient
-                    .from('schedules')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(20);
+                return JSON.parse(localStorage.getItem(getToastedKey(userId))) || {};
+            } catch (e) {
+                return {};
+            }
+        }
 
-                if (error) {
-                    console.error('Error fetching schedule notifications:', error);
-                    const notifList = document.getElementById('notifList');
-                    if (notifList) {
-                        notifList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">Failed to load notifications.</div>';
-                    }
-                    return;
+        function markToasted(userId, keys) {
+            const state = getToastedState(userId);
+            const now = Date.now();
+            keys.forEach(key => { state[key] = now; });
+            Object.keys(state).forEach(key => {
+                if (now - state[key] > 30 * 24 * 60 * 60 * 1000) delete state[key];
+            });
+            try { localStorage.setItem(getToastedKey(userId), JSON.stringify(state)); } catch (e) { /* storage full */ }
+        }
+
+        // ---- payment message: identical to the Transaction Log on the My Account Report page ----
+        function getPaymentAmount(row) {
+            const amount = Number(row.amount);
+            return Number.isFinite(amount) ? Math.abs(amount) : 0;
+        }
+
+        function getPaymentDate(row) {
+            const candidates = [
+                row.date, row.transaction_date, row.transactionDate,
+                row.created_at, row.createdAt, row.timestamp
+            ];
+            for (const value of candidates) {
+                if (!value) continue;
+                const parsed = new Date(value);
+                if (!Number.isNaN(parsed.getTime())) return parsed;
+            }
+            return null;
+        }
+
+        function formatKSh(value) {
+            const number = Number(value) || 0;
+            return 'KSh ' + number.toLocaleString('en-KE', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatDateLabel(date) {
+            return date
+                ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '—';
+        }
+
+        function formatTimeLabel(date) {
+            return date
+                ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                : '—';
+        }
+
+        function getTransactionCode(row) {
+            const explicit = row.transaction_code || row.transaction_id || row.reference ||
+                row.ref_code || row.receipt_no || row.code;
+            if (explicit) return String(explicit).toUpperCase();
+
+            const raw = String(row.id ?? '').replace(/-/g, '').toUpperCase();
+            return raw ? raw.slice(0, 8) : '—';
+        }
+
+        function isPaymentRow(row) {
+            return INCOME_TYPES.has(String(row.type ?? '').trim().toLowerCase());
+        }
+
+        function buildPaymentMessage(row) {
+            const date = getPaymentDate(row);
+            const amount = formatKSh(getPaymentAmount(row));
+            const code = getTransactionCode(row);
+            return `Confirmed. Payment of ${amount} on ${formatDateLabel(date)} at ${formatTimeLabel(date)} has been successfully received. Transaction ID ${code}.`;
+        }
+
+        // ---- toast (top right) ----
+        function showToastCard(title, message) {
+            const stack = document.getElementById('payToastStack');
+            if (!stack) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'pay-toast';
+            toast.innerHTML = `
+                <div class="pay-toast-icon"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="pay-toast-body">
+                    <strong>${escapeHtml(title)}</strong>
+                    <p>${escapeHtml(message)}</p>
+                </div>
+                <button type="button" class="pay-toast-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+                <span class="pay-toast-bar"></span>`;
+
+            const remove = () => {
+                toast.classList.add('leaving');
+                setTimeout(() => toast.remove(), 300);
+            };
+            toast.querySelector('.pay-toast-close').addEventListener('click', remove);
+            stack.appendChild(toast);
+            setTimeout(remove, TOAST_MS);
+        }
+
+        // Payments the user has not seen and has not been toasted about yet
+        function showNewPaymentToasts() {
+            if (!currentUserId) return;
+            const readState = getReadState(currentUserId);
+            const toasted = getToastedState(currentUserId);
+
+            const fresh = activePayments
+                .filter(row => readState[`pay_${row.id}`] === undefined && toasted[`pay_${row.id}`] === undefined)
+                .sort((a, b) => (getPaymentDate(a) || 0) - (getPaymentDate(b) || 0)); // oldest first
+
+            if (!fresh.length) return;
+
+            fresh.slice(-MAX_LOGIN_TOASTS).forEach(row => showToastCard('Payment received', buildPaymentMessage(row)));
+
+            if (fresh.length > MAX_LOGIN_TOASTS) {
+                const extra = fresh.length - MAX_LOGIN_TOASTS;
+                showToastCard('More payments', `${extra} more payment notification${extra > 1 ? 's are' : ' is'} waiting in your notification bell.`);
+            }
+
+            markToasted(currentUserId, fresh.map(row => `pay_${row.id}`));
+        }
+
+        // ---- fetching ----
+        async function fetchPaymentNotifications(userId) {
+            const since = new Date(Date.now() - PAYMENT_NOTIF_MAX_AGE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+            const { data, error } = await supabaseClient
+                .from('transactions')
+                .select('*')
+                .eq('user_id', userId)
+                .gte('created_at', since)
+                .order('created_at', { ascending: false })
+                .limit(PAYMENT_NOTIF_LIMIT);
+
+            if (error) {
+                console.warn('Could not load payment notifications:', error.message);
+                return null;
+            }
+            return (data || []).filter(isPaymentRow);
+        }
+
+        async function fetchAndRenderNotifications(userId) {
+            try {
+                const [schedulesResult, payments] = await Promise.all([
+                    supabaseClient.from('schedules').select('*').order('created_at', { ascending: false }).limit(20),
+                    fetchPaymentNotifications(userId)
+                ]);
+
+                if (schedulesResult.error) console.error('Error fetching schedule notifications:', schedulesResult.error);
+
+                activeSchedules = schedulesResult.data || [];
+                activePayments = payments || [];
+                notifLoadFailed = !!schedulesResult.error && payments === null;
+
+                renderNotifications();
+
+                if (!loginToastsShown) {
+                    loginToastsShown = true;
+                    showNewPaymentToasts();
                 }
-
-                activeSchedules = schedules || [];
-                renderScheduleNotifications(activeSchedules, userId);
+                subscribeToPayments();
             } catch (err) {
                 console.error('Notification system exception:', err);
             }
         }
 
-        function renderScheduleNotifications(schedules, userId) {
-            const readState = getReadState(userId);
-            const now = Date.now();
-            const notifBadge = document.getElementById('notifBadge');
-            const notifList = document.getElementById('notifList');
-            if (!notifList || !notifBadge) return;
+        // New deposits arriving while the dashboard is open
+        function subscribeToPayments() {
+            if (paymentChannel || !currentUserId) return;
 
-            let unreadCount = 0;
-            let visibleHtml = '';
+            paymentChannel = supabaseClient
+                .channel(`my-payments-${currentUserId}`)
+                .on(
+                    'postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'transactions', filter: `user_id=eq.${currentUserId}` },
+                    async (payload) => {
+                        let row = payload.new;
+                        if (!row || !isPaymentRow(row)) return;
+                        if (activePayments.some(p => String(p.id) === String(row.id))) return;
 
-            schedules.forEach(item => {
-                const readTimestamp = readState[item.id];
-                const isRead = readTimestamp !== undefined;
+                        // Re-read the row shortly after, so a code added by a database trigger is included
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                        const { data } = await supabaseClient.from('transactions').select('*').eq('id', row.id).maybeSingle();
+                        if (data) row = data;
 
-                if (isRead) {
-                    if (now - readTimestamp >= SIX_HOURS_MS) return;
-                } else {
-                    unreadCount++;
-                }
+                        activePayments.unshift(row);
+                        renderNotifications();
+                        markToasted(currentUserId, [`pay_${row.id}`]);
+                        showToastCard('Payment received', buildPaymentMessage(row));
+                    }
+                )
+                .subscribe();
+        }
 
-                const title = item.title || item.duty_name || item.event_title || 'New Schedule Assigned';
-                const description = item.description || item.location || (item.date ? `Date: ${item.date}` : 'Check your schedule for details.');
+        // ---- rendering ----
+        function getNotificationItems() {
+            const items = [];
 
-                visibleHtml += `
-                <div class="notif-item ${isRead ? 'read' : 'unread'}">
+            activeSchedules.forEach(item => {
+                items.push({ key: String(item.id), kind: 'schedule', createdAt: item.created_at, data: item });
+            });
+
+            activePayments.forEach(row => {
+                const date = getPaymentDate(row);
+                items.push({ key: `pay_${row.id}`, kind: 'payment', createdAt: date ? date.toISOString() : row.created_at, data: row });
+            });
+
+            items.sort((a, b) => (new Date(b.createdAt).getTime() || 0) - (new Date(a.createdAt).getTime() || 0));
+            return items;
+        }
+
+        function scheduleItemHtml(item, unread) {
+            const row = item.data;
+            const title = row.title || row.duty_name || row.event_title || 'New Schedule Assigned';
+            const description = row.description || row.location || (row.date ? `Date: ${row.date}` : 'Check your schedule for details.');
+
+            return `
+                <div class="notif-item ${unread ? 'unread' : 'read'}">
                     <div class="notif-icon"><i class="fa-solid fa-calendar-day"></i></div>
                     <div class="notif-content">
                         <p>New schedule: <strong>${escapeHtml(title)}</strong> - ${escapeHtml(description)}</p>
-                        <span>${formatTimeAgo(item.created_at)}</span>
+                        <span>${formatTimeAgo(row.created_at)}</span>
                     </div>
                 </div>`;
+        }
+
+        function paymentItemHtml(item, unread) {
+            const row = item.data;
+            return `
+                <div class="notif-item ${unread ? 'unread' : 'read'}">
+                    <div class="notif-icon pay-notif-icon"><i class="fa-solid fa-arrow-down"></i></div>
+                    <div class="notif-content">
+                        <p>${escapeHtml(buildPaymentMessage(row))}</p>
+                        <span>${formatTimeAgo(item.createdAt)}</span>
+                    </div>
+                </div>`;
+        }
+
+        function renderNotifications() {
+            const notifBadge = document.getElementById('notifBadge');
+            const notifList = document.getElementById('notifList');
+            if (!notifList || !notifBadge || !currentUserId) return;
+
+            const readState = getReadState(currentUserId);
+            const now = Date.now();
+            let unreadCount = 0;
+            let html = '';
+
+            getNotificationItems().forEach(item => {
+                const readAt = readState[item.key];
+                const isRead = readAt !== undefined;
+
+                // Seen more than 6 hours ago: gone
+                if (isRead && now - readAt >= SIX_HOURS_MS) return;
+
+                if (!isRead) unreadCount++;
+
+                const unreadLook = !isRead || notifSeenKeys.has(item.key);
+                html += item.kind === 'payment' ? paymentItemHtml(item, unreadLook) : scheduleItemHtml(item, unreadLook);
             });
 
             if (unreadCount > 0) {
@@ -2022,19 +2364,45 @@
                 notifBadge.style.display = 'none';
             }
 
-            notifList.innerHTML = visibleHtml ||
-                '<div style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">No new schedule notifications</div>';
+            const emptyStyle = 'padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;';
+            notifList.innerHTML = html ||
+                `<div style="${emptyStyle}">${notifLoadFailed ? 'Failed to load notifications.' : 'No new notifications'}</div>`;
+        }
+
+        // Opening the bell = the user has seen everything in it: start the 6 hour countdown
+        function onNotificationsOpened() {
+            if (!currentUserId) return;
+            const readState = getReadState(currentUserId);
+            const now = Date.now();
+
+            getNotificationItems().forEach(item => {
+                if (readState[item.key] === undefined) {
+                    readState[item.key] = now;
+                    notifSeenKeys.add(item.key);
+                }
+            });
+
+            saveReadState(currentUserId, readState);
+            renderNotifications(); // badge drops to 0, items keep the unread look while the list is open
+        }
+
+        function onNotificationsClosed() {
+            notifSeenKeys.clear();
+            renderNotifications();
         }
 
         function handleMarkAllAsRead() {
-            if (!currentUserId || !activeSchedules.length) return;
+            if (!currentUserId) return;
             const readState = getReadState(currentUserId);
             const now = Date.now();
-            activeSchedules.forEach(item => {
-                if (!readState[item.id]) readState[item.id] = now;
+
+            getNotificationItems().forEach(item => {
+                if (readState[item.key] === undefined) readState[item.key] = now;
             });
+
             saveReadState(currentUserId, readState);
-            renderScheduleNotifications(activeSchedules, currentUserId);
+            notifSeenKeys.clear();
+            renderNotifications();
         }
 
         const markAllReadBtn = document.getElementById('markAllReadBtn');
@@ -2106,7 +2474,7 @@
             document.getElementById('apName').textContent = fullName;
             document.getElementById('apPhone').textContent = phone || 'Not added yet';
 
-            fetchAndRenderScheduleNotifications(currentUserId);
+            fetchAndRenderNotifications(currentUserId);
         }
 
         // ===================== AVATAR PANEL =====================
@@ -2263,9 +2631,14 @@
                 }
             });
 
-            // Bell arrow follows the dropdown's "active" state
+            // Bell arrow follows the dropdown's "active" state; opening it marks everything as seen
+            let notifWasOpen = false;
             new MutationObserver(() => {
-                notifBtn.classList.toggle('open', notifDropdown.classList.contains('active'));
+                const isOpen = notifDropdown.classList.contains('active');
+                notifBtn.classList.toggle('open', isOpen);
+                if (isOpen && !notifWasOpen) onNotificationsOpened();
+                if (!isOpen && notifWasOpen) onNotificationsClosed();
+                notifWasOpen = isOpen;
             }).observe(notifDropdown, { attributes: true, attributeFilter: ['class'] });
         }
 
@@ -2328,6 +2701,7 @@
         // ===================== START =====================
         renderGreeting();
         setInterval(renderGreeting, 60 * 1000); // pick up period changes (e.g. morning -> noon)
+        setInterval(renderNotifications, 60 * 1000); // drops notifications 6 hours after they were seen
         loadUserProfile().then(initLocation);
     </script>
 </body>
