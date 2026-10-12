@@ -9,7 +9,6 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
@@ -41,7 +40,7 @@
             font-family: 'Playfair Display', serif;
         }
 
-        /* HEADER BAR - now a top-level sibling, distinct from the form panel */
+        /* HEADER BAR - a top-level sibling, distinct from the form panel */
         .auth-topbar {
             display: flex;
             justify-content: space-between;
@@ -62,8 +61,7 @@
         /* LEFT PANEL - IMAGE */
         .auth-visual {
             position: relative;
-            background: linear-gradient(180deg, rgba(10, 25, 47, 0.55) 0%, rgba(10, 25, 47, 0.85) 100%),
-                url('kimangu-worship.jpg') center/cover no-repeat;
+            background: linear-gradient(180deg, rgba(10, 25, 47, 0.55) 0%, rgba(10, 25, 47, 0.85) 100%), url('kimangu-worship.jpg') center/cover no-repeat;
             background-color: var(--primary-dark);
             display: flex;
             align-items: flex-end;
@@ -274,6 +272,11 @@
             color: var(--primary-dark);
         }
 
+        .btn-auth-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .auth-switch {
             text-align: center;
             font-size: 0.9rem;
@@ -461,11 +464,6 @@
             display: block;
         }
 
-        .btn-auth-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
         /* View switching */
         .auth-view {
             display: none;
@@ -548,8 +546,8 @@
                 <div class="auth-view active" id="signInView">
                     <span class="auth-badge">Welcome Back</span>
                     <h2>Sign in to your account</h2>
-                    <p class="auth-subtext">Enter any demo details to explore your <span class="highlight">member
-                            dashboard</span>.</p>
+                    <p class="auth-subtext">Enter your phone number and password to open your <span
+                            class="highlight">member dashboard</span>.</p>
 
                     <form onsubmit="handleAuthSubmit(event, 'signin')">
                         <div class="form-error" id="signinError"></div>
@@ -612,7 +610,7 @@
                 <div class="auth-view" id="signUpView">
                     <span class="auth-badge">Step 2 of 2</span>
                     <h2>Create your account</h2>
-                    <p class="auth-subtext">Register to explore the Kimangu AY member experience.</p>
+                    <p class="auth-subtext">Register to join the Kimangu AY member community.</p>
 
                     <form onsubmit="handleAuthSubmit(event, 'signup')">
                         <div class="form-error" id="signupError"></div>
@@ -696,23 +694,14 @@
     </div>
 
     <script>
-        // ===================== SUPABASE SETUP =====================
-        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // ===================== API BACKEND SETUP =====================
+        // Local development: your Node server on port 5000.
+        // In production the API is expected at the same address as this page. If your server lives
+        // somewhere else, put its full address here, e.g. 'https://api.yoursite.com/api'.
+        const API_BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+            ? 'http://localhost:5000/api'
+            : '/api';
 
-        // Phone numbers aren't emails, so we build a private internal address
-        // behind the scenes for Supabase Auth (users never see or type this).
-        function phoneToEmail(phone) {
-            const cleaned = phone.replace(/\D/g, '');
-            return `${cleaned}@kimanguay.org`;
-        }
-
-        // ===================== ACCESS CODES =====================
-        const ACCESS_CODES = {
-            '412367': 'admin',
-            '432467': 'regular'
-        };
         let pendingAccountType = null;
 
         // ===================== 6-DIGIT CODE INPUT BEHAVIOR =====================
@@ -737,7 +726,7 @@
             });
         });
 
-        function handleCodeSubmit(e) {
+        async function handleCodeSubmit(e) {
             e.preventDefault();
             const errorEl = document.getElementById('codeError');
             const btn = document.getElementById('codeVerifyBtn');
@@ -752,23 +741,33 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
 
-            setTimeout(() => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/verify-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+
+                const data = await res.json();
+
                 btn.disabled = false;
                 btn.innerHTML = 'Verify Code &rarr;';
 
-                const accountType = ACCESS_CODES[code];
-
-                if (!accountType) {
-                    errorEl.textContent = 'Invalid code. Please check with your AY leader.';
+                if (!res.ok || !data.accountType) {
+                    errorEl.textContent = data.error || 'Invalid code. Please check with your AY leader.';
                     codeBoxes.forEach(b => b.value = '');
                     codeBoxes[0].focus();
                     return;
                 }
 
-                pendingAccountType = accountType; // 'admin' or 'regular'
+                pendingAccountType = data.accountType; // 'admin' or 'regular'
                 codeBoxes.forEach(b => b.value = '');
                 showView('signUpView');
-            }, 1800);
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = 'Verify Code &rarr;';
+                errorEl.textContent = 'Server connection error. Ensure backend is running.';
+            }
         }
 
         // ===================== VIEW SWITCHING =====================
@@ -838,47 +837,42 @@
                 btn.disabled = true;
                 btn.textContent = 'Creating account...';
 
-                const email = phoneToEmail(phone);
-
-                const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: pass
-                });
-
-                if (signUpError) {
-                    showError('signupError', signUpError.message);
-                    btn.disabled = false;
-                    btn.textContent = 'Create account →';
-                    return;
-                }
-
-                const userId = signUpData.user ? signUpData.user.id : null;
-
-                if (userId) {
-                    const { error: profileError } = await supabaseClient.from('profiles').insert({
-                        id: userId,
-                        full_name: fullName,
-                        phone: phone,
-                        category: category,
-                        account_type: pendingAccountType
+                try {
+                    const res = await fetch(`${API_BASE_URL}/auth/signup`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            fullName: fullName,
+                            phone: phone,
+                            password: pass,
+                            category: category,
+                            accountType: pendingAccountType
+                        })
                     });
 
-                    if (profileError) {
-                        showError('signupError', 'Account created, but profile save failed: ' + profileError.message);
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        showError('signupError', data.error || 'Failed to create account.');
                         btn.disabled = false;
                         btn.textContent = 'Create account →';
                         return;
                     }
-                }
 
-                alert('Account created successfully! Please sign in.');
-                pendingAccountType = null;
-                e.target.reset();
-                document.getElementById('roleYouthCard').classList.add('selected');
-                document.getElementById('roleAmbassadorCard').classList.remove('selected');
-                btn.disabled = false;
-                btn.textContent = 'Create account →';
-                showView('signInView');
+                    alert('Account created successfully! Please sign in.');
+                    pendingAccountType = null;
+                    e.target.reset();
+                    document.getElementById('roleYouthCard').classList.add('selected');
+                    document.getElementById('roleAmbassadorCard').classList.remove('selected');
+                    btn.disabled = false;
+                    btn.textContent = 'Create account →';
+                    showView('signInView');
+
+                } catch (err) {
+                    showError('signupError', 'Server connection error. Please try again.');
+                    btn.disabled = false;
+                    btn.textContent = 'Create account →';
+                }
 
             } else {
                 clearError('signinError');
@@ -892,26 +886,54 @@
                     return;
                 }
 
-                const email = phoneToEmail(phone);
-
                 btn.disabled = true;
                 btn.textContent = 'Signing in...';
 
-                const { data: signInData, error: signInError } =
-                    await supabaseClient.auth.signInWithPassword({
-                        email: email,
-                        password: pass
+                try {
+                    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            phone: phone,
+                            password: pass
+                        })
                     });
 
-                if (signInError) {
-                    showError('signinError', 'Invalid phone number or password.');
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        showError('signinError', data.error || 'Invalid phone number or password.');
+                        btn.disabled = false;
+                        btn.textContent = 'Sign In →';
+                        return;
+                    }
+
+                    // Save the session. The dashboard reads these two entries.
+                    localStorage.setItem('token', data.token);
+                    if (data.refreshToken) localStorage.setItem('refresh_token', data.refreshToken);
+
+                    // TEMPORARY: pages that still use the Supabase library read their session from this entry.
+                    // It must be a COMPLETE session (refresh token, expiry, user). If any of these are missing,
+                    // that library throws the session away and those pages send the user back to the login page.
+                    // Delete this block once every page talks to your server instead.
+                    const expiresAt = data.expiresAt || (Math.floor(Date.now() / 1000) + 3600);
+                    localStorage.setItem('sb-hywlfxlvwqnqbsmrmcbl-auth-token', JSON.stringify({
+                        access_token: data.token,
+                        refresh_token: data.refreshToken || '',
+                        expires_at: expiresAt,
+                        expires_in: Math.max(0, expiresAt - Math.floor(Date.now() / 1000)),
+                        token_type: 'bearer',
+                        user: data.user || null
+                    }));
+
+                    // Login successful
+                    window.location.href = 'dashboard.html';
+
+                } catch (err) {
+                    showError('signinError', 'Server connection error. Please try again.');
                     btn.disabled = false;
                     btn.textContent = 'Sign In →';
-                    return;
                 }
-
-                // Login was successful
-                window.location.href = 'dashboard.html';
             }
         }
 

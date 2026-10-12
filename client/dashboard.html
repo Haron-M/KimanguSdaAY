@@ -10,7 +10,6 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="dashboard.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         /* ===== Hide all scrollbars (sidebar gets a thin one on large screens, see below) ===== */
@@ -1535,10 +1534,139 @@
     </div>
 
     <script>
-        // ===================== SUPABASE SETUP =====================
-        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // ===================== SERVER API =====================
+        // The browser never talks to the database. Everything goes through your Node server.
+        // Local development: server on port 5000. In production set API_BASE to your server's
+        // address (use '' if the server also serves this page).
+        const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+            ? 'http://localhost:5000'
+            : '/api';
+
+        // auth.html must save the login response, for example:
+        //   localStorage.setItem('token', data.token);
+        //   localStorage.setItem('refresh_token', data.refreshToken);
+        const TOKEN_KEYS = ['token', 'access_token', 'authToken', 'kimangu_token'];
+        const REFRESH_KEY = 'refresh_token';
+
+        // Pages that still use the Supabase library keep a full session in an "sb-...-auth-token" entry.
+        // That entry is the shared copy: this page and those pages both read it and update it.
+        // Remove the legacy handling once every page talks to the server.
+        function readLegacySession() {
+            for (const key of Object.keys(localStorage)) {
+                if (!/^sb-.+-auth-token$/.test(key)) continue;
+                try {
+                    const session = JSON.parse(localStorage.getItem(key));
+                    if (session && session.access_token) return { key, session };
+                } catch (err) { /* ignore */ }
+            }
+            return null;
+        }
+
+        function getToken() {
+            const legacy = readLegacySession();
+            if (legacy) return legacy.session.access_token;
+            for (const key of TOKEN_KEYS) {
+                const value = localStorage.getItem(key);
+                if (value) return value;
+            }
+            return null;
+        }
+
+        function getRefreshToken() {
+            const legacy = readLegacySession();
+            return (legacy && legacy.session.refresh_token) || localStorage.getItem(REFRESH_KEY);
+        }
+
+        function saveSession(token, refreshToken, expiresAt) {
+            const key = TOKEN_KEYS.find(k => localStorage.getItem(k)) || TOKEN_KEYS[0];
+            localStorage.setItem(key, token);
+            if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+
+            const legacy = readLegacySession();
+            if (legacy) {
+                legacy.session.access_token = token;
+                if (refreshToken) legacy.session.refresh_token = refreshToken;
+                if (expiresAt) {
+                    legacy.session.expires_at = expiresAt;
+                    legacy.session.expires_in = Math.max(0, expiresAt - Math.floor(Date.now() / 1000));
+                }
+                localStorage.setItem(legacy.key, JSON.stringify(legacy.session));
+            }
+        }
+
+        function clearSession() {
+            TOKEN_KEYS.forEach(key => localStorage.removeItem(key));
+            localStorage.removeItem(REFRESH_KEY);
+            Object.keys(localStorage)
+                .filter(key => /^sb-.+-auth-token$/.test(key))
+                .forEach(key => localStorage.removeItem(key));
+        }
+
+        function goToLogin() { window.location.href = 'auth.html'; }
+
+        class ApiError extends Error {
+            constructor(message, status) {
+                super(message);
+                this.status = status;
+            }
+        }
+
+        // One refresh at a time, even if several requests expire together
+        let refreshing = null;
+        function refreshSession() {
+            if (!refreshing) {
+                refreshing = (async () => {
+                    const refreshToken = getRefreshToken();
+                    if (!refreshToken) return false;
+                    try {
+                        const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ refreshToken })
+                        });
+                        if (!res.ok) return false;
+                        const data = await res.json();
+                        if (!data.token) return false;
+                        saveSession(data.token, data.refreshToken, data.expiresAt);
+                        return true;
+                    } catch (err) {
+                        return false;
+                    }
+                })().finally(() => { refreshing = null; });
+            }
+            return refreshing;
+        }
+
+        // Calls your server with the saved token. A 401 triggers one silent refresh, then sends the user to login.
+        async function api(path, { method = 'GET', body, retry = true } = {}) {
+            const token = getToken();
+            if (!token) {
+                console.warn('Sending you to the login page: no saved login was found in this browser.');
+                goToLogin();
+                throw new ApiError('Not signed in', 401);
+            }
+
+            const headers = { Authorization: `Bearer ${token}` };
+            if (body !== undefined) headers['Content-Type'] = 'application/json';
+
+            const res = await fetch(`${API_BASE}${path}`, {
+                method,
+                headers,
+                body: body !== undefined ? JSON.stringify(body) : undefined
+            });
+
+            if (res.status === 401) {
+                if (retry && await refreshSession()) return api(path, { method, body, retry: false });
+                console.warn(`Sending you to the login page: the server answered 401 (not signed in) for ${path}.`);
+                clearSession();
+                goToLogin();
+                throw new ApiError('Session expired', 401);
+            }
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new ApiError(data.error || `Request failed (${res.status})`, res.status);
+            return data;
+        }
 
         let homeWelcomeText = 'Good day';
         let greetingName = '';
@@ -1803,8 +1931,7 @@
             return (i > 0 ? parts.slice(i) : parts).join(', ');
         }
 
-        // ---- Saved location + IP check (Supabase `profiles` table) ----
-        // Needs the columns: last_ip, location_text, location_source, location_updated_at
+        // ---- Saved location + IP check (the server stores it in the `profiles` table) ----
         const ALLOW_SKIP = false;   // true = always offer "Continue with approximate location" on the gate
         let gateIP = null;          // IP address seen when the gate was opened
         let gateSoftFailures = 0;   // device could not locate (not a permission problem); 2 in a row unlock the skip button
@@ -1857,18 +1984,9 @@
 
         async function loadStoredLocation() {
             try {
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('last_ip, location_text, location_source')
-                    .eq('id', currentUserId)
-                    .maybeSingle();
-                if (error) {
-                    console.warn('Could not read saved location (did you add the columns?):', error.message);
-                    return null;
-                }
-                return data;
+                return await api('/api/profile/location');
             } catch (err) {
-                console.warn('Saved location lookup failed:', err);
+                console.warn('Could not read the saved location:', err.message);
                 return null;
             }
         }
@@ -1876,21 +1994,9 @@
         async function persistLocation(text, source, ip) {
             if (!currentUserId) return;
             try {
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .update({
-                        location_text: text,
-                        location_source: source,
-                        last_ip: ip || null,
-                        location_updated_at: new Date().toISOString()
-                    })
-                    .eq('id', currentUserId)
-                    .select('id');
-                if (error || !data || !data.length) {
-                    console.warn('Could not save location to the database:', error ? error.message : 'no row updated');
-                }
+                await api('/api/profile/location', { method: 'PUT', body: { text, source, ip: ip || null } });
             } catch (err) {
-                console.warn('Saving location failed:', err);
+                console.warn('Could not save the location:', err.message);
             }
         }
 
@@ -2065,15 +2171,14 @@
         const SIX_HOURS_MS = 6 * 60 * 60 * 1000;     // a notification disappears 6 hours after the user saw it
         const TOAST_MS = 15 * 1000;                  // login toast stays for 15 seconds
         const MAX_LOGIN_TOASTS = 3;                  // more than this are summarised in one extra toast
-        const PAYMENT_NOTIF_MAX_AGE_DAYS = 7;        // only payments from the last 7 days become notifications
-        const PAYMENT_NOTIF_LIMIT = 20;
+        const PAYMENT_POLL_MS = 30 * 1000;           // how often to ask the server for new deposits
         const INCOME_TYPES = new Set(['deposit', 'income', 'revenue']);
 
         let activePayments = [];
         let notifSeenKeys = new Set();   // seen while the dropdown is open: keep the unread look until it closes
         let notifLoadFailed = false;
         let loginToastsShown = false;
-        let paymentChannel = null;
+        let paymentPollTimer = null;
 
         // ---- read / toast bookkeeping (stored per browser) ----
         function getReadStorageKey(userId) { return `read_schedules_${userId}`; }
@@ -2196,58 +2301,47 @@
             setTimeout(remove, TOAST_MS);
         }
 
-        // Payments the user has not seen and has not been toasted about yet
+        // Toast a group of payments: the newest few one by one, the rest in a single summary
+        function toastPayments(rows) {
+            if (!currentUserId || !rows.length) return;
+
+            const sorted = rows.slice().sort((a, b) => (getPaymentDate(a) || 0) - (getPaymentDate(b) || 0)); // oldest first
+
+            sorted.slice(-MAX_LOGIN_TOASTS).forEach(row => showToastCard('Payment received', buildPaymentMessage(row)));
+
+            if (sorted.length > MAX_LOGIN_TOASTS) {
+                const extra = sorted.length - MAX_LOGIN_TOASTS;
+                showToastCard('More payments', `${extra} more payment notification${extra > 1 ? 's are' : ' is'} waiting in your notification bell.`);
+            }
+
+            markToasted(currentUserId, sorted.map(row => `pay_${row.id}`));
+        }
+
+        // Payments the user has not seen and has not been toasted about yet (runs once after login)
         function showNewPaymentToasts() {
             if (!currentUserId) return;
             const readState = getReadState(currentUserId);
             const toasted = getToastedState(currentUserId);
 
-            const fresh = activePayments
-                .filter(row => readState[`pay_${row.id}`] === undefined && toasted[`pay_${row.id}`] === undefined)
-                .sort((a, b) => (getPaymentDate(a) || 0) - (getPaymentDate(b) || 0)); // oldest first
-
-            if (!fresh.length) return;
-
-            fresh.slice(-MAX_LOGIN_TOASTS).forEach(row => showToastCard('Payment received', buildPaymentMessage(row)));
-
-            if (fresh.length > MAX_LOGIN_TOASTS) {
-                const extra = fresh.length - MAX_LOGIN_TOASTS;
-                showToastCard('More payments', `${extra} more payment notification${extra > 1 ? 's are' : ' is'} waiting in your notification bell.`);
-            }
-
-            markToasted(currentUserId, fresh.map(row => `pay_${row.id}`));
+            toastPayments(activePayments.filter(row =>
+                readState[`pay_${row.id}`] === undefined && toasted[`pay_${row.id}`] === undefined
+            ));
         }
 
-        // ---- fetching ----
-        async function fetchPaymentNotifications(userId) {
-            const since = new Date(Date.now() - PAYMENT_NOTIF_MAX_AGE_DAYS * 24 * 60 * 60 * 1000).toISOString();
-            const { data, error } = await supabaseClient
-                .from('transactions')
-                .select('*')
-                .eq('user_id', userId)
-                .gte('created_at', since)
-                .order('created_at', { ascending: false })
-                .limit(PAYMENT_NOTIF_LIMIT);
-
-            if (error) {
-                console.warn('Could not load payment notifications:', error.message);
-                return null;
-            }
-            return (data || []).filter(isPaymentRow);
-        }
-
+        // ---- fetching (through the server) ----
         async function fetchAndRenderNotifications(userId) {
             try {
-                const [schedulesResult, payments] = await Promise.all([
-                    supabaseClient.from('schedules').select('*').order('created_at', { ascending: false }).limit(20),
-                    fetchPaymentNotifications(userId)
+                const [schedulesResult, paymentsResult] = await Promise.allSettled([
+                    api('/api/notifications'),
+                    api('/api/payments/recent')
                 ]);
 
-                if (schedulesResult.error) console.error('Error fetching schedule notifications:', schedulesResult.error);
+                if (schedulesResult.status === 'rejected') console.warn('Could not load schedule notifications:', schedulesResult.reason && schedulesResult.reason.message);
+                if (paymentsResult.status === 'rejected') console.warn('Could not load payment notifications:', paymentsResult.reason && paymentsResult.reason.message);
 
-                activeSchedules = schedulesResult.data || [];
-                activePayments = payments || [];
-                notifLoadFailed = !!schedulesResult.error && payments === null;
+                activeSchedules = schedulesResult.status === 'fulfilled' && Array.isArray(schedulesResult.value) ? schedulesResult.value : [];
+                activePayments = paymentsResult.status === 'fulfilled' && Array.isArray(paymentsResult.value) ? paymentsResult.value : [];
+                notifLoadFailed = schedulesResult.status === 'rejected' && paymentsResult.status === 'rejected';
 
                 renderNotifications();
 
@@ -2255,38 +2349,40 @@
                     loginToastsShown = true;
                     showNewPaymentToasts();
                 }
-                subscribeToPayments();
+                startPaymentPolling();
             } catch (err) {
                 console.error('Notification system exception:', err);
             }
         }
 
-        // New deposits arriving while the dashboard is open
-        function subscribeToPayments() {
-            if (paymentChannel || !currentUserId) return;
+        // New deposits while the dashboard is open: ask the server every 30 seconds
+        async function pollPayments() {
+            if (!currentUserId || document.hidden) return;
+            try {
+                const rows = await api('/api/payments/recent');
+                if (!Array.isArray(rows)) return;
 
-            paymentChannel = supabaseClient
-                .channel(`my-payments-${currentUserId}`)
-                .on(
-                    'postgres_changes',
-                    { event: 'INSERT', schema: 'public', table: 'transactions', filter: `user_id=eq.${currentUserId}` },
-                    async (payload) => {
-                        let row = payload.new;
-                        if (!row || !isPaymentRow(row)) return;
-                        if (activePayments.some(p => String(p.id) === String(row.id))) return;
+                const known = new Set(activePayments.map(p => String(p.id)));
+                const added = rows.filter(row => !known.has(String(row.id)));
 
-                        // Re-read the row shortly after, so a code added by a database trigger is included
-                        await new Promise(resolve => setTimeout(resolve, 800));
-                        const { data } = await supabaseClient.from('transactions').select('*').eq('id', row.id).maybeSingle();
-                        if (data) row = data;
+                activePayments = rows;
+                if (!added.length) return;
 
-                        activePayments.unshift(row);
-                        renderNotifications();
-                        markToasted(currentUserId, [`pay_${row.id}`]);
-                        showToastCard('Payment received', buildPaymentMessage(row));
-                    }
-                )
-                .subscribe();
+                renderNotifications();
+
+                const toasted = getToastedState(currentUserId);
+                toastPayments(added.filter(row => toasted[`pay_${row.id}`] === undefined));
+            } catch (err) {
+                console.warn('Payment check failed:', err.message);
+            }
+        }
+
+        function startPaymentPolling() {
+            if (paymentPollTimer) return;
+            paymentPollTimer = setInterval(pollPayments, PAYMENT_POLL_MS);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) pollPayments(); // catch up when the user returns to the tab
+            });
         }
 
         // ---- rendering ----
@@ -2429,36 +2525,21 @@
         }
 
         async function loadUserProfile() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-
-            if (!session) {
-                window.location.href = 'auth.html';
+            let profile;
+            try {
+                profile = await api('/api/profile');
+            } catch (err) {
+                console.error('Could not load your profile:', err);
+                const failedNameEl = document.getElementById('sidebarFullName');
+                if (failedNameEl && err.status !== 401) failedNameEl.textContent = "Can't reach server";
                 return;
             }
 
-            currentUserId = session.user.id;
+            currentUserId = profile.id;
 
-            let fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Member';
-            let avatarUrl = null;
-            let phone = session.user.phone || session.user.user_metadata?.phone || '';
-
-            try {
-                const { data: profile, error } = await supabaseClient
-                    .from('profiles')
-                    .select('full_name, phone, avatar_url')
-                    .eq('id', currentUserId)
-                    .maybeSingle();
-
-                if (error) {
-                    console.warn('Profile fetch warning:', error.message);
-                } else if (profile) {
-                    if (profile.full_name) fullName = profile.full_name;
-                    if (profile.phone) phone = profile.phone;
-                    if (profile.avatar_url) avatarUrl = profile.avatar_url;
-                }
-            } catch (err) {
-                console.error('Database connection error:', err);
-            }
+            const fullName = profile.full_name || 'Member';
+            const phone = profile.phone && profile.phone !== 'N/A' ? profile.phone : '';
+            const avatarUrl = profile.avatar_url || null;
 
             const firstName = fullName.trim().split(/\s+/)[0] || 'Member';
             const initials = getInitials(fullName);
@@ -2541,15 +2622,11 @@
             apSave.disabled = true;
             setApStatus('Saving…');
 
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .update({ avatar_url: pendingAvatar })
-                .eq('id', currentUserId)
-                .select('id');
-
-            if (error || !data || !data.length) {
+            try {
+                await api('/api/profile/update', { method: 'POST', body: { avatar_url: pendingAvatar } });
+            } catch (err) {
                 apSave.disabled = false;
-                setApStatus(error?.message || 'Not saved. Check the update policy on profiles.', 'error');
+                setApStatus(err.message || 'Not saved. Please try again.', 'error');
                 return;
             }
 
@@ -2693,7 +2770,13 @@
         if (logoutLink) {
             logoutLink.addEventListener('click', async (e) => {
                 e.preventDefault();
-                await supabaseClient.auth.signOut();
+                const token = getToken();
+                if (token) {
+                    try {
+                        await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                    } catch (err) { /* sign out locally anyway */ }
+                }
+                clearSession();
                 window.location.href = 'index.html';
             });
         }
