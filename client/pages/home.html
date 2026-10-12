@@ -675,7 +675,43 @@
         //   /api/dashboard/stats  -> balance, my contribution, schedules count, events count
         //   /api/announcements    -> latest announcements
         //   /api/events           -> upcoming events
+        // Helper to retrieve auth token saved at login
+        function getAuthToken() {
+            try {
+                const session = JSON.parse(localStorage.getItem('sb-hywlfxlvwqnqbsmrmcbl-auth-token') || '{}');
+                return session?.access_token || session?.token || '';
+            } catch (e) {
+                return '';
+            }
+        }
 
+        // Unified API Helper function
+        async function api(endpoint) {
+            const token = getAuthToken();
+            if (!token) {
+                window.top.location.href = '../auth.html';
+                return null;
+            }
+
+            const response = await fetch(endpoint, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem('sb-hywlfxlvwqnqbsmrmcbl-auth-token');
+                window.top.location.href = '../auth.html';
+                return null;
+            }
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            return response.json();
+        }
         function navigateToParentPage(pageUrl) {
             if (window.parent && window.parent.postMessage) {
                 window.parent.postMessage({ type: 'navigate', page: pageUrl }, '*');
