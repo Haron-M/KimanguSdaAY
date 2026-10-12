@@ -8,9 +8,9 @@
 (function () {
     // Local development: server on port 5000. In production set API_BASE to your server's address
     // (use '' if the server also serves the site).
-    const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-        ? 'http://localhost:5000'
-        : '';
+    const API_BASE_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:5000/api'
+        : '/api';
 
     // auth.html sits next to this file, whatever folder the page is in
     const scriptUrl = document.currentScript ? document.currentScript.src : window.location.href;
