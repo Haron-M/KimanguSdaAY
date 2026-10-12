@@ -698,7 +698,8 @@
         // Local development: your Node server on port 5000.
         // In production the API is expected at the same address as this page. If your server lives
         // somewhere else, put its full address here, e.g. 'https://api.yoursite.com/api'.
-        const API_BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+        // Dynamic API Base URL (Uses localhost during development, /api on Vercel)
+        const API_BASE_URL = window.location.hostname === 'localhost'
             ? 'http://localhost:5000/api'
             : '/api';
 
