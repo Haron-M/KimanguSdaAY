@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -14,19 +15,22 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' })); // Support Base64 image payloads up to 10MB
 
+// ===================== SERVE STATIC FRONTEND =====================
+// Serves all static HTML, CSS, and JS files from the client folder
+app.use(express.static(path.join(__dirname, '../client')));
+
 const CLIENT_OPTIONS = {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
 };
 
 // Admin client (service role): used ONLY for database reads/writes and token checks.
-// Never sign users in with this client, or later queries would run as that user.
 const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     CLIENT_OPTIONS
 );
 
-// A fresh client for every sign-up / sign-in / refresh, so no session is ever shared between requests.
+// A fresh client for every sign-up / sign-in / refresh
 function authClient() {
     return createClient(
         process.env.SUPABASE_URL,
@@ -63,10 +67,8 @@ async function authenticateUser(req, res, next) {
     const user = data && data.user;
 
     if (error || !user) {
-        // Printed in your server terminal so you can see exactly why a request was refused
         console.warn(`Auth check failed for ${req.method} ${req.path}:`, error ? `${error.name}: ${error.message}` : 'no user returned');
 
-        // A problem reaching Supabase is not the user's fault: do not make the browser log them out
         const temporary = error && (error.name === 'AuthRetryableFetchError' || error.status >= 500);
         if (temporary) {
             return res.status(503).json({ error: 'Authentication service unavailable. Please try again.' });
@@ -107,7 +109,6 @@ app.post('/api/auth/signup', async (req, res) => {
 
         const email = phoneToEmail(phone);
 
-        // Register user with Supabase Auth
         const { data: signUpData, error: signUpError } = await authClient().auth.signUp({
             email,
             password
@@ -120,7 +121,6 @@ app.post('/api/auth/signup', async (req, res) => {
         const userId = signUpData.user ? signUpData.user.id : null;
 
         if (userId) {
-            // Save profile details to database
             const { error: profileError } = await supabase.from('profiles').insert({
                 id: userId,
                 full_name: fullName,
