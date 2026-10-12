@@ -1,16 +1,8 @@
 {
     "rewrites": [
         {
-            "source": "/api/(.*)",
-            "destination": "/server-side/server.js"
-        },
-        {
-            "source": "/",
-            "destination": "/client/index.html"
-        },
-        {
             "source": "/(.*)",
-            "destination": "/client/$1"
+            "destination": "/server-side/server.js"
         }
     ]
 }
