@@ -1538,56 +1538,18 @@
         // The browser never talks to the database. Everything goes through your Node server.
         // Local development: server on port 5000. In production set API_BASE to your server's
         // address (use '' if the server also serves this page).
-        const API_BASE_URL = window.location.hostname === 'localhost'
+        // Change API_BASE_URL to API_BASE
+        const API_BASE = window.location.hostname === 'localhost'
             ? 'http://localhost:5000/api'
             : '/api';
 
-        // auth.html must save the login response, for example:
-        //   localStorage.setItem('token', data.token);
-        //   localStorage.setItem('refresh_token', data.refreshToken);
         const TOKEN_KEYS = ['token', 'access_token', 'authToken', 'kimangu_token'];
         const REFRESH_KEY = 'refresh_token';
 
         // Pages that still use the Supabase library keep a full session in an "sb-...-auth-token" entry.
         // That entry is the shared copy: this page and those pages both read it and update it.
         // Remove the legacy handling once every page talks to the server.
-        // Helper to retrieve auth token saved at login
-        function getAuthToken() {
-            try {
-                const session = JSON.parse(localStorage.getItem('sb-hywlfxlvwqnqbsmrmcbl-auth-token') || '{}');
-                return session?.access_token || session?.token || '';
-            } catch (e) {
-                return '';
-            }
-        }
 
-        // Unified API Helper function
-        async function api(endpoint) {
-            const token = getAuthToken();
-            if (!token) {
-                window.top.location.href = '../auth.html';
-                return null;
-            }
-
-            const response = await fetch(endpoint, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.status === 401) {
-                localStorage.removeItem('sb-hywlfxlvwqnqbsmrmcbl-auth-token');
-                window.top.location.href = '../auth.html';
-                return null;
-            }
-
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
-            }
-
-            return response.json();
-        }
         function readLegacySession() {
             for (const key of Object.keys(localStorage)) {
                 if (!/^sb-.+-auth-token$/.test(key)) continue;
