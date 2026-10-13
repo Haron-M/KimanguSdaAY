@@ -27,6 +27,322 @@
      overflow-x: hidden;
  }
 
+
+ /* ==========================================
+   DAILY VERSE — KIMANGU AY
+========================================== */
+
+ .daily-verse-section {
+     padding: 65px 5%;
+     background: #f7f8fc;
+ }
+
+ .daily-verse-card {
+     position: relative;
+     width: 100%;
+     min-height: 390px;
+     overflow: hidden;
+     border-radius: 18px;
+     background: #03152e;
+     border: 1px solid rgba(212, 169, 62, 0.3);
+     box-shadow: 0 18px 45px rgba(4, 20, 43, 0.13);
+     isolation: isolate;
+ }
+
+ .daily-verse-background {
+     position: absolute;
+     inset: 0;
+     z-index: -2;
+
+     background-image:
+         url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2000&q=85");
+
+     background-size: cover;
+     background-position: center 55%;
+     transform: scale(1.01);
+ }
+
+ .daily-verse-overlay {
+     position: absolute;
+     inset: 0;
+     z-index: -1;
+
+     background: linear-gradient(90deg,
+             rgba(2, 16, 39, 0.99) 0%,
+             rgba(2, 20, 45, 0.96) 35%,
+             rgba(2, 20, 45, 0.78) 58%,
+             rgba(2, 20, 45, 0.15) 100%);
+ }
+
+ .daily-verse-content {
+     position: relative;
+     min-height: 390px;
+     padding: 32px 38px;
+     display: flex;
+     flex-direction: column;
+     align-items: flex-start;
+ }
+
+ .daily-verse-badge {
+     display: inline-flex;
+     align-items: center;
+     gap: 11px;
+     padding: 12px 22px;
+     border-radius: 10px;
+
+     background: #e9b632;
+     color: #071a36;
+
+     font-size: 15px;
+     font-weight: 800;
+     letter-spacing: 0.3px;
+
+     box-shadow: 0 5px 18px rgba(233, 182, 50, 0.18);
+ }
+
+ .daily-verse-badge i {
+     font-size: 18px;
+ }
+
+ .daily-verse-body {
+     width: 100%;
+     max-width: 750px;
+     margin-top: 22px;
+ }
+
+ .daily-verse-text-wrapper {
+     max-width: 720px;
+ }
+
+ .daily-verse-intro {
+     margin: 0 0 13px;
+
+     color: #e9b632;
+     font-size: 11px;
+     font-weight: 800;
+     letter-spacing: 2px;
+     line-height: 1.6;
+ }
+
+ .daily-verse-text-wrapper h2 {
+     margin: 0;
+     color: #ffffff;
+
+     font-family: 'Playfair Display', Georgia, serif;
+     font-size: clamp(25px, 3vw, 38px);
+     font-weight: 600;
+     font-style: italic;
+     line-height: 1.4;
+     letter-spacing: -0.5px;
+
+     overflow-wrap: anywhere;
+ }
+
+ .daily-verse-reference {
+     margin: 15px 0 0;
+
+     color: #f5c542;
+
+     font-family: 'Plus Jakarta Sans', sans-serif;
+     font-size: 16px;
+     font-weight: 700;
+     line-height: 1.7;
+ }
+
+ .daily-verse-divider {
+     width: 45px;
+     height: 3px;
+     margin: 21px 0 15px;
+
+     background: #e9b632;
+     border-radius: 3px;
+ }
+
+ .daily-verse-message {
+     max-width: 560px;
+     margin: 0;
+
+     color: #dce8f8;
+     font-size: 14px;
+     line-height: 1.9;
+ }
+
+ .daily-verse-actions {
+     display: flex;
+     align-items: center;
+     flex-wrap: wrap;
+     gap: 12px;
+     margin-top: 22px;
+ }
+
+ .daily-verse-button {
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     gap: 12px;
+
+     padding: 12px 18px;
+     border-radius: 8px;
+
+     background: #e9b632;
+     color: #071a36;
+
+     font-size: 13px;
+     font-weight: 800;
+     text-decoration: none;
+
+     transition:
+         transform 0.25s ease,
+         background 0.25s ease,
+         box-shadow 0.25s ease;
+ }
+
+ .daily-verse-button:hover {
+     background: #ffd15c;
+     transform: translateY(-2px);
+     box-shadow: 0 7px 20px rgba(233, 182, 50, 0.2);
+ }
+
+ .daily-verse-share {
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     gap: 9px;
+
+     padding: 11px 15px;
+     border: 1px solid rgba(255, 255, 255, 0.28);
+     border-radius: 8px;
+
+     background: rgba(3, 21, 46, 0.35);
+     color: #ffffff;
+
+     font-family: inherit;
+     font-size: 13px;
+     font-weight: 600;
+
+     cursor: pointer;
+     transition: background 0.25s ease;
+ }
+
+ .daily-verse-share:hover {
+     background: rgba(255, 255, 255, 0.12);
+ }
+
+ .daily-verse-credit {
+     display: flex;
+     align-items: center;
+     gap: 9px;
+
+     margin-top: auto;
+     padding-top: 20px;
+
+     color: #c7d7eb;
+     font-size: 12px;
+ }
+
+ .daily-verse-credit i {
+     color: #f5c542;
+     font-size: 17px;
+ }
+
+ /* Tablet screens */
+
+ @media (max-width: 900px) {
+     .daily-verse-section {
+         padding: 45px 4%;
+     }
+
+     .daily-verse-card,
+     .daily-verse-content {
+         min-height: 370px;
+     }
+
+     .daily-verse-content {
+         padding: 28px;
+     }
+
+     .daily-verse-overlay {
+         background: linear-gradient(90deg,
+                 rgba(2, 16, 39, 0.97) 0%,
+                 rgba(2, 20, 45, 0.90) 65%,
+                 rgba(2, 20, 45, 0.65) 100%);
+     }
+
+     .daily-verse-body {
+         max-width: 650px;
+     }
+ }
+
+ /* Mobile screens */
+
+ @media (max-width: 600px) {
+     .daily-verse-section {
+         padding: 32px 5%;
+     }
+
+     .daily-verse-card {
+         border-radius: 13px;
+     }
+
+     .daily-verse-content {
+         min-height: 390px;
+         padding: 23px 19px;
+     }
+
+     .daily-verse-badge {
+         padding: 10px 15px;
+         font-size: 13px;
+     }
+
+     .daily-verse-body {
+         margin-top: 24px;
+     }
+
+     .daily-verse-text-wrapper h2 {
+         font-size: 25px;
+         line-height: 1.48;
+     }
+
+     .daily-verse-reference {
+         font-size: 14px;
+     }
+
+     .daily-verse-message {
+         font-size: 13px;
+         line-height: 1.8;
+     }
+
+     .daily-verse-actions {
+         gap: 9px;
+     }
+
+     .daily-verse-button,
+     .daily-verse-share {
+         padding: 11px 12px;
+         font-size: 12px;
+     }
+
+     .daily-verse-credit {
+         font-size: 11px;
+     }
+
+     .daily-verse-overlay {
+         background: linear-gradient(90deg,
+                 rgba(2, 16, 39, 0.96),
+                 rgba(2, 20, 45, 0.87));
+     }
+ }
+
+ /* Respect reduced-motion preferences */
+
+ @media (prefers-reduced-motion: reduce) {
+
+     .daily-verse-button,
+     .daily-verse-share {
+         transition: none;
+     }
+ }
+
  h1,
  h2,
  h3,
