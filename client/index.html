@@ -14,185 +14,365 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="style.css">
+    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* =========================================
-           MOBILE NAVIGATION OVERRIDE & ANIMATION
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--primary-dark);
+            background-color: var(--white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        .serif-font {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* ==========================================
+           HEADER & NAVIGATION
+        ========================================== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--white);
+            box-shadow: 0 4px 20px rgba(10, 25, 47, 0.06);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            transition: var(--transition);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-img {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid var(--primary-dark);
+        }
+
+        .logo-text h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-text p {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--accent-gold);
+        }
+
+        /* ==========================================
+           RESOURCES DROPDOWN MENU
         ========================================= */
+        .nav-links li.dropdown {
+            position: relative;
+        }
 
-        @media (max-width: 900px) {
-            .mobile-menu-btn {
-                display: flex !important;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.5rem;
-                color: #0a192f;
-                cursor: pointer;
-                z-index: 1001;
-                width: 44px;
-                height: 44px;
-            }
+        .nav-links li.dropdown>a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
 
-            .nav-links {
-                position: fixed;
-                top: 70px;
-                left: 0;
-                width: 100%;
-                background: #ffffff;
-                flex-direction: column;
-                align-items: center;
-                padding: 1.5rem 0;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-                display: none !important;
-                /* Hidden by default on mobile */
-                z-index: 999;
-                border-top: 1px solid #e2e8f0;
-            }
+        .nav-links li.dropdown>a i.fa-caret-down {
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
 
-            /* Shown when hamburger button toggles .active class */
-            .nav-links.active {
-                display: flex !important;
-            }
-
-            .nav-links li {
-                width: 100%;
-                text-align: center;
-                margin: 0;
-            }
-
-            .nav-links li a {
-                display: block;
-                padding: 0.9rem 1rem;
-                font-size: 1.05rem;
-                font-weight: 600;
-                color: #0a192f;
-                border-bottom: 1px solid #f1f5f9;
-            }
-
-            /* Dropdown styling inside mobile drawer */
-            .nav-links li.dropdown {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                width: 100%;
-            }
-
-            .nav-links li.dropdown>a {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .nav-links li.dropdown.active>a {
-                background-color: #dc2626;
-                /* Dark Red header bar matching reference image */
-                color: #ffffff !important;
-            }
-
-            /* Dark Submenu Container matching reference screenshot */
-            .dropdown-menu {
-                position: static;
-                opacity: 1;
-                visibility: visible;
-                transform: none;
-                box-shadow: none;
-                border-top: none;
-                background-color: #262626;
-                /* Dark slate background */
-                border-radius: 0;
-                margin: 0;
-                padding: 0;
-                display: none;
-                width: 100%;
-            }
-
-            .nav-links li.dropdown.active .dropdown-menu {
-                display: block;
-            }
-
-            .dropdown-menu li {
-                text-align: center;
-            }
-
-            .dropdown-menu li a {
-                color: #f3f4f6 !important;
-                border-bottom: 1px solid #3f3f46;
-                padding: 0.85rem 1rem;
-                font-weight: 500;
-                font-size: 0.95rem;
-            }
-
-            .dropdown-menu li:last-child a {
-                border-bottom: none;
-            }
-
-            .dropdown-menu li a:hover,
-            .dropdown-menu li a:active {
-                background-color: #18181b;
-                color: #fbbf24 !important;
-            }
+        .nav-links li.dropdown:hover>a i.fa-caret-down,
+        .nav-links li.dropdown.active>a i.fa-caret-down {
+            transform: rotate(180deg);
         }
 
         /* Desktop Dropdown Submenu */
-        @media (min-width: 901px) {
-            .nav-links li.dropdown {
-                position: relative;
-            }
-
-            .nav-links li.dropdown>a {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                cursor: pointer;
-            }
-
-            .dropdown-menu {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                min-width: 250px;
-                background: #ffffff;
-                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-                border-radius: 0 0 10px 10px;
-                border-top: 3px solid #fbbf24;
-                list-style: none;
-                padding: 0.5rem 0;
-                margin: 0;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(10px);
-                transition: all 0.3s ease;
-                z-index: 1000;
-            }
-
-            .nav-links li.dropdown:hover .dropdown-menu {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-            }
-
-            .dropdown-menu li a {
-                display: block;
-                padding: 0.75rem 1.25rem;
-                color: #0a192f;
-                font-size: 0.9rem;
-                font-weight: 500;
-                text-decoration: none;
-                border-bottom: 1px dotted #e2e8f0;
-            }
-
-            .dropdown-menu li a:hover {
-                background-color: #f8fafc;
-                color: #b45309;
-                padding-left: 1.5rem;
-            }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 240px;
+            background: #ffffff;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+            border-radius: 0 0 10px 10px;
+            border-top: 3px solid var(--accent-gold);
+            list-style: none;
+            padding: 0.5rem 0;
+            margin: 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
         }
 
-        /* =========================================
-            COMBINED DAILY VERSE & ABOUT SECTION
-        ========================================= */
+        .nav-links li.dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
 
+        .dropdown-menu li {
+            width: 100%;
+            margin: 0;
+            text-align: left;
+            border-bottom: none;
+        }
+
+        .dropdown-menu li a {
+            display: block;
+            padding: 0.75rem 1.25rem;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            border-bottom: 1px dotted var(--border-color);
+            transition: background 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+        }
+
+        .dropdown-menu li:last-child a {
+            border-bottom: none;
+        }
+
+        .dropdown-menu li a:hover {
+            background-color: var(--off-white);
+            color: var(--accent-gold);
+            padding-left: 1.5rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--primary-dark);
+            color: var(--primary-dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        .btn-solid {
+            background: var(--primary-dark);
+            color: var(--white);
+            border: 1.5px solid var(--primary-dark);
+        }
+
+        .btn-solid:hover {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .btn-gold {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+            border: 1.5px solid var(--accent-gold);
+        }
+
+        .btn-gold:hover {
+            background: transparent;
+            color: var(--white);
+            border-color: var(--white);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-dark);
+            z-index: 1001;
+            width: 44px;
+            height: 44px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ==========================================
+           HERO SLIDER SECTION
+        ========================================== */
+        .hero {
+            position: relative;
+            height: 90vh;
+            min-height: 600px;
+            margin-top: 77px;
+            overflow: hidden;
+            background: var(--primary-dark);
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(10, 25, 47, 0.92) 0%, rgba(10, 25, 47, 0.75) 50%, rgba(10, 25, 47, 0.4) 100%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 750px;
+            padding: 0 5%;
+            color: var(--white);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-gold);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(2.5rem, 5vw, 4.2rem);
+            line-height: 1.15;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        .hero-content p {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            margin-bottom: 2rem;
+            max-width: 600px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .slider-dots {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .dot.active {
+            background: var(--accent-gold);
+            width: 20px;
+            border-radius: 4px;
+        }
+
+        /* ==========================================
+           COMBINED DAILY VERSE & ABOUT SECTION
+        ========================================== */
         .daily-about-section {
             position: relative;
             width: 100%;
@@ -217,7 +397,7 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: flex-start;
-            padding: 1.75rem 1.25rem 1.75rem 1.25rem;
+            padding: 1.75rem 1.25rem;
             border-radius: 20px;
             overflow: hidden;
             background-image: linear-gradient(to right,
@@ -325,26 +505,139 @@
             justify-content: center;
         }
 
-        @media (max-width: 950px) {
-            .daily-about-container {
-                grid-template-columns: 1fr;
-                gap: 2.5rem;
-            }
-
-            .daily-verse-col {
-                padding: 1.5rem 1rem;
-                background-image: linear-gradient(to bottom,
-                        rgba(255, 255, 255, 0.96) 0%,
-                        rgba(255, 255, 255, 0.88) 60%,
-                        rgba(255, 255, 255, 0.5) 100%), url('Gemini_Generated_Image_rffokrrffokrrffo.jfif');
-                background-position: center bottom;
-            }
+        .about-text h3 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-dark);
         }
 
-        /* =========================================
-            RESOURCE CENTER
-        ========================================= */
+        .about-text p {
+            color: var(--text-gray);
+            margin-bottom: 1.5rem;
+        }
 
+        .about-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .feature-box {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border-left: 4px solid var(--primary-dark);
+        }
+
+        .feature-box h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+
+        .feature-box p {
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* ==========================================
+           SECTIONS GENERAL
+        ========================================== */
+        section {
+            padding: 2rem 5%;
+            margin-top: -2px;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 4rem auto;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--text-gray);
+            font-size: 1.05rem;
+        }
+
+        /* EVENTS SECTION */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .event-card {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(10, 25, 47, 0.06);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(10, 25, 47, 0.1);
+        }
+
+        .event-img {
+            height: 220px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .event-date-tag {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--primary-dark);
+            color: var(--white);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .event-body {
+            padding: 2rem;
+        }
+
+        .event-body h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: var(--primary-dark);
+        }
+
+        .event-body p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .event-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--primary-dark);
+            font-weight: 600;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+        }
+
+        /* ==========================================
+           RESOURCE CENTER CARDS SECTION
+        ========================================== */
         .resources-section {
             padding: 4rem 5%;
             background-color: #f8fafc;
@@ -438,6 +731,434 @@
         .resource-btn:hover {
             background-color: #1e293b;
         }
+
+        /* ==========================================
+           CONTACT / VISIT SECTION
+        ========================================== */
+        .contact-section {
+            background: var(--primary-dark);
+            color: var(--white);
+            padding: 3rem 5%;
+        }
+
+        .contact-section .section-header h2,
+        .contact-section .section-header p {
+            color: var(--white);
+        }
+
+        .contact-section .section-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .contact-section .section-header p {
+            color: #94a3b8;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+        }
+
+        .contact-info-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            align-items: flex-start;
+        }
+
+        .contact-info-item i {
+            font-size: 1.1rem;
+            color: var(--accent-gold);
+            background: rgba(245, 158, 11, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .contact-info-item h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .contact-info-item p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        .contact-form {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            color: var(--primary-dark);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.6rem 0.9rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.1);
+        }
+
+        .contact-form button {
+            width: 100%;
+            padding: 0.7rem;
+            justify-content: center;
+        }
+
+        /* ==========================================
+           FOOTER
+        ========================================== */
+        footer {
+            background: #060e1b;
+            color: var(--white);
+            padding: 4rem 5% 2rem 5%;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-col h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-gold);
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-col ul li a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-col ul li a:hover {
+            color: var(--white);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-icons a {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--white);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .social-icons a:hover {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* ==========================================
+           MODAL & COUNTER
+        ========================================== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 47, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 12px;
+            max-width: 450px;
+            width: 100%;
+            position: relative;
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            0% {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-gray);
+        }
+
+        .close-modal:hover {
+            color: var(--primary-dark);
+        }
+
+        .member-counter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            background: var(--white);
+            padding: 1.2rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border-left: 4px solid var(--accent-gold);
+        }
+
+        .member-counter i {
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+        }
+
+        .member-counter h4 {
+            font-size: 1.6rem;
+            color: var(--primary-dark);
+            margin: 0;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .member-counter p {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            margin: 0;
+        }
+
+        /* SCROLL REVEAL ANIMATIONS */
+        .reveal,
+        .reveal-left,
+        .reveal-right {
+            opacity: 0;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .reveal {
+            transform: translateY(40px);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-left {
+            transform: translateX(-60px);
+        }
+
+        .reveal-left.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-right {
+            transform: translateX(60px);
+        }
+
+        .reveal-right.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* ==========================================
+           RESPONSIVE DESIGN & MOBILE MENU
+        ========================================== */
+        @media (max-width: 900px) {
+            .section-header h2 {
+                font-size: 1.6rem;
+            }
+
+            .section-header p {
+                font-size: 0.95rem;
+            }
+
+            .daily-about-container,
+            .about-section,
+            .contact-grid,
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+
+            .nav-actions {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 77px;
+                left: 0;
+                width: 100%;
+                background: var(--white);
+                flex-direction: column;
+                align-items: center;
+                padding: 1.5rem 0;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+                display: none !important;
+                z-index: 999;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .nav-links.active {
+                display: flex !important;
+            }
+
+            .nav-links li {
+                width: 100%;
+                text-align: center;
+                margin: 0;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .nav-links li:last-child {
+                border-bottom: none;
+            }
+
+            .nav-links li a {
+                display: block;
+                padding: 0.9rem 1rem;
+                font-size: 1.05rem;
+                font-weight: 600;
+                color: var(--primary-dark);
+            }
+
+            /* Mobile Dropdown Styling */
+            .nav-links li.dropdown {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+            }
+
+            .nav-links li.dropdown>a {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .nav-links li.dropdown.active>a {
+                background-color: #dc2626;
+                color: var(--white) !important;
+            }
+
+            .dropdown-menu {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                border-top: none;
+                background-color: #262626;
+                border-radius: 0;
+                margin: 0;
+                padding: 0;
+                display: none;
+                width: 100%;
+            }
+
+            .nav-links li.dropdown.active .dropdown-menu {
+                display: block;
+            }
+
+            .dropdown-menu li {
+                text-align: center;
+            }
+
+            .dropdown-menu li a {
+                color: #f3f4f6 !important;
+                border-bottom: 1px solid #3f3f46;
+                padding: 0.85rem 1rem;
+                font-weight: 500;
+                font-size: 0.95rem;
+            }
+
+            .dropdown-menu li a:hover,
+            .dropdown-menu li a:active {
+                background-color: #18181b;
+                color: var(--accent-gold) !important;
+            }
+
+            .hero {
+                height: 60vh;
+                min-height: 420px;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            .hero-content p {
+                font-size: 0.95rem;
+            }
+
+            .member-counter {
+                margin-top: 1rem;
+            }
+        }
     </style>
 </head>
 
@@ -448,7 +1169,6 @@
         <a href="#home" class="logo-container">
             <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
                 alt="SDA Logo" class="logo-img">
-
             <div class="logo-text">
                 <h1>KIMANGU AY</h1>
                 <p>Seventh-day Adventist Church</p>
@@ -487,16 +1207,13 @@
 
     <!-- HERO SLIDER SECTION -->
     <section id="home" class="hero">
-
         <!-- Slide 1 -->
         <div class="hero-slide active" style="background-image: url('kimangu-worship.jpg');">
             <div class="hero-overlay"></div>
             <div class="hero-content">
                 <span class="hero-badge">Welcome to Kimangu AY Family</span>
                 <h1>Faith that grows. Community that feels like home.</h1>
-                <p>
-                    Join a generation of young people living boldly for Christ
-                    through worship, friendship and service.
+                <p>Join a generation of young people living boldly for Christ through worship, friendship and service.
                 </p>
                 <div class="hero-buttons">
                     <button class="btn btn-gold">
@@ -516,10 +1233,7 @@
             <div class="hero-content">
                 <span class="hero-badge">Spiritual Growth</span>
                 <h1>Ask deeper questions. Discover lasting truth.</h1>
-                <p>
-                    Grow through thoughtful Bible study, honest conversation
-                    and a community that walks with you.
-                </p>
+                <p>Grow through thoughtful Bible study, honest conversation and a community that walks with you.</p>
                 <div class="hero-buttons">
                     <button class="btn btn-gold">
                         Join our community
@@ -538,10 +1252,7 @@
             <div class="hero-content">
                 <span class="hero-badge">Outreach & Action</span>
                 <h1>Called to serve. Ready to make a difference.</h1>
-                <p>
-                    We turn compassion into action—showing up for our church,
-                    our neighbours and our community.
-                </p>
+                <p>We turn compassion into action—showing up for our church, our neighbours and our community.</p>
                 <div class="hero-buttons">
                     <button class="btn btn-gold">
                         Join our community
@@ -566,7 +1277,7 @@
     <section id="about" class="daily-about-section reveal">
         <div class="daily-about-container">
 
-            <!-- LEFT COLUMN: DAILY VERSE -->
+            <!-- LEFT COLUMN: DAILY VERSE CARD -->
             <div class="daily-verse-col">
                 <div style="width: 100%;">
                     <div class="daily-verse-header">
@@ -592,15 +1303,13 @@
 
                 <div style="width: 100%;">
                     <div class="daily-divider"></div>
-
                     <p class="daily-verse-reflection">
-                        Trust God with your plans, your dreams and your tomorrow.
-                        He knows what is best for you.
+                        Trust God with your plans, your dreams and your tomorrow. He knows what is best for you.
                     </p>
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: ABOUT US -->
+            <!-- RIGHT COLUMN: ABOUT US CONTENT -->
             <div class="about-col">
                 <div class="about-text" style="max-width: 100%; margin: 0;">
                     <span class="hero-badge" style="color: var(--primary-dark);">
@@ -610,10 +1319,9 @@
                     <h3>Growing young disciples for Christ.</h3>
 
                     <p>
-                        Kimangu Adventist Youth is a welcoming community where young
-                        people deepen their faith, build lifelong friendships and
-                        discover practical ways to serve. Whether you are exploring
-                        faith or have grown up in church, there is a place for you here.
+                        Kimangu Adventist Youth is a welcoming community where young people deepen their faith, build
+                        lifelong friendships and discover practical ways to serve. Whether you are exploring faith or
+                        have grown up in church, there is a place for you here.
                     </p>
 
                     <div class="about-features">
@@ -647,13 +1355,8 @@
             <span class="hero-badge" style="color: var(--primary-dark);">
                 Upcoming Gatherings
             </span>
-
             <h2>News & Events</h2>
-
-            <p>
-                Stay connected with our upcoming youth programs, community
-                outreach, and special Sabbath services.
-            </p>
+            <p>Stay connected with our upcoming youth programs, community outreach, and special Sabbath services.</p>
         </div>
 
         <div class="events-grid" id="eventsGrid">
@@ -669,31 +1372,20 @@
             <span class="hero-badge" style="color: var(--primary-dark);">
                 Study & Growth
             </span>
-
             <h2>Resource Center</h2>
-
-            <p>
-                Explore essential study guides, Sabbath School lessons,
-                and Spirit of Prophecy materials.
-            </p>
+            <p>Explore essential study guides, Sabbath School lessons, and Spirit of Prophecy materials.</p>
         </div>
 
         <div class="resources-grid">
-
             <!-- Card 1: Cornerstone Lesson -->
             <div class="resource-card">
                 <div class="resource-img-container">
                     <img src="connerstone.png" alt="Cornerstone Lesson">
                 </div>
-
                 <div class="resource-card-body">
                     <h3>Cornerstone Lesson</h3>
-
-                    <p>
-                        Youth Sabbath School study guides designed to guide
-                        teens and young adults deeper into God's Word.
-                    </p>
-
+                    <p>Youth Sabbath School study guides designed to guide teens and young adults deeper into God's
+                        Word.</p>
                     <button class="resource-btn">
                         Click to see more
                         <i class="fa-solid fa-arrow-right"></i>
@@ -706,16 +1398,10 @@
                 <div class="resource-img-container">
                     <img src="adult_lesson.png" alt="Adult Lesson">
                 </div>
-
                 <div class="resource-card-body">
                     <h3>Adult Lesson</h3>
-
-                    <p>
-                        Quarterly Sabbath School lesson studies covering
-                        comprehensive theological topics and practical
-                        Christian living.
-                    </p>
-
+                    <p>Quarterly Sabbath School lesson studies covering comprehensive theological topics and practical
+                        Christian living.</p>
                     <button class="resource-btn">
                         Click to see more
                         <i class="fa-solid fa-arrow-right"></i>
@@ -728,23 +1414,16 @@
                 <div class="resource-img-container">
                     <img src="ellen_white.jpg" alt="Ellen G. White Collection">
                 </div>
-
                 <div class="resource-card-body">
                     <h3>Ellen G. White Collection</h3>
-
-                    <p>
-                        Access inspired writings, devotional devotionals,
-                        historical books, and spiritual counsel for daily
-                        Christian life.
-                    </p>
-
+                    <p>Access inspired writings, devotional devotionals, historical books, and spiritual counsel for
+                        daily Christian life.</p>
                     <button class="resource-btn">
                         Click to see more
                         <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
             </div>
-
         </div>
     </section>
 
@@ -752,12 +1431,8 @@
     <section id="contact" class="contact-section reveal">
         <div class="section-header">
             <span class="hero-badge">Get in Touch</span>
-
             <h2>Plan Your Visit or Send a Message</h2>
-
-            <p>
-                We would love to welcome you this coming Sabbath. Reach out
-                to us with any questions or prayer requests.
+            <p>We would love to welcome you this coming Sabbath. Reach out to us with any questions or prayer requests.
             </p>
         </div>
 
@@ -832,7 +1507,6 @@
                 <div class="logo-container" style="margin-bottom: 1rem;">
                     <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
                         alt="SDA Logo" class="logo-img" style="border-color: var(--accent-gold);">
-
                     <div class="logo-text">
                         <h1 style="color: var(--white);">KIMANGU AY</h1>
                         <p>Seventh-day Adventist</p>
@@ -840,8 +1514,7 @@
                 </div>
 
                 <p style="color: #94a3b8; font-size: 0.95rem; max-width: 350px;">
-                    A Christ-centered youth ministry growing faith, friendship,
-                    and service in Kimangu and beyond.
+                    A Christ-centered youth ministry growing faith, friendship, and service in Kimangu and beyond.
                 </p>
 
                 <div class="social-icons">
@@ -875,24 +1548,15 @@
         </div>
 
         <div class="footer-bottom">
-            <p>
-                &copy; 2026 Kimangu AY. Seventh-day Adventist Youth Ministry.
-                All rights reserved.
-            </p>
+            <p>&copy; 2026 Kimangu AY. Seventh-day Adventist Youth Ministry. All rights reserved.</p>
         </div>
     </footer>
 
     <!-- JOIN MODAL -->
     <div class="modal reveal" id="joinModal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal('joinModal')">
-                &times;
-            </span>
-
-            <h3 style="margin-bottom: 1rem; color: var(--primary-dark);">
-                Join Kimangu AY
-            </h3>
-
+            <span class="close-modal" onclick="closeModal('joinModal')">&times;</span>
+            <h3 style="margin-bottom: 1rem; color: var(--primary-dark);">Join Kimangu AY</h3>
             <p style="color: var(--text-gray); font-size: 0.95rem; margin-bottom: 1.5rem;">
                 Fill in your details to connect with our youth leadership team.
             </p>
@@ -915,9 +1579,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT -->
-    <script src="script.js"></script>
-
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
@@ -935,12 +1597,10 @@
 
         function formatEventTime(t) {
             if (!t) return '';
-
             const [h, m] = t.split(':');
             const hour = parseInt(h, 10);
             const suffix = hour >= 12 ? 'PM' : 'AM';
             const hour12 = ((hour + 11) % 12) + 1;
-
             return `${hour12}:${m} ${suffix}`;
         }
 
@@ -953,7 +1613,7 @@
             }
         }
 
-        // Attach event listener directly to menu button after DOM is loaded
+        // Mobile Menu & Hamburger Toggle Logic
         document.addEventListener('DOMContentLoaded', () => {
             const menuBtn = document.getElementById('menuBtn');
             const navLinks = document.getElementById('navLinks');
@@ -978,7 +1638,7 @@
             }
         });
 
-        // Toggle sub-links inside resources on mobile
+        // Toggle sub-links inside resources without jumping page
         function toggleResourcesDropdown(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -988,7 +1648,7 @@
             }
         }
 
-        // Close entire mobile navigation when a menu link is clicked
+        // Close entire mobile navigation when any link is clicked
         function closeMobileNav() {
             const navLinks = document.getElementById('navLinks');
             const menuIcon = document.getElementById('menuIcon');
@@ -1008,7 +1668,103 @@
             }
         }
 
-        // Fetch the daily Bible verse from OurManna API.
+        // Join button redirects to signup
+        document.querySelectorAll('.btn.btn-gold').forEach(button => {
+            button.addEventListener('click', () => {
+                window.location.href = 'auth.html?view=signup';
+            });
+        });
+
+        // Hero Slider Logic
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.hero-slide');
+        const dots = document.querySelectorAll('.dot');
+        let slideInterval;
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            currentSlideIndex = (index + slides.length) % slides.length;
+            slides[currentSlideIndex].classList.add('active');
+            dots[currentSlideIndex].classList.add('active');
+        }
+
+        function nextSlide() {
+            showSlide(currentSlideIndex + 1);
+        }
+
+        function currentSlide(index) {
+            showSlide(index);
+            resetInterval();
+        }
+
+        function resetInterval() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000);
+        }
+
+        slideInterval = setInterval(nextSlide, 5000);
+
+        // Member Counter Logic
+        function updateMemberCount() {
+            const count = localStorage.getItem('memberCount') || 0;
+            const counterEl = document.getElementById('memberCount');
+            if (counterEl) counterEl.textContent = count;
+        }
+
+        updateMemberCount();
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('joinModal');
+            if (e.target === modal) {
+                closeModal('joinModal');
+            }
+        });
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            alert('Thank you! Your message has been sent successfully. We will reach out to you soon.');
+            e.target.reset();
+        }
+
+        function handleModalSubmit(e) {
+            e.preventDefault();
+            let count = parseInt(localStorage.getItem('memberCount') || 0);
+            count++;
+            localStorage.setItem('memberCount', count);
+            updateMemberCount();
+            alert('Welcome to Kimangu AY! Your details have been received.');
+            closeModal('joinModal');
+            e.target.reset();
+        }
+
+        // Scroll Reveal Animation Observer
+        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // Fetch Daily Verse from OurManna API
         async function loadVerseOfTheDay() {
             setDynamicDate();
             const textEl = document.getElementById('dailyVerseText');
@@ -1028,29 +1784,21 @@
                 const data = await response.json();
 
                 if (data && data.verse && data.verse.details) {
-                    textEl.textContent =
-                        `"${data.verse.details.text.trim()}"`;
-
-                    refEl.textContent =
-                        `${data.verse.details.reference} (${data.verse.details.version || 'NKJV'})`;
+                    textEl.textContent = `"${data.verse.details.text.trim()}"`;
+                    refEl.textContent = `${data.verse.details.reference} (${data.verse.details.version || 'NKJV'})`;
                 } else {
                     throw new Error('Invalid verse data');
                 }
-
             } catch (err) {
                 console.error('Failed to load daily verse:', err);
-
-                textEl.textContent =
-                    '"Commit to the Lord whatever you do, and he will establish your plans."';
-
+                textEl.textContent = '"Commit to the Lord whatever you do, and he will establish your plans."';
                 refEl.textContent = 'Proverbs 16:3 (NKJV)';
             }
         }
 
-        // Load upcoming events from Supabase.
+        // Load upcoming events from Supabase
         async function loadHomepageEvents() {
             const grid = document.getElementById('eventsGrid');
-
             if (!grid) return;
 
             const today = new Date().toISOString().split('T')[0];
@@ -1073,48 +1821,31 @@
 
             grid.innerHTML = events.map(ev => {
                 const d = new Date(ev.event_date + 'T00:00:00');
-                const month = d.toLocaleString('en-US', {
-                    month: 'short'
-                }).toUpperCase();
-
+                const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
                 const day = d.getDate();
                 const timeLabel = formatEventTime(ev.start_time);
                 const imageUrl = ev.image_url || 'kimangu-worship.jpg';
 
                 return `
                     <div class="event-card">
-                        <div class="event-img reveal-left"
-                            style="background-image: url('${imageUrl}');">
-
+                        <div class="event-img reveal-left" style="background-image: url('${imageUrl}');">
                             <div class="event-date-tag">
                                 ${month}<br><strong>${day}</strong>
                             </div>
-
                         </div>
-
                         <div class="event-body reveal-right">
                             <h3>${escapeHtml(ev.title)}</h3>
                             <p>${escapeHtml(ev.content)}</p>
-
                             <div class="event-meta">
-                                <span>
-                                    <i class="fa-regular fa-clock"></i>
-                                    ${timeLabel} EAT
-                                </span>
-
-                                <a href="#contact"
-                                    style="color: var(--primary-dark); text-decoration: none; font-weight: 700;">
-                                    RSVP &rarr;
-                                </a>
+                                <span><i class="fa-regular fa-clock"></i> ${timeLabel} EAT</span>
+                                <a href="#contact" style="color: var(--primary-dark); text-decoration: none; font-weight: 700;">RSVP &rarr;</a>
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
 
-            document.querySelectorAll(
-                '#eventsGrid .reveal-left, #eventsGrid .reveal-right'
-            ).forEach(el => {
+            document.querySelectorAll('#eventsGrid .reveal-left, #eventsGrid .reveal-right').forEach(el => {
                 if (typeof revealObserver !== 'undefined') {
                     revealObserver.observe(el);
                 } else {
@@ -1123,7 +1854,7 @@
             });
         }
 
-        // Initialize homepage content.
+        // Initialize content on load
         loadVerseOfTheDay();
         loadHomepageEvents();
     </script>
