@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cornerstone Connections Lessons | Kimangu AY</title>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --header-brown: #5c3b28;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--primary-dark);
+            background-color: var(--white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        .serif-font {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* ==========================================
+           HEADER & NAVIGATION
+        ========================================== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--white);
+            box-shadow: 0 4px 20px rgba(10, 25, 47, 0.06);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            transition: var(--transition);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-img {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid var(--primary-dark);
+        }
+
+        .logo-text h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-text p {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--accent-gold);
+        }
+
+        /* Resources Dropdown Menu */
+        .nav-links li.dropdown {
+            position: relative;
+        }
+
+        .nav-links li.dropdown>a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 240px;
+            background: #ffffff;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+            border-radius: 0 0 10px 10px;
+            border-top: 3px solid var(--accent-gold);
+            list-style: none;
+            padding: 0.5rem 0;
+            margin: 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .nav-links li.dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-menu li {
+            width: 100%;
+            margin: 0;
+        }
+
+        .dropdown-menu li a {
+            display: block;
+            padding: 0.75rem 1.25rem;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            border-bottom: 1px dotted var(--border-color);
+            transition: background 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+        }
+
+        .dropdown-menu li:last-child a {
+            border-bottom: none;
+        }
+
+        .dropdown-menu li a:hover {
+            background-color: var(--off-white);
+            color: var(--accent-gold);
+            padding-left: 1.5rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--primary-dark);
+            color: var(--primary-dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        .btn-solid {
+            background: var(--primary-dark);
+            color: var(--white);
+            border: 1.5px solid var(--primary-dark);
+        }
+
+        .btn-solid:hover {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-dark);
+            z-index: 1001;
+            width: 44px;
+            height: 44px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ==========================================
+           CORNERSTONE PAGE HEADER BANNER
+        ========================================== */
+        .cornerstone-banner {
+            position: relative;
+            margin-top: 77px;
+            width: 100%;
+            height: 260px;
+            background-image: linear-gradient(rgba(20, 10, 5, 0.75),
+                    rgba(20, 10, 5, 0.85)), url('https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1800&q=80');
+            background-size: cover;
+            background-position: center 30%;
+            display: flex;
+            align-items: center;
+            padding: 0 8%;
+            overflow: hidden;
+            border-bottom: 6px solid #e2dcd5;
+        }
+
+        .cornerstone-badge {
+            position: absolute;
+            top: 0;
+            left: 12%;
+            background-color: var(--header-brown);
+            color: #ffffff;
+            padding: 6px 18px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .cornerstone-title {
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+            font-weight: 800;
+            line-height: 1.15;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            max-width: 700px;
+        }
+
+        /* ==========================================
+           MAIN CONTENT & LESSONS SECTION
+        ========================================== */
+        .lessons-section {
+            padding: 4rem 8%;
+            background-color: #fafbfc;
+            min-height: 600px;
+        }
+
+        .quarter-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.8rem;
+        }
+
+        .quarter-header h2 {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+        }
+
+        .quarter-header p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+
+        .quarter-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 3.5rem;
+            align-items: start;
+        }
+
+        /* Left Side Cover Photo */
+        .lesson-cover-box {
+            background: #ffffff;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+            border: 1px solid var(--border-color);
+            position: sticky;
+            top: 100px;
+        }
+
+        .lesson-cover-box img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .cover-caption {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .cover-caption h4 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+        }
+
+        .cover-caption p {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+        }
+
+        /* Right Side Lesson Table List (3 Columns Desktop Layout) */
+        .lessons-list {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #f1f5f9;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            background: #ffffff;
+        }
+
+        .lesson-row {
+            display: grid;
+            grid-template-columns: 220px 1fr 130px;
+            align-items: center;
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid #f1f5f9;
+            gap: 1rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .lesson-row:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .lesson-row:hover {
+            background-color: #f1f5f9;
+        }
+
+        .lesson-row:last-child {
+            border-bottom: none;
+        }
+
+        /* Column 1: Date & Lesson Number */
+        .lesson-date {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .lesson-date i {
+            color: #d97706;
+            font-size: 0.75rem;
+        }
+
+        .lesson-date a {
+            text-decoration: none;
+            color: #d97706;
+            transition: color 0.2s ease;
+        }
+
+        .lesson-date a.active-link {
+            color: #0284c7;
+        }
+
+        .lesson-date a:hover {
+            text-decoration: underline;
+        }
+
+        /* Column 2: Lesson Title */
+        .lesson-title-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #334155;
+            padding-right: 1rem;
+        }
+
+        /* Column 3: Download Button */
+        .download-col {
+            text-align: right;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #d97706;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .download-btn:hover {
+            background-color: rgba(217, 119, 6, 0.1);
+        }
+
+        .download-btn i {
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        /* ==========================================
+           FOOTER
+        ========================================== */
+        footer {
+            background: #060e1b;
+            color: var(--white);
+            padding: 4rem 5% 2rem 5%;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-col h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-gold);
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-col ul li a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-col ul li a:hover {
+            color: var(--white);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-icons a {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--white);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .social-icons a:hover {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* ==========================================
+           RESPONSIVE LAYOUT & MOBILE OPTIMIZATIONS
+        ========================================== */
+        @media (max-width: 900px) {
+            .nav-actions {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 77px;
+                left: 0;
+                width: 100%;
+                background: var(--white);
+                flex-direction: column;
+                align-items: center;
+                padding: 1.5rem 0;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+                display: none !important;
+                z-index: 999;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .nav-links.active {
+                display: flex !important;
+            }
+
+            .nav-links li {
+                width: 100%;
+                text-align: center;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .nav-links li a {
+                display: block;
+                padding: 0.9rem 1rem;
+            }
+
+            .dropdown-menu {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                border-top: none;
+                background-color: #262626;
+                display: none;
+                width: 100%;
+            }
+
+            .nav-links li.dropdown.active .dropdown-menu {
+                display: block;
+            }
+
+            .dropdown-menu li a {
+                color: #f3f4f6 !important;
+                border-bottom: 1px solid #3f3f46;
+                padding: 0.85rem 1rem;
+            }
+
+            .quarter-container {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+
+            .lesson-cover-box {
+                position: static;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+
+            /* --- MOBILE LESSON ROW ALIGNMENT FIX --- */
+            .lesson-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.85rem 1rem;
+            }
+
+            /* Hide title text on mobile for clean 1-line alignment */
+            .lesson-title-text {
+                display: none;
+            }
+
+            .download-col {
+                text-align: right;
+            }
+
+            .cornerstone-banner {
+                padding: 0 5%;
+                height: 200px;
+            }
+
+            .cornerstone-title {
+                font-size: 1.6rem;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <a href="index.html#home" class="logo-container">
+            <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
+                alt="SDA Logo" class="logo-img">
+            <div class="logo-text">
+                <h1>KIMANGU AY</h1>
+                <p>Seventh-day Adventist Church</p>
+            </div>
+        </a>
+
+        <ul class="nav-links" id="navLinks">
+            <li><a href="index.html#home" onclick="closeMobileNav()">Home</a></li>
+            <li><a href="index.html#events" onclick="closeMobileNav()">Events</a></li>
+
+            <!-- Resources Dropdown Menu -->
+            <li class="dropdown active" id="resourcesDropdown">
+                <a href="javascript:void(0)" onclick="toggleResourcesDropdown(event)">
+                    Resources <i class="fa-solid fa-caret-down"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="cornerstone.html" class="active">Cornerstone Lesson</a></li>
+                    <li><a href="index.html#resources" onclick="closeMobileNav()">Adult Lesson</a></li>
+                    <li><a href="index.html#resources" onclick="closeMobileNav()">Ellen G. White Collection</a></li>
+                </ul>
+            </li>
+
+            <li><a href="index.html#about" onclick="closeMobileNav()">About Us</a></li>
+            <li><a href="index.html#contact" onclick="closeMobileNav()">Contact</a></li>
+        </ul>
+
+        <div class="nav-actions">
+            <a href="auth.html" class="btn btn-outline">Sign In</a>
+            <a href="auth.html?view=signup" class="btn btn-solid">Join the AY</a>
+        </div>
+
+        <div class="mobile-menu-btn" id="menuBtn">
+            <i class="fa-solid fa-bars" id="menuIcon"></i>
+        </div>
+    </header>
+
+    <!-- CORNERSTONE CONNECTIONS BANNER HEADER -->
+    <div class="cornerstone-banner">
+        <div class="cornerstone-badge">CONNECTIONS</div>
+        <h1 class="cornerstone-title">Cornerstone Connections Lessons</h1>
+    </div>
+
+    <!-- MAIN LESSONS SECTION -->
+    <section class="lessons-section">
+
+        <!-- 4th Quarter 2026 Header -->
+        <div class="quarter-header">
+            <h2>4th Quarter 2026</h2>
+            <p>Youth Sabbath School Study Guides for October, November, and December 2026.</p>
+        </div>
+
+        <div class="quarter-container">
+
+            <!-- LEFT COLUMN: Cover Image -->
+            <div class="lesson-cover-box">
+                <img src="connerstone.png" alt="Cornerstone Connections 4th Quarter 2026 Cover">
+                <div class="cover-caption">
+                    <h4>Youth Sabbath School</h4>
+                    <p>4th Quarter 2026 Edition</p>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Lesson List (Date | Title [Desktop Only] | Download) -->
+            <div class="lessons-list">
+
+                <!-- Introduction -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Introduction</a>
+                    </div>
+                    <div class="lesson-title-text">Welcome to 4th Quarter Lessons</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_intro.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 01 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#" class="active-link">Lesson 01 – October 3</a>
+                    </div>
+                    <div class="lesson-title-text">Walking in the Light of Truth</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson01.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 02 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 02 – October 10</a>
+                    </div>
+                    <div class="lesson-title-text">The Power of Unshakeable Faith</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson02.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 03 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 03 – October 17</a>
+                    </div>
+                    <div class="lesson-title-text">Grace in Times of Need</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson03.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 04 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 04 – October 24</a>
+                    </div>
+                    <div class="lesson-title-text">Standing Firm in a Changing World</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson04.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 05 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 05 – October 31</a>
+                    </div>
+                    <div class="lesson-title-text">Living with Purpose and Passion</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson05.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 06 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 06 – November 7</a>
+                    </div>
+                    <div class="lesson-title-text">The Heart of True Worship</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson06.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 07 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 07 – November 14</a>
+                    </div>
+                    <div class="lesson-title-text">Overcoming Temptation with Scripture</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson07.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 08 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 08 – November 21</a>
+                    </div>
+                    <div class="lesson-title-text">Building Authentic Community</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson08.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 09 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 09 – November 28</a>
+                    </div>
+                    <div class="lesson-title-text">Sharing the Hope Within Us</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson09.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 10 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 10 – December 5</a>
+                    </div>
+                    <div class="lesson-title-text">Trusting God in Dark Times</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson10.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 11 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 11 – December 12</a>
+                    </div>
+                    <div class="lesson-title-text">Servant Leadership in Action</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson11.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 12 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 12 – December 19</a>
+                    </div>
+                    <div class="lesson-title-text">The Promise of His Return</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson12.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lesson 13 -->
+                <div class="lesson-row">
+                    <div class="lesson-date">
+                        <i class="fa-solid fa-chevron-right"></i>
+                        <a href="#">Lesson 13 – December 26</a>
+                    </div>
+                    <div class="lesson-title-text">Faithful Until the End</div>
+                    <div class="download-col">
+                        <a href="lessons/q4_2026_lesson13.pdf" download class="download-btn">
+                            <i class="fa-regular fa-file-pdf"></i> Download
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="logo-container" style="margin-bottom: 1rem;">
+                    <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
+                        alt="SDA Logo" class="logo-img" style="border-color: var(--accent-gold);">
+                    <div class="logo-text">
+                        <h1 style="color: var(--white);">KIMANGU AY</h1>
+                        <p>Seventh-day Adventist</p>
+                    </div>
+                </div>
+
+                <p style="color: #94a3b8; font-size: 0.95rem; max-width: 350px;">
+                    A Christ-centered youth ministry growing faith, friendship, and service in Kimangu and beyond.
+                </p>
+
+                <div class="social-icons">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="index.html#home">Home</a></li>
+                    <li><a href="index.html#events">Events</a></li>
+                    <li><a href="index.html#resources">Resources</a></li>
+                    <li><a href="index.html#about">About Us</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Worship Schedule</h4>
+                <ul>
+                    <li><a href="#">Sabbath School: 9:00 AM</a></li>
+                    <li><a href="#">Divine Service: 11:00 AM</a></li>
+                    <li><a href="#">AY Afternoon: 3:00 PM</a></li>
+                    <li><a href="#">Wednesday Prayer: 5:00 PM</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Kimangu AY. Seventh-day Adventist Youth Ministry. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuBtn = document.getElementById('menuBtn');
+            const navLinks = document.getElementById('navLinks');
+            const menuIcon = document.getElementById('menuIcon');
+
+            if (menuBtn) {
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    navLinks.classList.toggle('active');
+
+                    if (navLinks.classList.contains('active')) {
+                        menuIcon.classList.remove('fa-bars');
+                        menuIcon.classList.add('fa-xmark');
+                    } else {
+                        menuIcon.classList.remove('fa-xmark');
+                        menuIcon.classList.add('fa-bars');
+
+                        const dropdown = document.getElementById('resourcesDropdown');
+                        if (dropdown) dropdown.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        function toggleResourcesDropdown(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropdown = document.getElementById('resourcesDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+            }
+        }
+
+        function closeMobileNav() {
+            const navLinks = document.getElementById('navLinks');
+            const menuIcon = document.getElementById('menuIcon');
+
+            if (navLinks && navLinks.classList.contains('active')) {
+                navLinks.classList.remove('active');
+            }
+
+            if (menuIcon) {
+                menuIcon.classList.remove('fa-xmark');
+                menuIcon.classList.add('fa-bars');
+            }
+
+            const dropdown = document.getElementById('resourcesDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+
+</html>
