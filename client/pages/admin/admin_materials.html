@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimangu AY Admin | Materials Manager</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --accent-green: #10b981;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #cbd5e1;
+            --card-shadow: 0 10px 25px rgba(10, 25, 47, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            color: var(--primary-dark);
+            line-height: 1.5;
+            padding-bottom: 4rem;
+        }
+
+        header {
+            background: var(--primary-dark);
+            color: var(--white);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .header-logo img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-gold);
+        }
+
+        .header-logo h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .header-badge {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-gold);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid var(--accent-gold);
+        }
+
+        .admin-container {
+            max-width: 1150px;
+            margin: 2rem auto 0 auto;
+            padding: 0 1rem;
+        }
+
+        .page-title {
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .page-title p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+
+        .main-selector-box {
+            background: var(--white);
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.2rem;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.25rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-dark);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-dark);
+            border-bottom-color: var(--accent-gold);
+        }
+
+        .form-panel {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .form-panel.active {
+            display: block;
+        }
+
+        .panel-header {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .panel-header h3 {
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+        }
+
+        .form-grid-top {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .form-control {
+            padding: 0.65rem 0.8rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+            background: #ffffff;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .cover-upload-box {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 0.85rem;
+            text-align: center;
+            background: var(--off-white);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cover-upload-box:hover {
+            background: #e2e8f0;
+            border-color: var(--accent-gold);
+        }
+
+        .cover-upload-box input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-preview-name {
+            margin-top: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        /* 13-LESSON GRID LAYOUT */
+        .grid-wrapper {
+            margin-top: 1rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            overflow-x: auto;
+            background: var(--white);
+            width: 100%;
+        }
+
+        .grid-inner-container {
+            min-width: 620px;
+        }
+
+        .grid-header {
+            display: grid;
+            grid-template-columns: 90px 110px 1fr 140px;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: var(--primary-dark);
+            color: var(--white);
+            font-weight: 700;
+            font-size: 0.85rem;
+            align-items: center;
+        }
+
+        .grid-body {
+            max-height: 580px;
+            overflow-y: auto;
+        }
+
+        .grid-row {
+            display: grid;
+            grid-template-columns: 90px 110px 1fr 140px;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .grid-row:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .grid-row:last-child {
+            border-bottom: none;
+        }
+
+        .lesson-tag {
+            font-weight: 800;
+            color: var(--primary-dark);
+            font-size: 0.82rem;
+            background: #e2e8f0;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            display: block;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .file-mini-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.38rem 0.6rem;
+            background: #e2e8f0;
+            color: var(--primary-dark);
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            overflow: hidden;
+            transition: background 0.2s ease;
+            white-space: nowrap;
+            width: 100%;
+            max-width: 140px;
+        }
+
+        .file-mini-btn:hover {
+            background: #cbd5e1;
+        }
+
+        .file-mini-btn input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-mini-btn.has-file {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .form-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-save {
+            padding: 0.85rem 2rem;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.25s ease;
+        }
+
+        .btn-save:hover {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .btn-save:disabled {
+            background: var(--text-gray);
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="index.html" class="header-logo">
+            <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
+                alt="SDA Logo">
+            <h1>Kimangu AY Admin</h1>
+        </a>
+        <span class="header-badge"><i class="fa-solid fa-folder-open"></i> Materials Manager</span>
+    </header>
+
+    <div class="admin-container">
+
+        <div class="page-title">
+            <h2>Study Materials & Book Upload Portal</h2>
+            <p>Upload Sabbath School quarterly lessons, mission stories, Bible study guides, and Spirit of Prophecy
+                books.</p>
+        </div>
+
+        <!-- MAIN CATEGORY SELECTOR DROPDOWN -->
+        <div class="main-selector-box">
+            <div>
+                <label style="font-size: 0.9rem; font-weight: 800; color: var(--primary-dark);">
+                    <i class="fa-solid fa-sliders"></i> What would you like to upload?
+                </label>
+                <p style="font-size: 0.82rem; color: var(--text-gray);">Select the section you wish to manage below.</p>
+            </div>
+            <select id="mainUploadType" class="form-control" style="min-width: 250px; font-weight: 700;"
+                onchange="handleMainTypeChange(this.value)">
+                <option value="quarterly">Quarterly Lessons (Cornerstone, Adult, Mission)</option>
+                <option value="books">Books & Guides (Bible Study, Ellen G. White)</option>
+            </select>
+        </div>
+
+        <!-- TAB NAVIGATION BUTTONS -->
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="tabQuarterlyBtn" onclick="switchToTab('quarterly')">
+                <i class="fa-solid fa-calendar-days"></i> Quarterly Lessons (Cornerstone, Adult, Mission)
+            </button>
+            <button class="tab-btn" id="tabBooksBtn" onclick="switchToTab('books')">
+                <i class="fa-solid fa-book-bible"></i> Books & Guides (Bible Study, Ellen G. White)
+            </button>
+        </div>
+
+        <!-- ==========================================
+           TAB 1: QUARTERLY LESSONS (13 LESSON GRID)
+        ========================================== -->
+        <div class="form-panel active" id="quarterlyPanel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-layer-group"></i> Quarterly Lesson Upload Form</h3>
+            </div>
+
+            <form id="quarterlyForm" onsubmit="handleQuarterlySubmit(event)">
+
+                <div class="form-grid-top">
+                    <div class="form-group">
+                        <label for="qCategory">Select Material Type</label>
+                        <select id="qCategory" class="form-control" required>
+                            <option value="cornerstone">Cornerstone Lesson</option>
+                            <option value="adult">Adult Lesson</option>
+                            <option value="mission_story">Mission Story</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qQuarter">Quarter</label>
+                        <select id="qQuarter" class="form-control" required>
+                            <option value="1st Quarter">1st Quarter</option>
+                            <option value="2nd Quarter">2nd Quarter</option>
+                            <option value="3rd Quarter">3rd Quarter</option>
+                            <option value="4th Quarter" selected>4th Quarter</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qYear">Year</label>
+                        <input type="number" id="qYear" class="form-control" value="2026" min="2020" max="2035"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Upload Cover Image</label>
+                        <div class="cover-upload-box">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span style="font-size: 0.8rem; display: block; color: var(--text-gray);">Click or drag
+                                cover</span>
+                            <input type="file" id="qCoverImg" accept="image/*"
+                                onchange="updateCoverLabel(this, 'qCoverName')">
+                            <div id="qCoverName" class="file-preview-name"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 13 LESSONS GRID -->
+                <div>
+                    <h4 style="margin-bottom: 0.6rem; color: var(--primary-dark); font-size: 1rem;">
+                        <i class="fa-solid fa-list-check"></i> Lessons 01 – 13 Content Grid
+                    </h4>
+
+                    <div class="grid-wrapper">
+                        <div class="grid-inner-container">
+                            <div class="grid-header">
+                                <div>Lesson</div>
+                                <div>Date</div>
+                                <div>Lesson Title</div>
+                                <div>Upload File</div>
+                            </div>
+
+                            <div class="grid-body" id="gridBody">
+                                <!-- 13 Rows render here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="submitQuarterlyBtn" class="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Quarterly Materials
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- ==========================================
+           TAB 2: BOOKS & GUIDES (Bible Study & EGW)
+        ========================================== -->
+        <div class="form-panel" id="booksPanel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-book"></i> Book & Topical Study Guide Form</h3>
+            </div>
+
+            <form id="booksForm" onsubmit="handleBookSubmit(event)">
+                <div class="form-grid-top">
+                    <div class="form-group">
+                        <label for="bCategory">Collection Category</label>
+                        <select id="bCategory" class="form-control" required>
+                            <option value="bible_study">Bible Study Guide</option>
+                            <option value="egw">Ellen G. White Collection</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="bTitle">Title of Book / Study Guide</label>
+                        <input type="text" id="bTitle" class="form-control"
+                            placeholder="e.g. Steps to Christ or Revelation Unsealed" required>
+                    </div>
+                </div>
+
+                <div class="form-grid-top">
+                    <div class="form-group">
+                        <label>Book Cover Image</label>
+                        <div class="cover-upload-box">
+                            <i class="fa-solid fa-image"></i>
+                            <span style="font-size: 0.8rem; display: block; color: var(--text-gray);">Upload Cover
+                                Photo</span>
+                            <input type="file" id="bCoverImg" accept="image/*"
+                                onchange="updateCoverLabel(this, 'bCoverName')">
+                            <div id="bCoverName" class="file-preview-name"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>E-Book Document (PDF)</label>
+                        <div class="cover-upload-box">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span style="font-size: 0.8rem; display: block; color: var(--text-gray);">Upload Complete
+                                E-Book PDF</span>
+                            <input type="file" id="bPdfFile" accept=".pdf"
+                                onchange="updateCoverLabel(this, 'bPdfName')">
+                            <div id="bPdfName" class="file-preview-name"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="submitBookBtn" class="btn-save">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload Book / Guide
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+
+        if (typeof supabaseAdmin === 'undefined') {
+            var supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+
+        function switchToTab(type) {
+            const quarterlyPanel = document.getElementById('quarterlyPanel');
+            const booksPanel = document.getElementById('booksPanel');
+            const qBtn = document.getElementById('tabQuarterlyBtn');
+            const bBtn = document.getElementById('tabBooksBtn');
+            const mainDropdown = document.getElementById('mainUploadType');
+
+            if (type === 'quarterly') {
+                quarterlyPanel.classList.add('active');
+                booksPanel.classList.remove('active');
+                qBtn.classList.add('active');
+                bBtn.classList.remove('active');
+                mainDropdown.value = 'quarterly';
+            } else {
+                booksPanel.classList.add('active');
+                quarterlyPanel.classList.remove('active');
+                bBtn.classList.add('active');
+                qBtn.classList.remove('active');
+                mainDropdown.value = 'books';
+            }
+        }
+
+        function handleMainTypeChange(val) {
+            switchToTab(val);
+        }
+
+        function updateCoverLabel(input, targetId) {
+            const label = document.getElementById(targetId);
+            if (input.files && input.files[0]) {
+                label.textContent = `Selected: ${input.files[0].name}`;
+            } else {
+                label.textContent = '';
+            }
+        }
+
+        // Render Exactly 13 Rows for Lessons Grid
+        function render13GridRows() {
+            const gridBody = document.getElementById('gridBody');
+            if (!gridBody) return;
+
+            let html = '';
+            for (let i = 1; i <= 13; i++) {
+                const numStr = i < 10 ? `0${i}` : `${i}`;
+                html += `
+                    <div class="grid-row">
+                        <div>
+                            <span class="lesson-tag">Lesson ${numStr}</span>
+                        </div>
+                        <div>
+                            <input type="text" class="form-control row-date" placeholder="Date" value="Oct ${i * 7}">
+                        </div>
+                        <div>
+                            <input type="text" class="form-control row-title" placeholder="Enter Lesson ${numStr} Title..." required>
+                        </div>
+                        <div>
+                            <div class="file-mini-btn" id="wrapMini${i}">
+                                <i class="fa-regular fa-file-pdf"></i>&nbsp;<span id="labelMini${i}">PDF...</span>
+                                <input type="file" accept=".pdf" class="row-file" onchange="handleMiniFile(this, 'labelMini${i}', 'wrapMini${i}')">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            gridBody.innerHTML = html;
+        }
+
+        function handleMiniFile(input, labelId, wrapId) {
+            const label = document.getElementById(labelId);
+            const wrapper = document.getElementById(wrapId);
+            if (input.files && input.files[0]) {
+                label.textContent = input.files[0].name.substring(0, 10) + '...';
+                wrapper.classList.add('has-file');
+            } else {
+                label.textContent = 'PDF...';
+                wrapper.classList.remove('has-file');
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) return resolve(null);
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Handle Quarterly Lessons Submission
+        async function handleQuarterlySubmit(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitQuarterlyBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading to Database...';
+
+            try {
+                const category = document.getElementById('qCategory').value;
+                const quarter = document.getElementById('qQuarter').value;
+                const year = document.getElementById('qYear').value;
+                const coverImgFile = document.getElementById('qCoverImg').files[0];
+
+                const coverBase64 = coverImgFile ? await fileToBase64(coverImgFile) : null;
+
+                const dates = document.querySelectorAll('.row-date');
+                const titles = document.querySelectorAll('.row-title');
+                const files = document.querySelectorAll('.row-file');
+
+                const lessonsArr = [];
+                for (let i = 0; i < 13; i++) {
+                    const pdfFile = files[i] && files[i].files[0] ? files[i].files[0] : null;
+                    const pdfBase64 = pdfFile ? await fileToBase64(pdfFile) : null;
+
+                    lessonsArr.push({
+                        lesson: i + 1,
+                        date: dates[i] ? dates[i].value : '',
+                        title: titles[i] ? titles[i].value : '',
+                        pdf_filename: pdfFile ? pdfFile.name : null,
+                        pdf_data: pdfBase64
+                    });
+                }
+
+                const payload = {
+                    category: category,
+                    quarter: quarter,
+                    year: parseInt(year, 10),
+                    cover_image: coverBase64,
+                    lessons: lessonsArr
+                };
+
+                const { data, error } = await supabaseAdmin
+                    .from('quarterly_lessons')
+                    .insert([payload]);
+
+                if (error) throw error;
+
+                alert(`Successfully saved ${quarter} ${year} (${category}) materials to database!`);
+                e.target.reset();
+                document.getElementById('qCoverName').textContent = '';
+                render13GridRows();
+            } catch (err) {
+                console.error('Supabase Error:', err);
+                alert(`Error saving to database: ${err.message || 'Check network connection'}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Quarterly Materials';
+            }
+        }
+
+        // Handle Books & Study Guides Submission
+        async function handleBookSubmit(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBookBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading Book...';
+
+            try {
+                const category = document.getElementById('bCategory').value;
+                const title = document.getElementById('bTitle').value;
+                const coverFile = document.getElementById('bCoverImg').files[0];
+                const pdfFile = document.getElementById('bPdfFile').files[0];
+
+                const coverBase64 = coverFile ? await fileToBase64(coverFile) : null;
+                const pdfBase64 = pdfFile ? await fileToBase64(pdfFile) : null;
+
+                const payload = {
+                    category: category,
+                    title: title,
+                    cover_image: coverBase64,
+                    pdf_data: pdfBase64,
+                    pdf_filename: pdfFile ? pdfFile.name : null
+                };
+
+                const { data, error } = await supabaseAdmin
+                    .from('study_books')
+                    .insert([payload]);
+
+                if (error) throw error;
+
+                alert(`Successfully uploaded "${title}" to database!`);
+                e.target.reset();
+                document.getElementById('bCoverName').textContent = '';
+                document.getElementById('bPdfName').textContent = '';
+            } catch (err) {
+                console.error('Supabase Error:', err);
+                alert(`Error uploading book: ${err.message || 'Check network connection'}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload Book / Guide';
+            }
+        }
+
+        // Initialize 13 rows on load
+        render13GridRows();
+    </script>
+</body>
+
+</html>
