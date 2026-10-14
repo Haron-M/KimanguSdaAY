@@ -70,6 +70,7 @@
             align-items: center;
             padding: 1rem 5%;
             transition: var(--transition);
+            height: 77px;
         }
 
         .logo-container {
@@ -80,8 +81,8 @@
         }
 
         .logo-img {
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             object-fit: cover;
             border-radius: 50%;
             border: 2px solid var(--primary-dark);
@@ -254,16 +255,50 @@
             border-color: var(--white);
         }
 
+        /* Animated Hamburger Icon Button */
         .mobile-menu-btn {
             display: none;
-            font-size: 1.5rem;
             cursor: pointer;
-            color: var(--primary-dark);
             z-index: 1001;
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             align-items: center;
             justify-content: center;
+            border: none;
+            background: transparent;
+            padding: 0;
+        }
+
+        .hamburger-icon {
+            width: 24px;
+            height: 18px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hamburger-icon span {
+            display: block;
+            height: 2.5px;
+            width: 100%;
+            background-color: var(--primary-dark);
+            border-radius: 2px;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+
+        .mobile-menu-btn.open .hamburger-icon span:nth-child(1) {
+            transform: translateY(7.5px) rotate(45deg);
+        }
+
+        .mobile-menu-btn.open .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .mobile-menu-btn.open .hamburger-icon span:nth-child(3) {
+            transform: translateY(-7.5px) rotate(-45deg);
         }
 
         /* ==========================================
@@ -371,7 +406,7 @@
         }
 
         /* ==========================================
-           COMBINED DAILY VERSE & ABOUT SECTION
+           DAILY VERSE & ABOUT SECTION
         ========================================== */
         .daily-about-section {
             position: relative;
@@ -553,7 +588,7 @@
         .section-header {
             text-align: center;
             max-width: 700px;
-            margin: 0 auto 4rem auto;
+            margin: 0 auto 3rem auto;
         }
 
         .section-header h2 {
@@ -636,19 +671,36 @@
         }
 
         /* ==========================================
-           RESOURCE CENTER CARDS SECTION
+           RESOURCE CENTER CARDS SECTION (SINGLE ROW)
         ========================================== */
         .resources-section {
-            padding: 4rem 5%;
+            padding: 4rem 3%;
             background-color: #f8fafc;
         }
 
-        .resources-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            max-width: 1100px;
-            margin: 2.5rem auto 0 auto;
+        .resources-scroll-container {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-gold) #e2e8f0;
+        }
+
+        .resources-scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .resources-scroll-container::-webkit-scrollbar-thumb {
+            background-color: var(--accent-gold);
+            border-radius: 4px;
+        }
+
+        .resources-row {
+            display: flex;
+            gap: 1.25rem;
+            min-width: min-content;
+            justify-content: center;
+            margin: 1.5rem auto 0 auto;
         }
 
         .resource-card {
@@ -660,15 +712,17 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             display: flex;
             flex-direction: column;
+            width: 240px;
+            flex-shrink: 0;
         }
 
         .resource-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-6px);
             box-shadow: 0 18px 35px rgba(10, 25, 47, 0.12);
         }
 
         .resource-img-container {
-            height: 240px;
+            height: 180px;
             width: 100%;
             overflow: hidden;
             position: relative;
@@ -685,11 +739,11 @@
         }
 
         .resource-card:hover .resource-img-container img {
-            transform: scale(1.04);
+            transform: scale(1.05);
         }
 
         .resource-card-body {
-            padding: 1.25rem 1.5rem 1.5rem;
+            padding: 1.1rem 1.2rem 1.25rem;
             display: flex;
             flex-direction: column;
             flex-grow: 1;
@@ -697,39 +751,42 @@
 
         .resource-card-body h3 {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 700;
             color: #0a192f;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
+            line-height: 1.3;
         }
 
         .resource-card-body p {
             color: #64748b;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            margin-bottom: 1.25rem;
+            font-size: 0.82rem;
+            line-height: 1.45;
+            margin-bottom: 1.1rem;
             flex-grow: 1;
         }
 
         .resource-btn {
             width: 100%;
-            padding: 0.75rem 1rem;
+            padding: 0.65rem 0.85rem;
             background-color: #0a192f;
             color: #ffffff;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            text-decoration: none;
             transition: background-color 0.25s ease;
         }
 
         .resource-btn:hover {
-            background-color: #1e293b;
+            background-color: #f59e0b;
+            color: #0a192f;
         }
 
         /* ==========================================
@@ -1022,7 +1079,7 @@
         }
 
         /* ==========================================
-           RESPONSIVE DESIGN & MOBILE MENU
+           EXACT UNIFORM MOBILE NAVIGATION PADDING
         ========================================== */
         @media (max-width: 900px) {
             .section-header h2 {
@@ -1057,14 +1114,24 @@
                 background: var(--white);
                 flex-direction: column;
                 align-items: center;
-                padding: 1.5rem 0;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-                display: none !important;
+                padding: 0;
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
                 z-index: 999;
                 border-top: 1px solid var(--border-color);
+
+                max-height: 0;
+                opacity: 0;
+                visibility: hidden;
+                overflow: hidden;
+                transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.35s ease,
+                    visibility 0.35s ease;
             }
 
             .nav-links.active {
+                max-height: 550px;
+                opacity: 1;
+                visibility: visible;
                 display: flex !important;
             }
 
@@ -1072,22 +1139,27 @@
                 width: 100%;
                 text-align: center;
                 margin: 0;
-                border-bottom: 1px solid var(--border-color);
+                border-bottom: 1px solid #f1f5f9;
             }
 
             .nav-links li:last-child {
                 border-bottom: none;
             }
 
-            .nav-links li a {
-                display: block;
-                padding: 0.9rem 1rem;
-                font-size: 1.05rem;
+            /* --- ALL MAIN LINKS & SUB-LINKS USE EXACTLY IDENTICAL PADDING & FLEX SIZING --- */
+            .nav-links li a,
+            .nav-links li.dropdown>a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                padding: 0 1rem;
+                font-size: 0.95rem;
                 font-weight: 600;
                 color: var(--primary-dark);
+                text-decoration: none;
             }
 
-            /* Mobile Dropdown Styling */
             .nav-links li.dropdown {
                 display: flex;
                 flex-direction: column;
@@ -1095,51 +1167,50 @@
                 width: 100%;
             }
 
-            .nav-links li.dropdown>a {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .nav-links li.dropdown.active>a {
-                background-color: #dc2626;
-                color: var(--white) !important;
-            }
-
             .dropdown-menu {
                 position: static;
-                opacity: 1;
-                visibility: visible;
-                transform: none;
                 box-shadow: none;
                 border-top: none;
-                background-color: #262626;
+                background-color: #1e293b;
                 border-radius: 0;
                 margin: 0;
                 padding: 0;
-                display: none;
                 width: 100%;
+
+                max-height: 0;
+                opacity: 0;
+                visibility: hidden;
+                overflow: hidden;
+                transition: max-height 0.35s ease, opacity 0.3s ease;
+                display: block !important;
             }
 
             .nav-links li.dropdown.active .dropdown-menu {
-                display: block;
-            }
-
-            .dropdown-menu li {
-                text-align: center;
+                max-height: 450px;
+                opacity: 1;
+                visibility: visible;
             }
 
             .dropdown-menu li a {
-                color: #f3f4f6 !important;
-                border-bottom: 1px solid #3f3f46;
-                padding: 0.85rem 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                color: #f1f5f9 !important;
+                border-bottom: 1px solid #334155;
+                padding: 0.65rem 1rem;
                 font-weight: 500;
-                font-size: 0.95rem;
+                font-size: 0.92rem;
+                text-decoration: none;
             }
 
-            .dropdown-menu li a:hover,
-            .dropdown-menu li a:active {
-                background-color: #18181b;
+            .dropdown-menu li a:hover {
+                background-color: #0f172a;
                 color: var(--accent-gold) !important;
+            }
+
+            .resources-row {
+                justify-content: flex-start;
             }
 
             .hero {
@@ -1186,8 +1257,10 @@
                 </a>
                 <ul class="dropdown-menu">
                     <li><a href="cornerstone.html" onclick="closeMobileNav()">Cornerstone Lesson</a></li>
-                    <li><a href="adultLesson.html" onclick="closeMobileNav()">Adult Lesson</a></li>
-                    <li><a href="ellenWhite.html" onclick="closeMobileNav()">Ellen G. White Collection</a></li>
+                    <li><a href="adult_lesson.html" onclick="closeMobileNav()">Adult Lesson</a></li>
+                    <li><a href="mission_story.html" onclick="closeMobileNav()">Mission Story</a></li>
+                    <li><a href="bible_study.html" onclick="closeMobileNav()">Bible Study Guide</a></li>
+                    <li><a href="egw_collection.html" onclick="closeMobileNav()">Ellen G. White Collection</a></li>
                 </ul>
             </li>
 
@@ -1200,9 +1273,14 @@
             <a href="auth.html?view=signup" class="btn btn-solid">Join the AY</a>
         </div>
 
-        <div class="mobile-menu-btn" id="menuBtn">
-            <i class="fa-solid fa-bars" id="menuIcon"></i>
-        </div>
+        <!-- Animated Hamburger Button -->
+        <button class="mobile-menu-btn" id="menuBtn" aria-label="Toggle Navigation">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
     </header>
 
     <!-- HERO SLIDER SECTION -->
@@ -1284,7 +1362,7 @@
                         <h2 class="daily-title-text">
                             <i class="fa-solid fa-book-open"></i> Verse of the Day
                         </h2>
-                        <p class="daily-date-sub" id="dailyVerseDate">for Tuesday, October 13th, 2026</p>
+                        <p class="daily-date-sub" id="dailyVerseDate">for Wednesday, October 14th, 2026</p>
                     </div>
 
                     <div class="daily-badge">
@@ -1366,63 +1444,90 @@
         </div>
     </section>
 
-    <!-- RESOURCE CENTER SECTION -->
+    <!-- RESOURCE CENTER SECTION (SINGLE ROW) -->
     <section id="resources" class="resources-section reveal">
         <div class="section-header">
             <span class="hero-badge" style="color: var(--primary-dark);">
                 Study & Growth
             </span>
             <h2>Resource Center</h2>
-            <p>Explore essential study guides, Sabbath School lessons, and Spirit of Prophecy materials.</p>
+            <p>Explore essential study guides, Sabbath School lessons, mission stories, and Spirit of Prophecy
+                materials.</p>
         </div>
 
-        <div class="resources-grid">
-            <!-- Card 1: Cornerstone Lesson -->
-            <div class="resource-card">
-                <div class="resource-img-container">
-                    <img src="connerstone.png" alt="Cornerstone Lesson">
-                </div>
-                <div class="resource-card-body">
-                    <h3>Cornerstone Lesson</h3>
-                    <p>Youth Sabbath School study guides designed to guide teens and young adults deeper into God's
-                        Word.</p>
-                    <button class="resource-btn">
-                        Click to see more
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
-            </div>
+        <div class="resources-scroll-container">
+            <div class="resources-row">
 
-            <!-- Card 2: Adult Lesson -->
-            <div class="resource-card">
-                <div class="resource-img-container">
-                    <img src="adult_lesson.png" alt="Adult Lesson">
+                <!-- Card 1: Cornerstone Lesson -->
+                <div class="resource-card">
+                    <div class="resource-img-container">
+                        <img src="connerstone.png" alt="Cornerstone Lesson">
+                    </div>
+                    <div class="resource-card-body">
+                        <h3>Cornerstone Lesson</h3>
+                        <p>Youth Sabbath School guides for teens and young adults.</p>
+                        <a href="cornerstone.html" class="resource-btn">
+                            Click to see more <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="resource-card-body">
-                    <h3>Adult Lesson</h3>
-                    <p>Quarterly Sabbath School lesson studies covering comprehensive theological topics and practical
-                        Christian living.</p>
-                    <button class="resource-btn">
-                        Click to see more
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
-            </div>
 
-            <!-- Card 3: Ellen G. White Collection -->
-            <div class="resource-card">
-                <div class="resource-img-container">
-                    <img src="ellen_white.jpg" alt="Ellen G. White Collection">
+                <!-- Card 2: Adult Lesson -->
+                <div class="resource-card">
+                    <div class="resource-img-container">
+                        <img src="adult_lesson.png" alt="Adult Lesson">
+                    </div>
+                    <div class="resource-card-body">
+                        <h3>Adult Lesson</h3>
+                        <p>Quarterly Bible study guides covering deep Christian topics.</p>
+                        <a href="adult_lesson.html" class="resource-btn">
+                            Click to see more <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="resource-card-body">
-                    <h3>Ellen G. White Collection</h3>
-                    <p>Access inspired writings, devotional devotionals, historical books, and spiritual counsel for
-                        daily Christian life.</p>
-                    <button class="resource-btn">
-                        Click to see more
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+
+                <!-- Card 3: Mission Story -->
+                <div class="resource-card">
+                    <div class="resource-img-container">
+                        <img src="mission_story.png" alt="Mission Story">
+                    </div>
+                    <div class="resource-card-body">
+                        <h3>Mission Story</h3>
+                        <p>Inspiring world mission reports and global church testimonies.</p>
+                        <a href="mission_story.html" class="resource-btn">
+                            Click to see more <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
+
+                <!-- Card 4: Bible Study Guide -->
+                <div class="resource-card">
+                    <div class="resource-img-container">
+                        <img src="bible_study.png" alt="Bible Study Guide">
+                    </div>
+                    <div class="resource-card-body">
+                        <h3>Bible Study Guide</h3>
+                        <p>Topical Bible guides, doctrines, and fundamental beliefs.</p>
+                        <a href="bible_study.html" class="resource-btn">
+                            Click to see more <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 5: Ellen G. White Collection -->
+                <div class="resource-card">
+                    <div class="resource-img-container">
+                        <img src="ellen_white.jpg" alt="Ellen G. White Collection">
+                    </div>
+                    <div class="resource-card-body">
+                        <h3>Ellen G. White Collection</h3>
+                        <p>Inspired writings, devotionals, and spiritual counsel.</p>
+                        <a href="egw_collection.html" class="resource-btn">
+                            Click to see more <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -1529,20 +1634,19 @@
                 <h4>Explore</h4>
                 <ul>
                     <li><a href="#home">Home</a></li>
-                    <li><a href="#events">Events</a></li>
-                    <li><a href="#resources">Resources</a></li>
                     <li><a href="#about">About Us</a></li>
+                    <li><a href="#events">Events</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
             </div>
 
             <div class="footer-col">
-                <h4>Worship Schedule</h4>
+                <h4>Resources</h4>
                 <ul>
-                    <li><a href="#">Sabbath School: 9:00 AM</a></li>
-                    <li><a href="#">Divine Service: 11:00 AM</a></li>
-                    <li><a href="#">AY Afternoon: 3:00 PM</a></li>
-                    <li><a href="#">Wednesday Prayer: 5:00 PM</a></li>
+                    <li><a href="cornerstone.html">Cornerstone Lesson</a></li>
+                    <li><a href="adult_lesson.html">Adult Lesson</a></li>
+                    <li><a href="mission_story.html">Mission Story</a></li>
+                    <li><a href="bible_study.html">Bible Study Guide</a></li>
                 </ul>
             </div>
         </div>
@@ -1613,32 +1717,27 @@
             }
         }
 
-        // Mobile Menu & Hamburger Toggle Logic
+        // Animated Mobile Menu Logic
         document.addEventListener('DOMContentLoaded', () => {
             const menuBtn = document.getElementById('menuBtn');
             const navLinks = document.getElementById('navLinks');
-            const menuIcon = document.getElementById('menuIcon');
 
             if (menuBtn) {
                 menuBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    menuBtn.classList.toggle('open');
                     navLinks.classList.toggle('active');
 
-                    if (navLinks.classList.contains('active')) {
-                        menuIcon.classList.remove('fa-bars');
-                        menuIcon.classList.add('fa-xmark');
-                    } else {
-                        menuIcon.classList.remove('fa-xmark');
-                        menuIcon.classList.add('fa-bars');
-
+                    if (!navLinks.classList.contains('active')) {
                         const dropdown = document.getElementById('resourcesDropdown');
                         if (dropdown) dropdown.classList.remove('active');
                     }
                 });
             }
+
+            initMemberCounter();
         });
 
-        // Toggle sub-links inside resources without jumping page
         function toggleResourcesDropdown(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1648,18 +1747,16 @@
             }
         }
 
-        // Close entire mobile navigation when any link is clicked
         function closeMobileNav() {
             const navLinks = document.getElementById('navLinks');
-            const menuIcon = document.getElementById('menuIcon');
+            const menuBtn = document.getElementById('menuBtn');
 
             if (navLinks && navLinks.classList.contains('active')) {
                 navLinks.classList.remove('active');
             }
 
-            if (menuIcon) {
-                menuIcon.classList.remove('fa-xmark');
-                menuIcon.classList.add('fa-bars');
+            if (menuBtn) {
+                menuBtn.classList.remove('open');
             }
 
             const dropdown = document.getElementById('resourcesDropdown');
@@ -1668,7 +1765,6 @@
             }
         }
 
-        // Join button redirects to signup
         document.querySelectorAll('.btn.btn-gold').forEach(button => {
             button.addEventListener('click', () => {
                 window.location.href = 'auth.html?view=signup';
@@ -1705,17 +1801,72 @@
         }
 
         slideInterval = setInterval(nextSlide, 5000);
-
-        // Member Counter Logic
-        function updateMemberCount() {
-            const count = localStorage.getItem('memberCount') || 0;
+        // Fetch Member Count from Supabase Database & Animate Count Up on Scroll
+        async function initMemberCounter() {
             const counterEl = document.getElementById('memberCount');
-            if (counterEl) counterEl.textContent = count;
+            if (!counterEl) return;
+
+            let totalMembers = 0;
+            try {
+                // Query the 'profiles' table. Make sure your Supabase table has a public SELECT policy if users aren't logged in on the homepage.
+                const { count, error, data } = await supabasePublic
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true });
+
+                console.log("Supabase member count debug:", { count, error, data });
+
+                if (!error && count !== null) {
+                    totalMembers = count; // Will use the exact database count (e.g., 8)
+                } else {
+                    console.warn('Supabase query error or RLS policy restriction:', error);
+                    // Fallback if query fails
+                    totalMembers = parseInt(localStorage.getItem('memberCount') || 8, 10);
+                }
+            } catch (err) {
+                console.error('Failed to fetch member count from Supabase:', err);
+                totalMembers = parseInt(localStorage.getItem('memberCount') || 8, 10);
+            }
+
+            const aboutSection = document.getElementById('about');
+            if (!aboutSection) {
+                animateCounter(counterEl, 0, totalMembers, 1500);
+                return;
+            }
+
+            let hasAnimated = false;
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !hasAnimated) {
+                        hasAnimated = true;
+                        animateCounter(counterEl, 0, totalMembers, 1600);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.2 });
+
+            observer.observe(aboutSection);
         }
 
-        updateMemberCount();
+        function animateCounter(element, start, end, duration) {
+            if (end <= 0) {
+                element.textContent = start;
+                return;
+            }
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const current = Math.floor(progress * (end - start) + start);
+                element.textContent = current;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    element.textContent = end;
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
 
-        // Modal Functions
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('active');
         }
@@ -1739,16 +1890,14 @@
 
         function handleModalSubmit(e) {
             e.preventDefault();
-            let count = parseInt(localStorage.getItem('memberCount') || 0);
-            count++;
+            let count = parseInt(localStorage.getItem('memberCount') || 0) + 1;
             localStorage.setItem('memberCount', count);
-            updateMemberCount();
             alert('Welcome to Kimangu AY! Your details have been received.');
             closeModal('joinModal');
             e.target.reset();
+            initMemberCounter();
         }
 
-        // Scroll Reveal Animation Observer
         const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -1764,7 +1913,6 @@
 
         revealElements.forEach(el => revealObserver.observe(el));
 
-        // Fetch Daily Verse from OurManna API
         async function loadVerseOfTheDay() {
             setDynamicDate();
             const textEl = document.getElementById('dailyVerseText');
@@ -1796,7 +1944,6 @@
             }
         }
 
-        // Load upcoming events from Supabase
         async function loadHomepageEvents() {
             const grid = document.getElementById('eventsGrid');
             if (!grid) return;
@@ -1854,7 +2001,6 @@
             });
         }
 
-        // Initialize content on load
         loadVerseOfTheDay();
         loadHomepageEvents();
     </script>

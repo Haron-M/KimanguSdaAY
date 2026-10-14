@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Study Guides | Kimangu AY</title>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-dark: #0a192f;
+            --primary-blue: #0f2b4c;
+            --accent-gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --text-gray: #64748b;
+            --border-color: #e2e8f0;
+            --header-bible: #0284c7;
+            /* Sky blue theme for Bible study guides */
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--primary-dark);
+            background-color: var(--white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        .serif-font {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* ==========================================
+           HEADER & NAVIGATION
+        ========================================== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--white);
+            box-shadow: 0 4px 20px rgba(10, 25, 47, 0.06);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 3%;
+            transition: var(--transition);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-img {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid var(--primary-dark);
+        }
+
+        .logo-text h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-text p {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--accent-gold);
+        }
+
+        /* Resources Dropdown Menu */
+        .nav-links li.dropdown {
+            position: relative;
+        }
+
+        .nav-links li.dropdown>a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 240px;
+            background: #ffffff;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+            border-radius: 0 0 10px 10px;
+            border-top: 3px solid var(--accent-gold);
+            list-style: none;
+            padding: 0.5rem 0;
+            margin: 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .nav-links li.dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-menu li {
+            width: 100%;
+            margin: 0;
+        }
+
+        .dropdown-menu li a {
+            display: block;
+            padding: 0.75rem 1.25rem;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            border-bottom: 1px dotted var(--border-color);
+            transition: background 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+        }
+
+        .dropdown-menu li:last-child a {
+            border-bottom: none;
+        }
+
+        .dropdown-menu li a:hover {
+            background-color: var(--off-white);
+            color: var(--accent-gold);
+            padding-left: 1.5rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--primary-dark);
+            color: var(--primary-dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        .btn-solid {
+            background: var(--primary-dark);
+            color: var(--white);
+            border: 1.5px solid var(--primary-dark);
+        }
+
+        .btn-solid:hover {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-dark);
+            z-index: 1001;
+            width: 44px;
+            height: 44px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ==========================================
+           BIBLE STUDY BANNER HEADER
+        ========================================== */
+        .bible-banner {
+            position: relative;
+            margin-top: 77px;
+            width: 100%;
+            height: 220px;
+            background-image: linear-gradient(rgba(15, 23, 42, 0.85),
+                    rgba(15, 23, 42, 0.92)), url('https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=1800&q=80');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            padding: 0 3%;
+            overflow: hidden;
+            border-bottom: 5px solid #0284c7;
+        }
+
+        .bible-badge {
+            position: absolute;
+            top: 0;
+            left: 3%;
+            background-color: var(--header-bible);
+            color: #ffffff;
+            padding: 6px 18px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .bible-title {
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+            font-weight: 800;
+            line-height: 1.15;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            max-width: 700px;
+        }
+
+        /* ==========================================
+           MAIN CONTENT SECTION (Small Left Margin)
+        ========================================== */
+        .bible-section {
+            padding: 2.5rem 2%;
+            background-color: #fafbfc;
+            min-height: 600px;
+        }
+
+        .section-intro-header {
+            margin-bottom: 1.75rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.8rem;
+        }
+
+        .section-intro-header h2 {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+        }
+
+        .section-intro-header p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+
+        .main-bible-container {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 1.75rem;
+            align-items: start;
+        }
+
+        /* Left Side Card Cover/Sidebar */
+        .bible-sidebar-box {
+            background: #ffffff;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            position: sticky;
+            top: 95px;
+        }
+
+        .bible-sidebar-box img {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+            display: block;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 0.85rem;
+        }
+
+        .sidebar-caption h4 {
+            font-size: 1rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .sidebar-caption p {
+            font-size: 0.82rem;
+            color: var(--text-gray);
+            line-height: 1.45;
+        }
+
+        .book-search-input {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 0.85rem;
+            font-family: inherit;
+        }
+
+        .book-search-input:focus {
+            outline: none;
+            border-color: var(--header-bible);
+        }
+
+        /* ==========================================
+           RIGHT SIDE BOOK GRID
+        ========================================== */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1.25rem 0.85rem;
+        }
+
+        .book-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .book-cover-wrapper {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            background-color: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid #cbd5e1;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .book-card:hover .book-cover-wrapper {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
+        }
+
+        .book-cover-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .info-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 22px;
+            height: 22px;
+            background: rgba(15, 23, 42, 0.82);
+            color: #38bdf8;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .info-btn:hover {
+            background: #0284c7;
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        .book-title-link {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #0f172a;
+            text-decoration: none;
+            line-height: 1.3;
+            transition: color 0.2s ease;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .book-title-link:hover {
+            color: var(--header-bible);
+            text-decoration: underline;
+        }
+
+        /* ==========================================
+           FOOTER
+        ========================================== */
+        footer {
+            background: #060e1b;
+            color: var(--white);
+            padding: 3.5rem 3% 2rem 3%;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 2.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .footer-col h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1.25rem;
+            color: var(--accent-gold);
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-col ul li a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-col ul li a:hover {
+            color: var(--white);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .social-icons a {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--white);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .social-icons a:hover {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 1.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: #64748b;
+            font-size: 0.88rem;
+        }
+
+        /* ==========================================
+           RESPONSIVE LAYOUT
+        ========================================== */
+        @media (max-width: 900px) {
+            .nav-actions {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 77px;
+                left: 0;
+                width: 100%;
+                background: var(--white);
+                flex-direction: column;
+                align-items: center;
+                padding: 1.5rem 0;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+                display: none !important;
+                z-index: 999;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .nav-links.active {
+                display: flex !important;
+            }
+
+            .nav-links li {
+                width: 100%;
+                text-align: center;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .nav-links li a {
+                display: block;
+                padding: 0.9rem 1rem;
+            }
+
+            .dropdown-menu {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                border-top: none;
+                background-color: #262626;
+                display: none;
+                width: 100%;
+            }
+
+            .nav-links li.dropdown.active .dropdown-menu {
+                display: block;
+            }
+
+            .dropdown-menu li a {
+                color: #f3f4f6 !important;
+                border-bottom: 1px solid #3f3f46;
+                padding: 0.85rem 1rem;
+            }
+
+            .main-bible-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .bible-sidebar-box {
+                position: static;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+
+            .books-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 1.25rem 0.75rem;
+            }
+
+            .book-cover-wrapper {
+                height: 180px;
+            }
+
+            .bible-banner {
+                padding: 0 3%;
+                height: 180px;
+            }
+
+            .bible-title {
+                font-size: 1.5rem;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <a href="index.html#home" class="logo-container">
+            <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
+                alt="SDA Logo" class="logo-img">
+            <div class="logo-text">
+                <h1>KIMANGU AY</h1>
+                <p>Seventh-day Adventist Church</p>
+            </div>
+        </a>
+
+        <ul class="nav-links" id="navLinks">
+            <li><a href="index.html#home" onclick="closeMobileNav()">Home</a></li>
+            <li><a href="index.html#events" onclick="closeMobileNav()">Events</a></li>
+
+            <!-- Resources Dropdown Menu -->
+            <li class="dropdown active" id="resourcesDropdown">
+                <a href="javascript:void(0)" onclick="toggleResourcesDropdown(event)">
+                    Resources <i class="fa-solid fa-caret-down"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="cornerstone.html" onclick="closeMobileNav()">Cornerstone Lesson</a></li>
+                    <li><a href="adult_lesson.html" onclick="closeMobileNav()">Adult Lesson</a></li>
+                    <li><a href="mission_story.html" onclick="closeMobileNav()">Mission Story</a></li>
+                    <li><a href="bible_study.html" class="active">Bible Study Guide</a></li>
+                    <li><a href="egw_collection.html" onclick="closeMobileNav()">Ellen G. White Collection</a></li>
+                </ul>
+            </li>
+
+            <li><a href="index.html#about" onclick="closeMobileNav()">About Us</a></li>
+            <li><a href="index.html#contact" onclick="closeMobileNav()">Contact</a></li>
+        </ul>
+
+        <div class="nav-actions">
+            <a href="auth.html" class="btn btn-outline">Sign In</a>
+            <a href="auth.html?view=signup" class="btn btn-solid">Join the AY</a>
+        </div>
+
+        <div class="mobile-menu-btn" id="menuBtn">
+            <i class="fa-solid fa-bars" id="menuIcon"></i>
+        </div>
+    </header>
+
+    <!-- BIBLE STUDY BANNER HEADER -->
+    <div class="bible-banner">
+        <div class="bible-badge">SCRIPTURE STUDY</div>
+        <h1 class="bible-title">Bible Study Guides & Series</h1>
+    </div>
+
+    <!-- MAIN COLLECTION SECTION -->
+    <section class="bible-section">
+
+        <div class="section-intro-header">
+            <h2>Interactive Study Series</h2>
+            <p>Search and explore topical Bible study guides, doctrinal lessons, and fundamental belief series.</p>
+        </div>
+
+        <div class="main-bible-container">
+
+            <!-- LEFT COLUMN: Sidebar & Search -->
+            <div class="bible-sidebar-box">
+                <img src="bible_study.png" alt="Bible Study Guide Cover">
+                <div class="sidebar-caption">
+                    <h4>Topical Bible Guides</h4>
+                    <p>Comprehensive study materials for personal devotion and group lessons.</p>
+                </div>
+                <input type="text" class="book-search-input" placeholder="Search study guide..."
+                    onkeyup="filterGuides(this.value)">
+            </div>
+
+            <!-- RIGHT COLUMN: Book Grid (Matching Image Height & Layout) -->
+            <div class="books-grid" id="booksGrid">
+
+                <!-- Guide 1 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=400&q=80"
+                            alt="Steps to Christ Study Guide">
+                        <button class="info-btn" onclick="showGuideInfo('Steps to Christ Study Guide')"
+                            title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('steps-to-christ')" class="book-title-link">Steps to
+                        Christ Guide</a>
+                </div>
+
+                <!-- Guide 2 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=400&q=80"
+                            alt="Daniel Prophecy Guide">
+                        <button class="info-btn" onclick="showGuideInfo('Daniel Prophecy Guide')" title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('daniel-prophecy')" class="book-title-link">Daniel
+                        Prophecy Series</a>
+                </div>
+
+                <!-- Guide 3 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=400&q=80"
+                            alt="Revelation Unsealed Guide">
+                        <button class="info-btn" onclick="showGuideInfo('Revelation Unsealed Guide')"
+                            title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('revelation-unsealed')"
+                        class="book-title-link">Revelation Unsealed</a>
+                </div>
+
+                <!-- Guide 4 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80"
+                            alt="28 Fundamental Beliefs">
+                        <button class="info-btn" onclick="showGuideInfo('28 Fundamental Beliefs')"
+                            title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('28-beliefs')" class="book-title-link">28
+                        Fundamental Beliefs</a>
+                </div>
+
+                <!-- Guide 5 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80"
+                            alt="Sanctuary Doctrine Study">
+                        <button class="info-btn" onclick="showGuideInfo('Sanctuary Doctrine Study')"
+                            title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('sanctuary-study')" class="book-title-link">The
+                        Sanctuary Study</a>
+                </div>
+
+                <!-- Guide 6 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80"
+                            alt="Sabbath Truth Lessons">
+                        <button class="info-btn" onclick="showGuideInfo('Sabbath Truth Lessons')" title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('sabbath-truth')" class="book-title-link">Sabbath
+                        Truth Lessons</a>
+                </div>
+
+                <!-- Guide 7 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400&q=80"
+                            alt="State of the Dead Guide">
+                        <button class="info-btn" onclick="showGuideInfo('State of the Dead Guide')"
+                            title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('state-of-dead')" class="book-title-link">State of
+                        the Dead</a>
+                </div>
+
+                <!-- Guide 8 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80"
+                            alt="Christian Stewardship">
+                        <button class="info-btn" onclick="showGuideInfo('Christian Stewardship')" title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('stewardship-guide')"
+                        class="book-title-link">Christian Stewardship</a>
+                </div>
+
+                <!-- Guide 9 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1476275466078-4007374efbbe?auto=format&fit=crop&w=400&q=80"
+                            alt="Health and Wholeness">
+                        <button class="info-btn" onclick="showGuideInfo('Health and Wholeness')" title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('health-wholeness')" class="book-title-link">Health
+                        & Wholeness</a>
+                </div>
+
+                <!-- Guide 10 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1463320726281-696a485928c7?auto=format&fit=crop&w=400&q=80"
+                            alt="Christian Prayer Life">
+                        <button class="info-btn" onclick="showGuideInfo('Christian Prayer Life')" title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('prayer-life')" class="book-title-link">Christian
+                        Prayer Life</a>
+                </div>
+
+                <!-- Guide 11 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=400&q=80"
+                            alt="Understanding the Law">
+                        <button class="info-btn" onclick="showGuideInfo('Understanding the Law')" title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('understanding-law')"
+                        class="book-title-link">Understanding the Law</a>
+                </div>
+
+                <!-- Guide 12 -->
+                <div class="book-card">
+                    <div class="book-cover-wrapper">
+                        <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80"
+                            alt="Second Coming Promises">
+                        <button class="info-btn" onclick="showGuideInfo('Second Coming Promises')"
+                            title="Guide Details">
+                            <i class="fa-solid fa-info"></i>
+                        </button>
+                    </div>
+                    <a href="javascript:void(0)" onclick="openGuide('second-coming')" class="book-title-link">Second
+                        Coming Promises</a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="logo-container" style="margin-bottom: 1rem;">
+                    <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
+                        alt="SDA Logo" class="logo-img" style="border-color: var(--accent-gold);">
+                    <div class="logo-text">
+                        <h1 style="color: var(--white);">KIMANGU AY</h1>
+                        <p>Seventh-day Adventist</p>
+                    </div>
+                </div>
+
+                <p style="color: #94a3b8; font-size: 0.95rem; max-width: 350px;">
+                    A Christ-centered youth ministry growing faith, friendship, and service in Kimangu and beyond.
+                </p>
+
+                <div class="social-icons">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="index.html#home">Home</a></li>
+                    <li><a href="index.html#events">Events</a></li>
+                    <li><a href="index.html#resources">Resources</a></li>
+                    <li><a href="index.html#about">About Us</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Worship Schedule</h4>
+                <ul>
+                    <li><a href="#">Sabbath School: 9:00 AM</a></li>
+                    <li><a href="#">Divine Service: 11:00 AM</a></li>
+                    <li><a href="#">AY Afternoon: 3:00 PM</a></li>
+                    <li><a href="#">Wednesday Prayer: 5:00 PM</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Kimangu AY. Seventh-day Adventist Youth Ministry. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuBtn = document.getElementById('menuBtn');
+            const navLinks = document.getElementById('navLinks');
+            const menuIcon = document.getElementById('menuIcon');
+
+            if (menuBtn) {
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    navLinks.classList.toggle('active');
+
+                    if (navLinks.classList.contains('active')) {
+                        menuIcon.classList.remove('fa-bars');
+                        menuIcon.classList.add('fa-xmark');
+                    } else {
+                        menuIcon.classList.remove('fa-xmark');
+                        menuIcon.classList.add('fa-bars');
+
+                        const dropdown = document.getElementById('resourcesDropdown');
+                        if (dropdown) dropdown.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        function toggleResourcesDropdown(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropdown = document.getElementById('resourcesDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+            }
+        }
+
+        function closeMobileNav() {
+            const navLinks = document.getElementById('navLinks');
+            const menuIcon = document.getElementById('menuIcon');
+
+            if (navLinks && navLinks.classList.contains('active')) {
+                navLinks.classList.remove('active');
+            }
+
+            if (menuIcon) {
+                menuIcon.classList.remove('fa-xmark');
+                menuIcon.classList.add('fa-bars');
+            }
+
+            const dropdown = document.getElementById('resourcesDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('active');
+            }
+        }
+
+        function openGuide(guideId) {
+            alert(`Opening Bible study guide: ${guideId}`);
+        }
+
+        function showGuideInfo(title) {
+            alert(`Information for: ${title}`);
+        }
+
+        function filterGuides(query) {
+            const term = query.toLowerCase().trim();
+            const cards = document.querySelectorAll('.book-card');
+
+            cards.forEach(card => {
+                const title = card.querySelector('.book-title-link').textContent.toLowerCase();
+                if (title.includes(term)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
