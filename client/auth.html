@@ -30,11 +30,22 @@
             box-sizing: border-box;
         }
 
+        html {
+            height: 100%;
+        }
+
+        /* The page itself never scrolls: the top bar stays put, the image panel
+           fills the remaining height, and only the form panel scrolls. */
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--primary-dark);
             background: var(--white);
             line-height: 1.6;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         h1,
@@ -52,17 +63,23 @@
             box-shadow: 0 4px 20px rgba(10, 25, 47, 0.06);
             position: relative;
             z-index: 10;
+            flex-shrink: 0;
         }
 
         .auth-wrapper {
+            flex: 1;
+            min-height: 0;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            min-height: calc(100vh - 73px);
+            grid-template-rows: minmax(0, 1fr);
         }
 
-        /* LEFT PANEL - IMAGE */
+        /* LEFT PANEL - IMAGE (fills the available height, never taller than the screen) */
         .auth-visual {
             position: relative;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
             background: linear-gradient(180deg, rgba(10, 25, 47, 0.55) 0%, rgba(10, 25, 47, 0.85) 100%), url('kimangu-worship.jpg') center/cover no-repeat;
             background-color: var(--primary-dark);
             display: flex;
@@ -100,13 +117,26 @@
             font-style: normal;
         }
 
-        /* RIGHT PANEL - FORM */
+        /* RIGHT PANEL - FORM (scrolls on its own) */
         .auth-form-panel {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            height: 100%;
+            min-height: 0;
             padding: 2.5rem 4rem;
             overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+
+        .auth-form-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .auth-form-panel::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 999px;
         }
 
         .auth-logo {
@@ -190,10 +220,12 @@
             border-color: var(--accent-gold);
         }
 
+        /* margin:auto centers the form when it is short and lets it scroll
+           from the top (nothing gets cut off) when it is taller than the panel */
         .auth-form-container {
             max-width: 420px;
             width: 100%;
-            margin: 0 auto;
+            margin: auto;
         }
 
         .auth-badge {
@@ -354,7 +386,7 @@
             margin-top: 2px;
         }
 
-        /* ---------- Phone hint ---------- */
+        /* ---------- Field hints (full name + phone) ---------- */
         .field-hint {
             display: flex;
             justify-content: space-between;
@@ -610,11 +642,126 @@
             }
         }
 
+        /* ---------- Success toast ---------- */
+        .toast-container {
+            position: fixed;
+            top: 88px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(92vw, 380px);
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--success);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            box-shadow: 0 14px 34px rgba(10, 25, 47, 0.18);
+            animation: toastIn 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+        }
+
+        .toast.hide {
+            animation: toastOut 0.3s ease forwards;
+        }
+
+        .toast-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--success);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            animation: tickPop 0.5s 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+        }
+
+        .toast-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .toast-body strong {
+            display: block;
+            font-size: 0.92rem;
+            color: var(--primary-dark);
+        }
+
+        .toast-body span {
+            display: block;
+            font-size: 0.82rem;
+            color: var(--text-gray);
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-gray);
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 4px;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover {
+            color: var(--primary-dark);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-16px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes toastOut {
+            to {
+                opacity: 0;
+                transform: translateY(-12px) scale(0.97);
+            }
+        }
+
+        @keyframes tickPop {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .toast,
+            .toast-icon,
+            .auth-view {
+                animation: none;
+            }
+        }
+
         /* RESPONSIVE */
         @media (max-width: 900px) {
             .auth-wrapper {
                 grid-template-columns: 1fr;
-                min-height: auto;
             }
 
             .auth-visual {
@@ -632,6 +779,10 @@
             .auth-topbar {
                 padding: 0.8rem 5%;
             }
+
+            .toast-container {
+                top: 76px;
+            }
         }
 
         @media (max-width: 420px) {
@@ -643,6 +794,9 @@
 </head>
 
 <body>
+
+    <!-- SUCCESS TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
     <!-- DISTINCT HEADER BAR -->
     <div class="auth-topbar">
@@ -669,7 +823,7 @@
         </div>
 
         <!-- RIGHT FORM PANEL -->
-        <div class="auth-form-panel">
+        <div class="auth-form-panel" id="authFormPanel">
             <div class="auth-form-container">
 
                 <!-- SIGN IN VIEW -->
@@ -709,7 +863,7 @@
                             account</button></p>
 
                     <div class="demo-notice">
-                        <i class="fa-regular fa-shield-halved"></i>
+                        <i class="fa-solid fa-shield-halved"></i>
                         <span>Your details are securely stored and never shared.</span>
                     </div>
                 </div>
@@ -774,7 +928,11 @@
                             <label>Full name</label>
                             <div class="input-wrap">
                                 <i class="fa-solid fa-user left-icon"></i>
-                                <input type="text" id="signupName" placeholder="Your full name" required>
+                                <input type="text" id="signupName" placeholder="Your full name" autocomplete="name"
+                                    required>
+                            </div>
+                            <div class="field-hint" id="nameHint">
+                                <span id="nameHintText">Enter at least two names, e.g. John Kamau</span>
                             </div>
                         </div>
 
@@ -841,7 +999,7 @@
                             in</button></p>
 
                     <div class="demo-notice">
-                        <i class="fa-regular fa-shield-halved"></i>
+                        <i class="fa-solid fa-shield-halved"></i>
                         <span>Your details are securely stored and never shared.</span>
                     </div>
                 </div>
@@ -867,6 +1025,30 @@
         const LABEL_SIGNIN = 'Sign In ' + ARROW_RIGHT;
         const LABEL_SIGNUP = 'Create account ' + ARROW_RIGHT;
         const LABEL_VERIFY = 'Verify Code ' + ARROW_RIGHT;
+
+        // ===================== TOAST =====================
+        function showToast(title, message, duration = 4500) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.setAttribute('role', 'status');
+            toast.innerHTML =
+                '<div class="toast-icon"><i class="fa-solid fa-check"></i></div>' +
+                '<div class="toast-body"><strong></strong><span></span></div>' +
+                '<button type="button" class="toast-close" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>';
+            toast.querySelector('strong').textContent = title;
+            toast.querySelector('span').textContent = message;
+
+            const dismiss = () => {
+                if (toast.classList.contains('hide')) return;
+                toast.classList.add('hide');
+                toast.addEventListener('animationend', () => toast.remove(), { once: true });
+            };
+            toast.querySelector('.toast-close').addEventListener('click', dismiss);
+
+            container.appendChild(toast);
+            setTimeout(dismiss, duration);
+        }
 
         // ===================== 6-DIGIT CODE INPUT BEHAVIOR =====================
         const codeBoxes = document.querySelectorAll('.code-box');
@@ -938,6 +1120,8 @@
         function showView(viewId) {
             document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
+            // The form panel is the scroll area now, so start every view at the top
+            document.getElementById('authFormPanel').scrollTop = 0;
         }
 
         function togglePassword(inputId, btn) {
@@ -963,6 +1147,8 @@
             const el = document.getElementById(id);
             el.textContent = message;
             el.classList.add('active');
+            // The form can be scrolled, so make sure the error is actually visible
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function clearError(id) {
@@ -970,6 +1156,58 @@
             el.textContent = '';
             el.classList.remove('active');
         }
+
+        // ===================== SIGN UP: FULL NAME (at least two names) =====================
+        const signupNameInput = document.getElementById('signupName');
+        const nameHint = document.getElementById('nameHint');
+        const nameHintText = document.getElementById('nameHintText');
+        const NAME_HINT_DEFAULT = 'Enter at least two names, e.g. John Kamau';
+        let nameTouched = false;
+
+        function validateFullName(value) {
+            const parts = value.trim().split(/\s+/).filter(Boolean);
+
+            if (parts.length === 0) {
+                return { ok: false, message: 'Please enter your full name.' };
+            }
+            // Letters only (hyphens, apostrophes and dots are fine, e.g. Mary-Anne, O'Neil)
+            if (!parts.every((p) => /^\p{L}[\p{L}'’.\-]*$/u.test(p))) {
+                return { ok: false, message: 'Names can only contain letters, hyphens and apostrophes.' };
+            }
+            if (parts.length < 2) {
+                return { ok: false, message: 'Please enter at least two names, e.g. John Kamau.' };
+            }
+            const realNames = parts.filter((p) => p.replace(/[^\p{L}]/gu, '').length >= 2);
+            if (realNames.length < 2) {
+                return { ok: false, message: 'Each name must have at least 2 letters.' };
+            }
+            return { ok: true, message: '' };
+        }
+
+        function updateNameState() {
+            const value = signupNameInput.value;
+            const result = validateFullName(value);
+
+            nameHint.classList.remove('valid', 'invalid');
+            signupNameInput.classList.remove('valid', 'invalid');
+
+            if (result.ok) {
+                nameHint.classList.add('valid');
+                signupNameInput.classList.add('valid');
+                nameHintText.textContent = 'Name looks good';
+            } else if (value.trim() && nameTouched) {
+                nameHint.classList.add('invalid');
+                signupNameInput.classList.add('invalid');
+                nameHintText.textContent = result.message;
+            } else {
+                nameHintText.textContent = NAME_HINT_DEFAULT;
+            }
+        }
+        signupNameInput.addEventListener('input', updateNameState);
+        signupNameInput.addEventListener('blur', () => {
+            nameTouched = true;
+            updateNameState();
+        });
 
         // ===================== SIGN UP: PHONE (exactly 10 digits) =====================
         const signupPhoneInput = document.getElementById('signupPhone');
@@ -1053,19 +1291,27 @@
             if (type === 'signup') {
                 clearError('signupError');
                 const btn = document.getElementById('signupBtn');
-                const fullName = document.getElementById('signupName').value.trim();
+                const fullName = signupNameInput.value.trim().replace(/\s+/g, ' ');
                 const phone = document.getElementById('signupPhone').value.trim();
                 const pass = document.getElementById('signupPassword').value;
                 const confirm = document.getElementById('confirmPassword').value;
                 const category = document.querySelector('input[name="role"]:checked').value;
 
-                if (!fullName) {
-                    showError('signupError', 'Please enter your full name.');
+                const nameCheck = validateFullName(fullName);
+                if (!nameCheck.ok) {
+                    nameTouched = true;
+                    updateNameState();
+                    // Make sure the field is marked red even when it is still empty
+                    nameHint.classList.add('invalid');
+                    signupNameInput.classList.add('invalid');
+                    nameHintText.textContent = nameCheck.message;
+                    showError('signupError', nameCheck.message);
+                    signupNameInput.focus({ preventScroll: true });
                     return;
                 }
                 if (!/^\d{10}$/.test(phone)) {
                     showError('signupError', 'Phone number must be exactly 10 digits.');
-                    document.getElementById('signupPhone').focus();
+                    document.getElementById('signupPhone').focus({ preventScroll: true });
                     return;
                 }
                 if (getPasswordScore(pass) < 5) {
@@ -1107,16 +1353,21 @@
                         return;
                     }
 
-                    alert('Account created successfully! Please sign in.');
+                    // Account created: reset the form, go to sign in and confirm with a toast
                     pendingAccountType = null;
                     e.target.reset();
                     document.getElementById('roleYouthCard').classList.add('selected');
                     document.getElementById('roleAmbassadorCard').classList.remove('selected');
+                    nameTouched = false;
+                    updateNameState();
                     updatePhoneState();
                     updatePasswordStrength();
                     btn.disabled = false;
                     btn.innerHTML = LABEL_SIGNUP;
+
                     showView('signInView');
+                    document.getElementById('signinPhone').value = phone; // saves retyping
+                    showToast('Account created successfully', 'You can now sign in with your phone number and password.');
 
                 } catch (err) {
                     showError('signupError', 'Server connection error. Please try again.');
