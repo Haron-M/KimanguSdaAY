@@ -642,101 +642,97 @@
             }
         }
 
-        /* ---------- Success toast ---------- */
-        .toast-container {
+        /* ---------- Success pop-up (modal) ---------- */
+        .modal-overlay {
             position: fixed;
-            top: 88px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: min(92vw, 380px);
-            display: flex;
-            flex-direction: column;
-            gap: 0.6rem;
-            z-index: 1000;
-            pointer-events: none;
-        }
-
-        .toast {
-            pointer-events: auto;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--white);
-            border: 1px solid var(--border-color);
-            border-left: 4px solid var(--success);
-            border-radius: 12px;
-            padding: 0.85rem 1rem;
-            box-shadow: 0 14px 34px rgba(10, 25, 47, 0.18);
-            animation: toastIn 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15);
-        }
-
-        .toast.hide {
-            animation: toastOut 0.3s ease forwards;
-        }
-
-        .toast-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: var(--success);
-            color: var(--white);
+            inset: 0;
+            background: rgba(10, 25, 47, 0.55);
+            -webkit-backdrop-filter: blur(3px);
+            backdrop-filter: blur(3px);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.95rem;
-            flex-shrink: 0;
+            padding: 1.5rem;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 380px;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem 1.75rem 1.75rem;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(10, 25, 47, 0.3);
+            transform: translateY(14px) scale(0.95);
+            transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+        }
+
+        .modal-overlay.show .modal-card {
+            transform: none;
+        }
+
+        .modal-icon {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: #dcf5e6;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            margin: 0 auto 1.4rem;
+        }
+
+        .modal-overlay.show .modal-icon i {
             animation: tickPop 0.5s 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
         }
 
-        .toast-body {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .toast-body strong {
-            display: block;
-            font-size: 0.92rem;
+        .modal-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
+            font-weight: 700;
             color: var(--primary-dark);
+            margin-bottom: 0.4rem;
         }
 
-        .toast-body span {
-            display: block;
-            font-size: 0.82rem;
+        .modal-card p {
+            font-size: 0.88rem;
             color: var(--text-gray);
-            line-height: 1.4;
+            margin-bottom: 1.6rem;
         }
 
-        .toast-close {
-            background: none;
+        .modal-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--primary-dark);
+            color: var(--white);
             border: none;
-            color: var(--text-gray);
+            border-radius: 12px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.95rem;
             cursor: pointer;
-            font-size: 0.85rem;
-            padding: 4px;
-            flex-shrink: 0;
+            transition: var(--transition);
         }
 
-        .toast-close:hover {
+        .modal-btn:hover {
+            background: var(--accent-gold);
             color: var(--primary-dark);
         }
 
-        @keyframes toastIn {
-            from {
-                opacity: 0;
-                transform: translateY(-16px) scale(0.96);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        @keyframes toastOut {
-            to {
-                opacity: 0;
-                transform: translateY(-12px) scale(0.97);
-            }
+        .modal-btn:focus-visible {
+            outline: 3px solid rgba(245, 158, 11, 0.5);
+            outline-offset: 2px;
         }
 
         @keyframes tickPop {
@@ -751,8 +747,12 @@
 
         @media (prefers-reduced-motion: reduce) {
 
-            .toast,
-            .toast-icon,
+            .modal-overlay,
+            .modal-card {
+                transition: none;
+            }
+
+            .modal-overlay.show .modal-icon i,
             .auth-view {
                 animation: none;
             }
@@ -779,10 +779,6 @@
             .auth-topbar {
                 padding: 0.8rem 5%;
             }
-
-            .toast-container {
-                top: 76px;
-            }
         }
 
         @media (max-width: 420px) {
@@ -795,8 +791,16 @@
 
 <body>
 
-    <!-- SUCCESS TOAST CONTAINER -->
-    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+    <!-- SUCCESS POP-UP -->
+    <div class="modal-overlay" id="successModal" role="dialog" aria-modal="true" aria-labelledby="successTitle"
+        aria-describedby="successMessage">
+        <div class="modal-card">
+            <div class="modal-icon"><i class="fa-solid fa-check"></i></div>
+            <h3 id="successTitle">Success!</h3>
+            <p id="successMessage">Account created successfully</p>
+            <button type="button" class="modal-btn" id="successOkBtn">OK</button>
+        </div>
+    </div>
 
     <!-- DISTINCT HEADER BAR -->
     <div class="auth-topbar">
@@ -1026,29 +1030,37 @@
         const LABEL_SIGNUP = 'Create account ' + ARROW_RIGHT;
         const LABEL_VERIFY = 'Verify Code ' + ARROW_RIGHT;
 
-        // ===================== TOAST =====================
-        function showToast(title, message, duration = 4500) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.setAttribute('role', 'status');
-            toast.innerHTML =
-                '<div class="toast-icon"><i class="fa-solid fa-check"></i></div>' +
-                '<div class="toast-body"><strong></strong><span></span></div>' +
-                '<button type="button" class="toast-close" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>';
-            toast.querySelector('strong').textContent = title;
-            toast.querySelector('span').textContent = message;
+        // ===================== SUCCESS POP-UP =====================
+        const successModal = document.getElementById('successModal');
+        const successOkBtn = document.getElementById('successOkBtn');
+        let successModalOnClose = null;
 
-            const dismiss = () => {
-                if (toast.classList.contains('hide')) return;
-                toast.classList.add('hide');
-                toast.addEventListener('animationend', () => toast.remove(), { once: true });
-            };
-            toast.querySelector('.toast-close').addEventListener('click', dismiss);
-
-            container.appendChild(toast);
-            setTimeout(dismiss, duration);
+        function showSuccessModal(title, message, onClose) {
+            document.getElementById('successTitle').textContent = title;
+            document.getElementById('successMessage').textContent = message;
+            successModalOnClose = onClose || null;
+            successModal.classList.add('show');
+            requestAnimationFrame(() => successOkBtn.focus());
         }
+
+        function closeSuccessModal() {
+            if (!successModal.classList.contains('show')) return;
+            successModal.classList.remove('show');
+            const callback = successModalOnClose;
+            successModalOnClose = null;
+            if (callback) callback();
+        }
+
+        successOkBtn.addEventListener('click', closeSuccessModal);
+        // Clicking the dimmed area outside the card also closes it
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal) closeSuccessModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (!successModal.classList.contains('show')) return;
+            if (e.key === 'Escape') closeSuccessModal();
+            if (e.key === 'Tab') { e.preventDefault(); successOkBtn.focus(); } // keep focus inside the pop-up
+        });
 
         // ===================== 6-DIGIT CODE INPUT BEHAVIOR =====================
         const codeBoxes = document.querySelectorAll('.code-box');
@@ -1353,7 +1365,7 @@
                         return;
                     }
 
-                    // Account created: reset the form, go to sign in and confirm with a toast
+                    // Account created: reset the form, go to sign in and confirm with the success pop-up
                     pendingAccountType = null;
                     e.target.reset();
                     document.getElementById('roleYouthCard').classList.add('selected');
@@ -1367,7 +1379,9 @@
 
                     showView('signInView');
                     document.getElementById('signinPhone').value = phone; // saves retyping
-                    showToast('Account created successfully', 'You can now sign in with your phone number and password.');
+                    showSuccessModal('Success!', 'Account created successfully', () => {
+                        document.getElementById('signinPassword').focus();
+                    });
 
                 } catch (err) {
                     showError('signupError', 'Server connection error. Please try again.');
