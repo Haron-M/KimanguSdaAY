@@ -14,9 +14,6 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         :root {
             --primary-dark: #0a192f;
@@ -26,6 +23,7 @@
             --off-white: #f8fafc;
             --text-gray: #64748b;
             --border-color: #e2e8f0;
+            --header-height: 77px;
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -49,8 +47,7 @@
 
         h1,
         h2,
-        h3,
-        .serif-font {
+        h3 {
             font-family: 'Playfair Display', serif;
         }
 
@@ -70,7 +67,7 @@
             align-items: center;
             padding: 1rem 5%;
             transition: var(--transition);
-            height: 77px;
+            height: var(--header-height);
         }
 
         .logo-container {
@@ -119,7 +116,7 @@
         }
 
         .nav-links a:hover,
-        .nav-links a.active {
+        .nav-links a.is-current {
             color: var(--accent-gold);
         }
 
@@ -243,18 +240,6 @@
             color: var(--primary-dark);
         }
 
-        .btn-gold {
-            background: var(--accent-gold);
-            color: var(--primary-dark);
-            border: 1.5px solid var(--accent-gold);
-        }
-
-        .btn-gold:hover {
-            background: transparent;
-            color: var(--white);
-            border-color: var(--white);
-        }
-
         /* Animated Hamburger Icon Button */
         .mobile-menu-btn {
             display: none;
@@ -302,586 +287,60 @@
         }
 
         /* ==========================================
-           HERO SLIDER SECTION
+           MIDDLE AREA: THE IFRAME THAT SWAPS PAGES
         ========================================== */
-        .hero {
-            position: relative;
-            height: 90vh;
-            min-height: 600px;
-            margin-top: 77px;
-            overflow: hidden;
-            background: var(--primary-dark);
+        main {
+            padding-top: var(--header-height);
         }
 
-        .hero-slide {
+        .frame-wrap {
+            position: relative;
+            min-height: calc(100vh - var(--header-height));
+            background: var(--white);
+        }
+
+        #contentFrame {
+            display: block;
+            width: 100%;
+            height: 60vh;
+            border: 0;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .frame-loader {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 18vh;
+            pointer-events: none;
+            z-index: 2;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .frame-loader.is-hidden {
             opacity: 0;
             visibility: hidden;
-            transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            align-items: center;
         }
 
-        .hero-slide.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, rgba(10, 25, 47, 0.92) 0%, rgba(10, 25, 47, 0.75) 50%, rgba(10, 25, 47, 0.4) 100%);
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: 750px;
-            padding: 0 5%;
-            color: var(--white);
-        }
-
-        .hero-badge {
-            display: inline-block;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--accent-gold);
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .hero-content h1 {
-            font-size: clamp(2.5rem, 5vw, 4.2rem);
-            line-height: 1.15;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-        }
-
-        .hero-content p {
-            font-size: 1.1rem;
-            color: #cbd5e1;
-            margin-bottom: 2rem;
-            max-width: 600px;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .slider-dots {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            z-index: 10;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
+        .spinner {
+            width: 42px;
+            height: 42px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--accent-gold);
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
-            cursor: pointer;
-            transition: var(--transition);
+            animation: spin 0.8s linear infinite;
         }
 
-        .dot.active {
-            background: var(--accent-gold);
-            width: 20px;
-            border-radius: 4px;
-        }
-
-        /* ==========================================
-           DAILY VERSE & ABOUT SECTION
-        ========================================== */
-        .daily-about-section {
-            position: relative;
-            width: 100%;
-            padding: 3.5rem 5%;
-            background: #fdfdfd;
-            overflow: hidden;
-        }
-
-        .daily-about-container {
-            max-width: 1250px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1.15fr 0.85fr;
-            gap: 3rem;
-            align-items: stretch;
-        }
-
-        .daily-verse-col {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 1.75rem 1.25rem;
-            border-radius: 20px;
-            overflow: hidden;
-            background-image: linear-gradient(to right,
-                    rgba(255, 255, 255, 0.96) 0%,
-                    rgba(255, 255, 255, 0.88) 55%,
-                    rgba(255, 255, 255, 0.25) 100%), url('Gemini_Generated_Image_rffokrrffokrrffo.jfif');
-            background-size: cover;
-            background-position: right center;
-            background-repeat: no-repeat;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-sizing: border-box;
-        }
-
-        .daily-verse-header {
-            width: 100%;
-            margin-bottom: 0.75rem;
-        }
-
-        .daily-title-text {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: clamp(1.4rem, 2.2vw, 1.85rem);
-            font-weight: 800;
-            color: #0284c7;
-            margin: 0 0 0.15rem 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .daily-title-text i {
-            color: #0284c7;
-            font-size: 1.5rem;
-        }
-
-        .daily-date-sub {
-            font-family: 'Playfair Display', serif;
-            font-style: italic;
-            font-size: 0.9rem;
-            color: #64748b;
-            margin: 0;
-        }
-
-        .daily-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            width: fit-content;
-            margin-bottom: 0.85rem;
-            padding: 4px 11px;
-            border: 1px solid rgba(180, 83, 9, 0.22);
-            border-radius: 999px;
-            background: rgba(255, 250, 235, 0.92);
-            color: #92400e;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .daily-verse-text {
-            max-width: 550px;
-            margin: 0 0 0.75rem 0;
-            color: #0f291e;
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(1.15rem, 1.8vw, 1.55rem);
-            font-style: italic;
-            font-weight: 700;
-            line-height: 1.45;
-            text-wrap: pretty;
-        }
-
-        .daily-verse-ref {
-            margin-bottom: 0.75rem;
-            color: #9a5b12;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-        }
-
-        .daily-divider {
-            width: 50px;
-            height: 2px;
-            margin-bottom: 0.75rem;
-            border-radius: 2px;
-            background: #c58b2b;
-        }
-
-        .daily-verse-reflection {
-            max-width: 480px;
-            margin: 0;
-            color: #334155;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .about-col {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .about-text h3 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            color: var(--primary-dark);
-        }
-
-        .about-text p {
-            color: var(--text-gray);
-            margin-bottom: 1.5rem;
-        }
-
-        .about-features {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .feature-box {
-            background: var(--white);
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-            border-left: 4px solid var(--primary-dark);
-        }
-
-        .feature-box h4 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary-dark);
-        }
-
-        .feature-box p {
-            font-size: 0.9rem;
-            margin: 0;
-        }
-
-        /* ==========================================
-           SECTIONS GENERAL
-        ========================================== */
-        section {
-            padding: 2rem 5%;
-            margin-top: -2px;
-        }
-
-        .section-header {
-            text-align: center;
-            max-width: 700px;
-            margin: 0 auto 3rem auto;
-        }
-
-        .section-header h2 {
-            font-size: 2.5rem;
-            color: var(--primary-dark);
-            margin-bottom: 1rem;
-        }
-
-        .section-header p {
-            color: var(--text-gray);
-            font-size: 1.05rem;
-        }
-
-        /* EVENTS SECTION */
-        .events-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-        }
-
-        .event-card {
-            background: var(--white);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(10, 25, 47, 0.06);
-            border: 1px solid var(--border-color);
-            transition: var(--transition);
-        }
-
-        .event-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(10, 25, 47, 0.1);
-        }
-
-        .event-img {
-            height: 220px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-
-        .event-date-tag {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: var(--primary-dark);
-            color: var(--white);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-align: center;
-        }
-
-        .event-body {
-            padding: 2rem;
-        }
-
-        .event-body h3 {
-            font-size: 1.4rem;
-            margin-bottom: 1rem;
-            color: var(--primary-dark);
-        }
-
-        .event-body p {
-            color: var(--text-gray);
-            font-size: 0.95rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .event-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-            color: var(--primary-dark);
-            font-weight: 600;
-            border-top: 1px solid var(--border-color);
-            padding-top: 1rem;
-        }
-
-        /* ==========================================
-           RESOURCE CENTER CARDS SECTION (SINGLE ROW)
-        ========================================== */
-        .resources-section {
-            padding: 4rem 3%;
-            background-color: #f8fafc;
-        }
-
-        .resources-scroll-container {
-            width: 100%;
-            overflow-x: auto;
-            padding-bottom: 1rem;
-            scrollbar-width: thin;
-            scrollbar-color: var(--accent-gold) #e2e8f0;
-        }
-
-        .resources-scroll-container::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .resources-scroll-container::-webkit-scrollbar-thumb {
-            background-color: var(--accent-gold);
-            border-radius: 4px;
-        }
-
-        .resources-row {
-            display: flex;
-            gap: 1.25rem;
-            min-width: min-content;
-            justify-content: center;
-            margin: 1.5rem auto 0 auto;
-        }
-
-        .resource-card {
-            background: #ffffff;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(10, 25, 47, 0.06);
-            border: 1px solid #e2e8f0;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            width: 240px;
-            flex-shrink: 0;
-        }
-
-        .resource-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 18px 35px rgba(10, 25, 47, 0.12);
-        }
-
-        .resource-img-container {
-            height: 180px;
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            background-color: #0a192f;
-        }
-
-        .resource-img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: top center;
-            display: block;
-            transition: transform 0.4s ease;
-        }
-
-        .resource-card:hover .resource-img-container img {
-            transform: scale(1.05);
-        }
-
-        .resource-card-body {
-            padding: 1.1rem 1.2rem 1.25rem;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
-
-        .resource-card-body h3 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #0a192f;
-            margin-bottom: 0.4rem;
-            line-height: 1.3;
-        }
-
-        .resource-card-body p {
-            color: #64748b;
-            font-size: 0.82rem;
-            line-height: 1.45;
-            margin-bottom: 1.1rem;
-            flex-grow: 1;
-        }
-
-        .resource-btn {
-            width: 100%;
-            padding: 0.65rem 0.85rem;
-            background-color: #0a192f;
-            color: #ffffff;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            text-decoration: none;
-            transition: background-color 0.25s ease;
-        }
-
-        .resource-btn:hover {
-            background-color: #f59e0b;
-            color: #0a192f;
-        }
-
-        /* ==========================================
-           CONTACT / VISIT SECTION
-        ========================================== */
-        .contact-section {
-            background: var(--primary-dark);
-            color: var(--white);
-            padding: 3rem 5%;
-        }
-
-        .contact-section .section-header h2,
-        .contact-section .section-header p {
-            color: var(--white);
-        }
-
-        .contact-section .section-header {
-            margin-bottom: 2.5rem;
-        }
-
-        .contact-section .section-header p {
-            color: #94a3b8;
-        }
-
-        .contact-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2.5rem;
-        }
-
-        .contact-info-item {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.2rem;
-            align-items: flex-start;
-        }
-
-        .contact-info-item i {
-            font-size: 1.1rem;
-            color: var(--accent-gold);
-            background: rgba(245, 158, 11, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .contact-info-item h4 {
-            font-size: 1.1rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .contact-info-item p {
-            color: #94a3b8;
-            font-size: 0.95rem;
-        }
-
-        .contact-form {
-            background: var(--white);
-            padding: 1.5rem;
-            border-radius: 10px;
-            color: var(--primary-dark);
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.6rem 0.9rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary-dark);
-            box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.1);
-        }
-
-        .contact-form button {
-            width: 100%;
-            padding: 0.7rem;
-            justify-content: center;
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* ==========================================
@@ -958,141 +417,9 @@
         }
 
         /* ==========================================
-           MODAL & COUNTER
-        ========================================== */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 25, 47, 0.8);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 12px;
-            max-width: 450px;
-            width: 100%;
-            position: relative;
-            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes modalPop {
-            0% {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-gray);
-        }
-
-        .close-modal:hover {
-            color: var(--primary-dark);
-        }
-
-        .member-counter {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-top: 2rem;
-            background: var(--white);
-            padding: 1.2rem 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-            border-left: 4px solid var(--accent-gold);
-        }
-
-        .member-counter i {
-            font-size: 1.8rem;
-            color: var(--accent-gold);
-        }
-
-        .member-counter h4 {
-            font-size: 1.6rem;
-            color: var(--primary-dark);
-            margin: 0;
-            font-family: 'Playfair Display', serif;
-        }
-
-        .member-counter p {
-            font-size: 0.85rem;
-            color: var(--text-gray);
-            margin: 0;
-        }
-
-        /* SCROLL REVEAL ANIMATIONS */
-        .reveal,
-        .reveal-left,
-        .reveal-right {
-            opacity: 0;
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .reveal {
-            transform: translateY(40px);
-        }
-
-        .reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .reveal-left {
-            transform: translateX(-60px);
-        }
-
-        .reveal-left.visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .reveal-right {
-            transform: translateX(60px);
-        }
-
-        .reveal-right.visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        /* ==========================================
-           EXACT UNIFORM MOBILE NAVIGATION PADDING
+           MOBILE NAVIGATION
         ========================================== */
         @media (max-width: 900px) {
-            .section-header h2 {
-                font-size: 1.6rem;
-            }
-
-            .section-header p {
-                font-size: 0.95rem;
-            }
-
-            .daily-about-container,
-            .about-section,
-            .contact-grid,
             .footer-grid {
                 grid-template-columns: 1fr;
                 gap: 2.5rem;
@@ -1108,13 +435,16 @@
 
             .nav-links {
                 position: fixed;
-                top: 77px;
+                top: var(--header-height);
                 left: 0;
                 width: 100%;
                 background: var(--white);
                 flex-direction: column;
                 align-items: center;
-                padding: 0;
+                gap: 0;
+                /* cancels the 2.5rem desktop gap */
+                padding: 0.5rem 0;
+                /* equal space at top and bottom */
                 box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
                 z-index: 999;
                 border-top: 1px solid var(--border-color);
@@ -1129,7 +459,8 @@
             }
 
             .nav-links.active {
-                max-height: 550px;
+                max-height: 700px;
+                /* raised so the open dropdown isn't clipped */
                 opacity: 1;
                 visibility: visible;
                 display: flex !important;
@@ -1146,18 +477,24 @@
                 border-bottom: none;
             }
 
-            /* --- ALL MAIN LINKS & SUB-LINKS USE EXACTLY IDENTICAL PADDING & FLEX SIZING --- */
+            /* --- ALL MAIN LINKS USE IDENTICAL, EQUAL PADDING --- */
             .nav-links li a,
             .nav-links li.dropdown>a {
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 width: 100%;
-                padding: 0 1rem;
+                padding: 1rem;
+                /* same top/bottom/left/right */
                 font-size: 0.95rem;
                 font-weight: 600;
                 color: var(--primary-dark);
                 text-decoration: none;
+            }
+
+            .nav-links li a.is-current,
+            .nav-links li.dropdown>a.is-current {
+                color: var(--accent-gold);
             }
 
             .nav-links li.dropdown {
@@ -1181,6 +518,7 @@
                 opacity: 0;
                 visibility: hidden;
                 overflow: hidden;
+                transform: none;
                 transition: max-height 0.35s ease, opacity 0.3s ease;
                 display: block !important;
             }
@@ -1191,6 +529,7 @@
                 visibility: visible;
             }
 
+            /* --- DROPDOWN SUB-LINKS: equal top and bottom padding --- */
             .dropdown-menu li a {
                 display: flex;
                 align-items: center;
@@ -1198,36 +537,22 @@
                 width: 100%;
                 color: #f1f5f9 !important;
                 border-bottom: 1px solid #334155;
-                padding: 0.65rem 1rem;
+                padding: 0.85rem 1rem;
+                /* equal top and bottom */
                 font-weight: 500;
                 font-size: 0.92rem;
                 text-decoration: none;
             }
 
+            /* No hover indent on touch devices, keeps text centered */
             .dropdown-menu li a:hover {
+                padding-left: 1rem;
                 background-color: #0f172a;
                 color: var(--accent-gold) !important;
             }
 
-            .resources-row {
-                justify-content: flex-start;
-            }
-
-            .hero {
-                height: 60vh;
-                min-height: 420px;
-            }
-
-            .hero-content h1 {
-                font-size: 2rem;
-            }
-
-            .hero-content p {
-                font-size: 0.95rem;
-            }
-
-            .member-counter {
-                margin-top: 1rem;
+            .dropdown-menu li a.is-current {
+                color: var(--accent-gold) !important;
             }
         }
     </style>
@@ -1235,7 +560,9 @@
 
 <body>
 
-    <!-- HEADER -->
+    <!-- ==========================================
+         HEADER (stays on screen for every page)
+    ========================================== -->
     <header>
         <a href="#home" class="logo-container">
             <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
@@ -1247,7 +574,7 @@
         </a>
 
         <ul class="nav-links" id="navLinks">
-            <li><a href="#home" class="active" onclick="closeMobileNav()">Home</a></li>
+            <li><a href="#home" onclick="closeMobileNav()">Home</a></li>
             <li><a href="#events" onclick="closeMobileNav()">Events</a></li>
 
             <!-- Resources Dropdown Menu -->
@@ -1256,11 +583,11 @@
                     Resources <i class="fa-solid fa-caret-down"></i>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="cornerstone.html" onclick="closeMobileNav()">Cornerstone Lesson</a></li>
-                    <li><a href="adult_lesson.html" onclick="closeMobileNav()">Adult Lesson</a></li>
-                    <li><a href="mission_story.html" onclick="closeMobileNav()">Mission Story</a></li>
-                    <li><a href="bible_study.html" onclick="closeMobileNav()">Bible Study Guide</a></li>
-                    <li><a href="egw_collection.html" onclick="closeMobileNav()">Ellen G. White Collection</a></li>
+                    <li><a href="#/cornerstone" onclick="closeMobileNav()">Cornerstone Lesson</a></li>
+                    <li><a href="#/adult-lesson" onclick="closeMobileNav()">Adult Lesson</a></li>
+                    <li><a href="#/mission-story" onclick="closeMobileNav()">Mission Story</a></li>
+                    <li><a href="#/bible-study" onclick="closeMobileNav()">Bible Study Guide</a></li>
+                    <li><a href="#/egw-collection" onclick="closeMobileNav()">Ellen G. White Collection</a></li>
                 </ul>
             </li>
 
@@ -1283,331 +610,23 @@
         </button>
     </header>
 
-    <!-- HERO SLIDER SECTION -->
-    <section id="home" class="hero">
-        <!-- Slide 1 -->
-        <div class="hero-slide active" style="background-image: url('kimangu-worship.jpg');">
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <span class="hero-badge">Welcome to Kimangu AY Family</span>
-                <h1>Faith that grows. Community that feels like home.</h1>
-                <p>Join a generation of young people living boldly for Christ through worship, friendship and service.
-                </p>
-                <div class="hero-buttons">
-                    <button class="btn btn-gold">
-                        Join our community
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                    <a href="auth.html" class="btn btn-outline" style="border-color: white; color: white;">
-                        Sign in
-                    </a>
-                </div>
+    <!-- ==========================================
+         MIDDLE AREA: pages load inside this iframe
+    ========================================== -->
+    <main>
+        <div class="frame-wrap">
+            <div class="frame-loader" id="frameLoader">
+                <div class="spinner"></div>
             </div>
+            <iframe id="contentFrame" title="Page content"></iframe>
         </div>
+    </main>
 
-        <!-- Slide 2 -->
-        <div class="hero-slide" style="background-image: url('kimangu-study.jpg');">
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <span class="hero-badge">Spiritual Growth</span>
-                <h1>Ask deeper questions. Discover lasting truth.</h1>
-                <p>Grow through thoughtful Bible study, honest conversation and a community that walks with you.</p>
-                <div class="hero-buttons">
-                    <button class="btn btn-gold">
-                        Join our community
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                    <a href="auth.html" class="btn btn-outline" style="border-color: white; color: white;">
-                        Sign in
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 3 -->
-        <div class="hero-slide" style="background-image: url('kimangu-service.jpg');">
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <span class="hero-badge">Outreach & Action</span>
-                <h1>Called to serve. Ready to make a difference.</h1>
-                <p>We turn compassion into action—showing up for our church, our neighbours and our community.</p>
-                <div class="hero-buttons">
-                    <button class="btn btn-gold">
-                        Join our community
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                    <a href="auth.html" class="btn btn-outline" style="border-color: white; color: white;">
-                        Sign in
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slider Dots -->
-        <div class="slider-dots" id="sliderDots">
-            <div class="dot active" onclick="currentSlide(0)"></div>
-            <div class="dot" onclick="currentSlide(1)"></div>
-            <div class="dot" onclick="currentSlide(2)"></div>
-        </div>
-    </section>
-
-    <!-- COMBINED DAILY VERSE & ABOUT US SECTION -->
-    <section id="about" class="daily-about-section reveal">
-        <div class="daily-about-container">
-
-            <!-- LEFT COLUMN: DAILY VERSE CARD -->
-            <div class="daily-verse-col">
-                <div style="width: 100%;">
-                    <div class="daily-verse-header">
-                        <h2 class="daily-title-text">
-                            <i class="fa-solid fa-book-open"></i> Verse of the Day
-                        </h2>
-                        <p class="daily-date-sub" id="dailyVerseDate">for Wednesday, October 14th, 2026</p>
-                    </div>
-
-                    <div class="daily-badge">
-                        <i class="fa-solid fa-cross"></i>
-                        Daily Devotional
-                    </div>
-
-                    <p class="daily-verse-text" id="dailyVerseText">
-                        "Loading today's verse..."
-                    </p>
-
-                    <div class="daily-verse-ref" id="dailyVerseRef">
-                        Loading reference...
-                    </div>
-                </div>
-
-                <div style="width: 100%;">
-                    <div class="daily-divider"></div>
-                    <p class="daily-verse-reflection">
-                        Trust God with your plans, your dreams and your tomorrow. He knows what is best for you.
-                    </p>
-                </div>
-            </div>
-
-            <!-- RIGHT COLUMN: ABOUT US CONTENT -->
-            <div class="about-col">
-                <div class="about-text" style="max-width: 100%; margin: 0;">
-                    <span class="hero-badge" style="color: var(--primary-dark);">
-                        You Belong Here
-                    </span>
-
-                    <h3>Growing young disciples for Christ.</h3>
-
-                    <p>
-                        Kimangu Adventist Youth is a welcoming community where young people deepen their faith, build
-                        lifelong friendships and discover practical ways to serve. Whether you are exploring faith or
-                        have grown up in church, there is a place for you here.
-                    </p>
-
-                    <div class="about-features">
-                        <div class="feature-box">
-                            <h4>Sabbath Worship</h4>
-                            <p>Dynamic programs every Saturday starting from 9:00 AM.</p>
-                        </div>
-
-                        <div class="feature-box">
-                            <h4>Bible Labs</h4>
-                            <p>Interactive discussions tackling real youth life questions.</p>
-                        </div>
-                    </div>
-
-                    <div class="member-counter">
-                        <i class="fa-solid fa-users"></i>
-                        <div>
-                            <h4 id="memberCount">0</h4>
-                            <p>Members Signed In</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-    <!-- EVENTS SECTION -->
-    <section id="events">
-        <div class="section-header reveal">
-            <span class="hero-badge" style="color: var(--primary-dark);">
-                Upcoming Gatherings
-            </span>
-            <h2>News & Events</h2>
-            <p>Stay connected with our upcoming youth programs, community outreach, and special Sabbath services.</p>
-        </div>
-
-        <div class="events-grid" id="eventsGrid">
-            <p style="text-align: center; color: var(--text-gray); grid-column: 1 / -1;">
-                Loading events...
-            </p>
-        </div>
-    </section>
-
-    <!-- RESOURCE CENTER SECTION (SINGLE ROW) -->
-    <section id="resources" class="resources-section reveal">
-        <div class="section-header">
-            <span class="hero-badge" style="color: var(--primary-dark);">
-                Study & Growth
-            </span>
-            <h2>Resource Center</h2>
-            <p>Explore essential study guides, Sabbath School lessons, mission stories, and Spirit of Prophecy
-                materials.</p>
-        </div>
-
-        <div class="resources-scroll-container">
-            <div class="resources-row">
-
-                <!-- Card 1: Cornerstone Lesson -->
-                <div class="resource-card">
-                    <div class="resource-img-container">
-                        <img src="connerstone.png" alt="Cornerstone Lesson">
-                    </div>
-                    <div class="resource-card-body">
-                        <h3>Cornerstone Lesson</h3>
-                        <p>Youth Sabbath School guides for teens and young adults.</p>
-                        <a href="cornerstone.html" class="resource-btn">
-                            Click to see more <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Card 2: Adult Lesson -->
-                <div class="resource-card">
-                    <div class="resource-img-container">
-                        <img src="adult_lesson.png" alt="Adult Lesson">
-                    </div>
-                    <div class="resource-card-body">
-                        <h3>Adult Lesson</h3>
-                        <p>Quarterly Bible study guides covering deep Christian topics.</p>
-                        <a href="adult_lesson.html" class="resource-btn">
-                            Click to see more <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Card 3: Mission Story -->
-                <div class="resource-card">
-                    <div class="resource-img-container">
-                        <img src="mission_story.png" alt="Mission Story">
-                    </div>
-                    <div class="resource-card-body">
-                        <h3>Mission Story</h3>
-                        <p>Inspiring world mission reports and global church testimonies.</p>
-                        <a href="mission_story.html" class="resource-btn">
-                            Click to see more <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Card 4: Bible Study Guide -->
-                <div class="resource-card">
-                    <div class="resource-img-container">
-                        <img src="bible_study.png" alt="Bible Study Guide">
-                    </div>
-                    <div class="resource-card-body">
-                        <h3>Bible Study Guide</h3>
-                        <p>Topical Bible guides, doctrines, and fundamental beliefs.</p>
-                        <a href="bible_study.html" class="resource-btn">
-                            Click to see more <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Card 5: Ellen G. White Collection -->
-                <div class="resource-card">
-                    <div class="resource-img-container">
-                        <img src="ellen_white.jpg" alt="Ellen G. White Collection">
-                    </div>
-                    <div class="resource-card-body">
-                        <h3>Ellen G. White Collection</h3>
-                        <p>Inspired writings, devotionals, and spiritual counsel.</p>
-                        <a href="egw_collection.html" class="resource-btn">
-                            Click to see more <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- CONTACT / VISIT SECTION -->
-    <section id="contact" class="contact-section reveal">
-        <div class="section-header">
-            <span class="hero-badge">Get in Touch</span>
-            <h2>Plan Your Visit or Send a Message</h2>
-            <p>We would love to welcome you this coming Sabbath. Reach out to us with any questions or prayer requests.
-            </p>
-        </div>
-
-        <div class="contact-grid">
-            <div>
-                <div class="contact-info-item">
-                    <i class="fa-solid fa-location-dot"></i>
-                    <div>
-                        <h4>Location</h4>
-                        <p>Kimangu SDA Church, Kenya</p>
-                    </div>
-                </div>
-
-                <div class="contact-info-item">
-                    <i class="fa-solid fa-envelope"></i>
-                    <div>
-                        <h4>Email Us</h4>
-                        <p>info@kimanguay.org</p>
-                    </div>
-                </div>
-
-                <div class="contact-info-item">
-                    <i class="fa-solid fa-phone"></i>
-                    <div>
-                        <h4>Call / WhatsApp</h4>
-                        <p>+254 700 000 000</p>
-                    </div>
-                </div>
-
-                <div class="contact-info-item">
-                    <i class="fa-solid fa-clock"></i>
-                    <div>
-                        <h4>Worship Hours</h4>
-                        <p>Saturdays: 8:00 AM – 5:00 PM</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="contact-form">
-                <h3 style="margin-bottom: 1.5rem; color: var(--primary-dark);">
-                    Send us a note
-                </h3>
-
-                <form onsubmit="handleFormSubmit(event)">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" required placeholder="Enter your name">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" required placeholder="name@example.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Your Message / Prayer Request</label>
-                        <textarea rows="4" required placeholder="How can we help you?"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-solid">
-                        Send Message
-                    </button>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- FOOTER -->
+    <!-- ==========================================
+         FOOTER (stays on screen for every page)
+    ========================================== -->
     <footer>
-        <div class="footer-grid reveal">
+        <div class="footer-grid">
             <div class="footer-col">
                 <div class="logo-container" style="margin-bottom: 1rem;">
                     <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
@@ -1622,11 +641,12 @@
                     A Christ-centered youth ministry growing faith, friendship, and service in Kimangu and beyond.
                 </p>
 
+                <!-- Replace javascript:void(0) with your real social media links -->
                 <div class="social-icons">
-                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
-                    <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="javascript:void(0)"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="javascript:void(0)"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="javascript:void(0)"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="javascript:void(0)"><i class="fa-brands fa-whatsapp"></i></a>
                 </div>
             </div>
 
@@ -1643,10 +663,11 @@
             <div class="footer-col">
                 <h4>Resources</h4>
                 <ul>
-                    <li><a href="cornerstone.html">Cornerstone Lesson</a></li>
-                    <li><a href="adult_lesson.html">Adult Lesson</a></li>
-                    <li><a href="mission_story.html">Mission Story</a></li>
-                    <li><a href="bible_study.html">Bible Study Guide</a></li>
+                    <li><a href="#/cornerstone">Cornerstone Lesson</a></li>
+                    <li><a href="#/adult-lesson">Adult Lesson</a></li>
+                    <li><a href="#/mission-story">Mission Story</a></li>
+                    <li><a href="#/bible-study">Bible Study Guide</a></li>
+                    <li><a href="#/egw-collection">Ellen G. White Collection</a></li>
                 </ul>
             </div>
         </div>
@@ -1656,71 +677,42 @@
         </div>
     </footer>
 
-    <!-- JOIN MODAL -->
-    <div class="modal reveal" id="joinModal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal('joinModal')">&times;</span>
-            <h3 style="margin-bottom: 1rem; color: var(--primary-dark);">Join Kimangu AY</h3>
-            <p style="color: var(--text-gray); font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Fill in your details to connect with our youth leadership team.
-            </p>
-
-            <form onsubmit="handleModalSubmit(event)">
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" required placeholder="Your name">
-                </div>
-
-                <div class="form-group">
-                    <label>Phone Number / WhatsApp</label>
-                    <input type="text" required placeholder="+254 7...">
-                </div>
-
-                <button type="submit" class="btn btn-solid" style="width: 100%; justify-content: center;">
-                    Submit & Connect
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- ==========================================
+         SHELL LOGIC
+         Routes:  #home #about #events #contact  -> index_home.html (+ scroll to that section)
+                  #/cornerstone ... #/egw-collection -> the matching page file
+    ========================================== -->
     <script>
-        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        // ---------- Which file belongs to which link ----------
+        // To add a new page later: add a line here and a link (href="#/your-slug") in the menu.
+        const PAGES = {
+            'home': 'index_home.html',
+            'cornerstone': 'cornerstone.html',
+            'adult-lesson': 'adultLesson.html',
+            'mission-story': 'mission_story.html',
+            'bible-study': 'bible_study.html',
+            'egw-collection': 'ellenWhite.html'
+        };
 
-        const supabasePublic = window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_KEY
-        );
+        const HEADER_H = 77;                 // must match --header-height
+        const $ = (id) => document.getElementById(id);
+        const frame = $('contentFrame');
+        const loader = $('frameLoader');
 
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str || '';
-            return div.innerHTML;
-        }
+        const current = {
+            slug: null,        // page on screen (or loading)
+            file: null,
+            token: 0,          // invalidates older navigations
+            ready: false,      // true once the page is prepared and sized
+            doc: null,
+            resizeObs: null
+        };
+        let pendingSection = null;           // section to scroll to once a page has loaded
 
-        function formatEventTime(t) {
-            if (!t) return '';
-            const [h, m] = t.split(':');
-            const hour = parseInt(h, 10);
-            const suffix = hour >= 12 ? 'PM' : 'AM';
-            const hour12 = ((hour + 11) % 12) + 1;
-            return `${hour12}:${m} ${suffix}`;
-        }
-
-        function setDynamicDate() {
-            const dateEl = document.getElementById('dailyVerseDate');
-            if (dateEl) {
-                const now = new Date();
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                dateEl.textContent = `for ${now.toLocaleDateString('en-US', options)}`;
-            }
-        }
-
-        // Animated Mobile Menu Logic
+        // ---------- Mobile menu (header) ----------
         document.addEventListener('DOMContentLoaded', () => {
-            const menuBtn = document.getElementById('menuBtn');
-            const navLinks = document.getElementById('navLinks');
+            const menuBtn = $('menuBtn');
+            const navLinks = $('navLinks');
 
             if (menuBtn) {
                 menuBtn.addEventListener('click', (e) => {
@@ -1729,280 +721,280 @@
                     navLinks.classList.toggle('active');
 
                     if (!navLinks.classList.contains('active')) {
-                        const dropdown = document.getElementById('resourcesDropdown');
+                        const dropdown = $('resourcesDropdown');
                         if (dropdown) dropdown.classList.remove('active');
                     }
                 });
             }
-
-            initMemberCounter();
         });
 
         function toggleResourcesDropdown(e) {
             e.preventDefault();
             e.stopPropagation();
-            const dropdown = document.getElementById('resourcesDropdown');
-            if (dropdown) {
-                dropdown.classList.toggle('active');
-            }
+            const dropdown = $('resourcesDropdown');
+            if (dropdown) dropdown.classList.toggle('active');
         }
 
         function closeMobileNav() {
-            const navLinks = document.getElementById('navLinks');
-            const menuBtn = document.getElementById('menuBtn');
+            const navLinks = $('navLinks');
+            const menuBtn = $('menuBtn');
+            if (navLinks) navLinks.classList.remove('active');
+            if (menuBtn) menuBtn.classList.remove('open');
+            const dropdown = $('resourcesDropdown');
+            if (dropdown) dropdown.classList.remove('active');
+        }
 
-            if (navLinks && navLinks.classList.contains('active')) {
-                navLinks.classList.remove('active');
-            }
-
-            if (menuBtn) {
-                menuBtn.classList.remove('open');
-            }
-
-            const dropdown = document.getElementById('resourcesDropdown');
-            if (dropdown) {
-                dropdown.classList.remove('active');
+        // ---------- Nav highlight ----------
+        function updateNav(hash) {
+            document.querySelectorAll('.nav-links a.is-current').forEach((a) => a.classList.remove('is-current'));
+            const target = hash || '#home';
+            document.querySelectorAll('.nav-links a').forEach((a) => {
+                if (a.getAttribute('href') === target) a.classList.add('is-current');
+            });
+            if (target.indexOf('#/') === 0) {
+                const trigger = document.querySelector('#resourcesDropdown > a');
+                if (trigger) trigger.classList.add('is-current');
             }
         }
 
-        document.querySelectorAll('.btn.btn-gold').forEach(button => {
-            button.addEventListener('click', () => {
-                window.location.href = 'auth.html?view=signup';
-            });
+        // ---------- Loader / reveal ----------
+        function setLoading(isLoading) {
+            loader.classList.toggle('is-hidden', !isLoading);
+            frame.style.opacity = isLoading ? '0' : '1';
+        }
+
+        // ---------- Sizing: iframe is as tall as the page inside it, so only ONE scrollbar exists ----------
+        function fitFrame() {
+            try {
+                const doc = frame.contentDocument;
+                if (!doc || !doc.documentElement) return;
+                const h = Math.ceil(doc.documentElement.getBoundingClientRect().height);
+                if (h > 0 && h < 40000 && Math.abs(h - frame.offsetHeight) > 1) {
+                    frame.style.height = h + 'px';
+                }
+            } catch (e) { /* cross-origin: nothing to measure */ }
+        }
+
+        // Gives pages a vh replacement that does not grow with the iframe (see index_home.html)
+        function setAppVh(doc) {
+            doc.documentElement.style.setProperty('--app-vh', (window.innerHeight / 100) + 'px');
+        }
+
+        let lastWidth = window.innerWidth;
+        window.addEventListener('resize', () => {
+            if (window.innerWidth !== lastWidth) {      // ignore mobile address-bar height changes
+                lastWidth = window.innerWidth;
+                if (current.doc) { try { setAppVh(current.doc); } catch (e) { } }
+            }
         });
 
-        // Hero Slider Logic
-        let currentSlideIndex = 0;
-        const slides = document.querySelectorAll('.hero-slide');
-        const dots = document.querySelectorAll('.dot');
-        let slideInterval;
+        // ---------- Scrolling to a section inside the iframe ----------
+        function scrollToSection(id, smooth) {
+            let y = 0;
 
-        function showSlide(index) {
-            slides.forEach(slide => slide.classList.remove('active'));
-            dots.forEach(dot => dot.classList.remove('active'));
-
-            currentSlideIndex = (index + slides.length) % slides.length;
-            slides[currentSlideIndex].classList.add('active');
-            dots[currentSlideIndex].classList.add('active');
-        }
-
-        function nextSlide() {
-            showSlide(currentSlideIndex + 1);
-        }
-
-        function currentSlide(index) {
-            showSlide(index);
-            resetInterval();
-        }
-
-        function resetInterval() {
-            clearInterval(slideInterval);
-            slideInterval = setInterval(nextSlide, 5000);
-        }
-
-        slideInterval = setInterval(nextSlide, 5000);
-        // Fetch Member Count from Supabase Database & Animate Count Up on Scroll
-        async function initMemberCounter() {
-            const counterEl = document.getElementById('memberCount');
-            if (!counterEl) return;
-
-            let totalMembers = 0;
-            try {
-                // Query the 'profiles' table. Make sure your Supabase table has a public SELECT policy if users aren't logged in on the homepage.
-                const { count, error, data } = await supabasePublic
-                    .from('profiles')
-                    .select('*', { count: 'exact', head: true });
-
-                console.log("Supabase member count debug:", { count, error, data });
-
-                if (!error && count !== null) {
-                    totalMembers = count; // Will use the exact database count (e.g., 8)
-                } else {
-                    console.warn('Supabase query error or RLS policy restriction:', error);
-                    // Fallback if query fails
-                    totalMembers = parseInt(localStorage.getItem('memberCount') || 8, 10);
-                }
-            } catch (err) {
-                console.error('Failed to fetch member count from Supabase:', err);
-                totalMembers = parseInt(localStorage.getItem('memberCount') || 8, 10);
+            if (id && id !== 'home') {
+                let el = null;
+                let doc = null;
+                try { doc = frame.contentDocument; el = doc && doc.getElementById(id); } catch (e) { }
+                if (!el) return;
+                const innerTop = el.getBoundingClientRect().top + (doc.defaultView.scrollY || 0);
+                y = frame.getBoundingClientRect().top + window.scrollY + innerTop - HEADER_H;
             }
 
-            const aboutSection = document.getElementById('about');
-            if (!aboutSection) {
-                animateCounter(counterEl, 0, totalMembers, 1500);
+            window.scrollTo({ top: Math.max(0, y), behavior: smooth ? 'smooth' : 'instant' });
+        }
+
+        // ---------- Clicks inside the loaded page ----------
+        // Links to sibling pages, index.html, or #anchors are handled here so they swap inside the shell.
+        // Any other link (auth.html, external sites) opens normally in the whole window.
+        function goTo(hash) {
+            if (location.hash === hash) route();
+            else location.hash = hash;
+        }
+
+        function onChildClick(e) {
+            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+            const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+            if (!a || a.hasAttribute('download') || (a.target && a.target !== '_self')) return;
+
+            const href = a.getAttribute('href');
+            if (!href || href.toLowerCase().indexOf('javascript:') === 0) return;
+
+            // Anchor inside the same page, e.g. href="#contact"
+            if (href.charAt(0) === '#') {
+                const id = href.slice(1);
+                if (!id) { e.preventDefault(); return; }
+                if (a.ownerDocument.getElementById(id)) {
+                    e.preventDefault();
+                    scrollToSection(id, true);
+                }
                 return;
             }
 
-            let hasAnimated = false;
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting && !hasAnimated) {
-                        hasAnimated = true;
-                        animateCounter(counterEl, 0, totalMembers, 1600);
-                        observer.unobserve(entry.target);
+            let url;
+            try { url = new URL(a.href); } catch (err) { return; }
+            if (['http:', 'https:', 'file:'].indexOf(url.protocol) === -1) return;   // mailto:, tel: ...
+
+            e.preventDefault();
+
+            if (url.origin === location.origin) {
+                const file = url.pathname.split('/').pop();
+                const slug = Object.keys(PAGES).find((k) => PAGES[k] === file);
+
+                if (slug && slug !== 'home') { goTo('#/' + slug); return; }
+                if (slug === 'home' || file === 'index.html' || file === '') { goTo(url.hash || '#home'); return; }
+            }
+
+            window.top.location.href = url.href;
+        }
+
+        // ---------- Preparing a freshly loaded page ----------
+        function prepareChild(doc) {
+            const root = doc.documentElement;
+            if (root.dataset.shellReady) return;
+            root.dataset.shellReady = '1';
+            root.classList.add('embedded');       // lets a page add its own "embedded" CSS if ever needed
+
+            // The shell already has a header and footer, so hide the ones inside the page
+            const style = doc.createElement('style');
+            style.textContent = `
+                html, body { overflow: hidden !important; }
+                body > header, body > footer { display: none !important; }
+            `;
+            doc.head.appendChild(style);
+
+            setAppVh(doc);
+            trimHeaderOffset(doc);
+            doc.addEventListener('click', onChildClick);
+
+            // Keep the iframe as tall as the page, even when content loads in later
+            const RO = frame.contentWindow.ResizeObserver;
+            if (RO) {
+                if (current.resizeObs) current.resizeObs.disconnect();
+                current.resizeObs = new RO(fitFrame);
+                current.resizeObs.observe(root);
+            }
+
+            current.doc = doc;
+            if (doc.title) document.title = doc.title;
+
+            fitFrame();
+            current.ready = true;
+            setLoading(false);
+            if (pendingSection) scrollToSection(pendingSection, false);
+        }
+
+        // Pages normally leave ~77px at the top for their own fixed header. Remove that gap.
+        function trimHeaderOffset(doc) {
+            const win = doc.defaultView;
+            const near = (v) => Math.abs(parseFloat(v) - HEADER_H) <= 12;
+            const cs = (el) => win.getComputedStyle(el);
+            const body = doc.body;
+
+            if (near(cs(body).paddingTop)) body.style.setProperty('padding-top', '0', 'important');
+            if (near(cs(body).marginTop)) body.style.setProperty('margin-top', '0', 'important');
+
+            const skip = ['SCRIPT', 'STYLE', 'LINK', 'TEMPLATE', 'NOSCRIPT'];
+            const first = Array.from(body.children).find((el) => {
+                if (skip.indexOf(el.tagName) !== -1) return false;
+                const s = cs(el);
+                return s.display !== 'none' && s.position !== 'fixed' && s.position !== 'absolute';
+            });
+            if (first && near(cs(first).marginTop)) first.style.setProperty('margin-top', '0', 'important');
+        }
+
+        // If the browser blocks access to the page (e.g. file:// or another domain), show it with its own scrollbar
+        function fallbackShow(token) {
+            if (token !== current.token) return;
+            frame.style.height = 'calc(100vh - ' + HEADER_H + 'px)';
+            current.ready = false;
+            setLoading(false);
+        }
+
+        function waitForChild(token, file) {
+            const started = performance.now();
+
+            (function poll() {
+                if (token !== current.token) return;
+
+                try {
+                    const doc = frame.contentDocument;
+                    if (doc && doc.location.href !== 'about:blank' &&
+                        doc.location.pathname.split('/').pop() === file &&
+                        doc.readyState !== 'loading' && doc.body &&
+                        !doc.documentElement.dataset.shellReady) {
+                        prepareChild(doc);
+                        return;
                     }
-                });
-            }, { threshold: 0.2 });
+                } catch (e) { fallbackShow(token); return; }
 
-            observer.observe(aboutSection);
+                if (performance.now() - started > 10000) { fallbackShow(token); return; }
+                setTimeout(poll, 40);
+            })();
         }
 
-        function animateCounter(element, start, end, duration) {
-            if (end <= 0) {
-                element.textContent = start;
+        // After everything (images, fonts) has loaded: re-measure and re-aim the scroll once
+        frame.addEventListener('load', () => {
+            if (!current.file) return;
+            const token = current.token;
+            try {
+                const doc = frame.contentDocument;
+                if (!doc || doc.location.href === 'about:blank') return;
+                if (doc.location.pathname.split('/').pop() !== current.file) return;
+                prepareChild(doc);                       // no-op if already prepared
+                fitFrame();
+            } catch (e) { fallbackShow(token); return; }
+
+            if (pendingSection) scrollToSection(pendingSection, false);
+            pendingSection = null;
+        });
+
+        // ---------- Loading a page ----------
+        function loadPage(slug, section) {
+            // Same page is already showing: only scroll
+            if (current.slug === slug && current.ready) {
+                if (section) scrollToSection(section, true);
+                else window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const current = Math.floor(progress * (end - start) + start);
-                element.textContent = current;
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    element.textContent = end;
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
 
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
+            const token = ++current.token;
+            current.slug = slug;
+            current.file = PAGES[slug];
+            current.ready = false;
+            pendingSection = section;
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        window.addEventListener('click', (e) => {
-            const modal = document.getElementById('joinModal');
-            if (e.target === modal) {
-                closeModal('joinModal');
-            }
-        });
-
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            alert('Thank you! Your message has been sent successfully. We will reach out to you soon.');
-            e.target.reset();
-        }
-
-        function handleModalSubmit(e) {
-            e.preventDefault();
-            let count = parseInt(localStorage.getItem('memberCount') || 0) + 1;
-            localStorage.setItem('memberCount', count);
-            alert('Welcome to Kimangu AY! Your details have been received.');
-            closeModal('joinModal');
-            e.target.reset();
-            initMemberCounter();
-        }
-
-        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    revealObserver.unobserve(entry.target);
-                }
-            });
-        }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        });
-
-        revealElements.forEach(el => revealObserver.observe(el));
-
-        async function loadVerseOfTheDay() {
-            setDynamicDate();
-            const textEl = document.getElementById('dailyVerseText');
-            const refEl = document.getElementById('dailyVerseRef');
-
-            if (!textEl || !refEl) return;
+            if (current.resizeObs) { current.resizeObs.disconnect(); current.resizeObs = null; }
+            setLoading(true);
+            window.scrollTo({ top: 0, behavior: 'instant' });
 
             try {
-                const response = await fetch(
-                    'https://beta.ourmanna.com/api/v1/get?format=json&order=daily&version=nkjv'
-                );
+                // replace() swaps the page without adding extra Back-button steps
+                frame.contentWindow.location.replace(current.file);
+            } catch (e) {
+                frame.src = current.file;
+            }
+            waitForChild(token, current.file);
+        }
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
+        // ---------- Router ----------
+        function route() {
+            const hash = location.hash;
+            updateNav(hash);
+            closeMobileNav();
 
-                const data = await response.json();
-
-                if (data && data.verse && data.verse.details) {
-                    textEl.textContent = `"${data.verse.details.text.trim()}"`;
-                    refEl.textContent = `${data.verse.details.reference} (${data.verse.details.version || 'NKJV'})`;
-                } else {
-                    throw new Error('Invalid verse data');
-                }
-            } catch (err) {
-                console.error('Failed to load daily verse:', err);
-                textEl.textContent = '"Commit to the Lord whatever you do, and he will establish your plans."';
-                refEl.textContent = 'Proverbs 16:3 (NKJV)';
+            if (hash.indexOf('#/') === 0) {
+                const slug = hash.slice(2);
+                if (!PAGES[slug]) { location.replace('#home'); return; }
+                loadPage(slug, null);
+            } else {
+                loadPage('home', hash.slice(1) || 'home');
             }
         }
 
-        async function loadHomepageEvents() {
-            const grid = document.getElementById('eventsGrid');
-            if (!grid) return;
-
-            const today = new Date().toISOString().split('T')[0];
-
-            const { data: events, error } = await supabasePublic
-                .from('events')
-                .select('*')
-                .gte('event_date', today)
-                .order('event_date', { ascending: true })
-                .limit(6);
-
-            if (error || !events || events.length === 0) {
-                grid.innerHTML = `
-                    <p style="text-align: center; color: var(--text-gray); grid-column: 1 / -1;">
-                        No upcoming events right now — check back soon!
-                    </p>
-                `;
-                return;
-            }
-
-            grid.innerHTML = events.map(ev => {
-                const d = new Date(ev.event_date + 'T00:00:00');
-                const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-                const day = d.getDate();
-                const timeLabel = formatEventTime(ev.start_time);
-                const imageUrl = ev.image_url || 'kimangu-worship.jpg';
-
-                return `
-                    <div class="event-card">
-                        <div class="event-img reveal-left" style="background-image: url('${imageUrl}');">
-                            <div class="event-date-tag">
-                                ${month}<br><strong>${day}</strong>
-                            </div>
-                        </div>
-                        <div class="event-body reveal-right">
-                            <h3>${escapeHtml(ev.title)}</h3>
-                            <p>${escapeHtml(ev.content)}</p>
-                            <div class="event-meta">
-                                <span><i class="fa-regular fa-clock"></i> ${timeLabel} EAT</span>
-                                <a href="#contact" style="color: var(--primary-dark); text-decoration: none; font-weight: 700;">RSVP &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            document.querySelectorAll('#eventsGrid .reveal-left, #eventsGrid .reveal-right').forEach(el => {
-                if (typeof revealObserver !== 'undefined') {
-                    revealObserver.observe(el);
-                } else {
-                    el.classList.add('visible');
-                }
-            });
-        }
-
-        loadVerseOfTheDay();
-        loadHomepageEvents();
+        window.addEventListener('hashchange', route);
+        route();   // handle the address the visitor arrived on
     </script>
 </body>
 
