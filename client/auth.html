@@ -19,6 +19,8 @@
             --off-white: #f8fafc;
             --text-gray: #64748b;
             --border-color: #e2e8f0;
+            --danger: #ef4444;
+            --success: #16a34a;
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -148,18 +150,44 @@
             font-weight: 600;
         }
 
+        /* ---------- Modern arrows ---------- */
+        .btn-arrow,
+        .back-arrow {
+            font-size: 0.85rem;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-auth-submit:hover:not(:disabled) .btn-arrow {
+            transform: translateX(5px);
+        }
+
+        .back-home,
+        .code-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .back-home:hover .back-arrow,
+        .code-back:hover .back-arrow {
+            transform: translateX(-4px);
+        }
+
         .back-home {
             font-size: 0.9rem;
             font-weight: 600;
             color: var(--primary-dark);
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            padding: 0.45rem 0.9rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 999px;
+            transition: var(--transition);
         }
 
         .back-home:hover {
             color: var(--accent-gold);
+            border-color: var(--accent-gold);
         }
 
         .auth-form-container {
@@ -237,6 +265,14 @@
             box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.08);
         }
 
+        .input-wrap input.invalid {
+            border-color: var(--danger);
+        }
+
+        .input-wrap input.valid {
+            border-color: var(--success);
+        }
+
         .toggle-password {
             position: absolute;
             right: 14px;
@@ -262,7 +298,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             transition: var(--transition);
             margin-top: 0.5rem;
         }
@@ -316,6 +352,93 @@
         .demo-notice i {
             color: var(--primary-blue);
             margin-top: 2px;
+        }
+
+        /* ---------- Phone hint ---------- */
+        .field-hint {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: var(--text-gray);
+            margin-top: 0.4rem;
+            transition: color 0.25s ease;
+        }
+
+        .field-hint.invalid {
+            color: var(--danger);
+        }
+
+        .field-hint.valid {
+            color: var(--success);
+        }
+
+        /* ---------- Password strength ---------- */
+        .pw-strength {
+            margin-top: 0.7rem;
+        }
+
+        .pw-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .pw-bar-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            background: var(--danger);
+            transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.35s ease;
+        }
+
+        .pw-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-top: 0.4rem;
+            color: var(--text-gray);
+        }
+
+        .pw-rules {
+            list-style: none;
+            margin-top: 0.6rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.35rem 0.8rem;
+        }
+
+        .pw-rules li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: var(--text-gray);
+            transition: color 0.25s ease;
+        }
+
+        .pw-rules li i {
+            font-size: 0.72rem;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--border-color);
+            color: var(--white);
+            transition: background-color 0.25s ease, transform 0.25s ease;
+        }
+
+        .pw-rules li.met {
+            color: var(--success);
+        }
+
+        .pw-rules li.met i {
+            background: var(--success);
+            transform: scale(1.1);
         }
 
         /* Registration role selector */
@@ -435,7 +558,7 @@
         }
 
         .code-back {
-            display: block;
+            display: flex;
             text-align: center;
             font-size: 0.85rem;
             color: var(--text-gray);
@@ -444,6 +567,7 @@
             background: none;
             border: none;
             width: 100%;
+            font-family: inherit;
         }
 
         .code-back:hover {
@@ -509,6 +633,12 @@
                 padding: 0.8rem 5%;
             }
         }
+
+        @media (max-width: 420px) {
+            .pw-rules {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -526,7 +656,7 @@
                 <p>Seventh-day Adventist</p>
             </div>
         </a>
-        <a href="index.html" class="back-home">&larr; Home</a>
+        <a href="index.html" class="back-home"><i class="fa-solid fa-arrow-left-long back-arrow"></i> Home</a>
     </div>
 
     <div class="auth-wrapper">
@@ -555,7 +685,7 @@
                             <label>Phone number</label>
                             <div class="input-wrap">
                                 <i class="fa-solid fa-phone left-icon"></i>
-                                <input type="tel" id="signinPhone" placeholder="e.g. 0712 345 678" required>
+                                <input type="tel" id="signinPhone" placeholder="e.g. 0712345678" required>
                             </div>
                         </div>
 
@@ -571,7 +701,8 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn-auth-submit" id="signinBtn">Sign In &rarr;</button>
+                        <button type="submit" class="btn-auth-submit" id="signinBtn">Sign In <i
+                                class="fa-solid fa-arrow-right-long btn-arrow"></i></button>
                     </form>
 
                     <p class="auth-switch">New to Kimangu AY? <button onclick="showView('codeView')">Create
@@ -600,10 +731,12 @@
                         </div>
                         <div class="code-error" id="codeError"></div>
 
-                        <button type="submit" class="btn-auth-submit" id="codeVerifyBtn">Verify Code &rarr;</button>
+                        <button type="submit" class="btn-auth-submit" id="codeVerifyBtn">Verify Code <i
+                                class="fa-solid fa-arrow-right-long btn-arrow"></i></button>
                     </form>
 
-                    <button class="code-back" onclick="showView('signInView')">&larr; Back to sign in</button>
+                    <button class="code-back" onclick="showView('signInView')"><i
+                            class="fa-solid fa-arrow-left-long back-arrow"></i> Back to sign in</button>
                 </div>
 
                 <!-- SIGN UP VIEW -->
@@ -612,7 +745,7 @@
                     <h2>Create your account</h2>
                     <p class="auth-subtext">Register to join the Kimangu AY member community.</p>
 
-                    <form onsubmit="handleAuthSubmit(event, 'signup')">
+                    <form onsubmit="handleAuthSubmit(event, 'signup')" novalidate>
                         <div class="form-error" id="signupError"></div>
                         <div class="role-select-group">
                             <label>I am registering as</label>
@@ -649,7 +782,12 @@
                             <label>Phone number</label>
                             <div class="input-wrap">
                                 <i class="fa-solid fa-phone left-icon"></i>
-                                <input type="tel" id="signupPhone" placeholder="e.g. 0712 345 678" required>
+                                <input type="tel" id="signupPhone" placeholder="e.g. 0712345678" inputmode="numeric"
+                                    maxlength="10" autocomplete="tel" required>
+                            </div>
+                            <div class="field-hint" id="phoneHint">
+                                <span id="phoneHintText">Enter exactly 10 digits</span>
+                                <span id="phoneCount">0/10</span>
                             </div>
                         </div>
 
@@ -662,6 +800,24 @@
                                     onclick="togglePassword('signupPassword', this)">
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
+                            </div>
+
+                            <!-- Password strength: progress bar + checklist -->
+                            <div class="pw-strength" id="pwStrength">
+                                <div class="pw-bar">
+                                    <div class="pw-bar-fill" id="pwBarFill"></div>
+                                </div>
+                                <div class="pw-meta">
+                                    <span id="pwLabel">Password strength</span>
+                                    <span id="pwCount">0/5</span>
+                                </div>
+                                <ul class="pw-rules">
+                                    <li data-rule="length"><i class="fa-solid fa-check"></i> At least 6 characters</li>
+                                    <li data-rule="lower"><i class="fa-solid fa-check"></i> One lowercase letter</li>
+                                    <li data-rule="upper"><i class="fa-solid fa-check"></i> One uppercase letter</li>
+                                    <li data-rule="digit"><i class="fa-solid fa-check"></i> One digit</li>
+                                    <li data-rule="special"><i class="fa-solid fa-check"></i> One special character</li>
+                                </ul>
                             </div>
                         </div>
 
@@ -677,7 +833,8 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn-auth-submit" id="signupBtn">Create account &rarr;</button>
+                        <button type="submit" class="btn-auth-submit" id="signupBtn">Create account <i
+                                class="fa-solid fa-arrow-right-long btn-arrow"></i></button>
                     </form>
 
                     <p class="auth-switch">Already have an account? <button onclick="showView('signInView')">Sign
@@ -704,6 +861,12 @@
             : '/api';
 
         let pendingAccountType = null;
+
+        // Reusable button labels (with the modern arrow icon)
+        const ARROW_RIGHT = '<i class="fa-solid fa-arrow-right-long btn-arrow"></i>';
+        const LABEL_SIGNIN = 'Sign In ' + ARROW_RIGHT;
+        const LABEL_SIGNUP = 'Create account ' + ARROW_RIGHT;
+        const LABEL_VERIFY = 'Verify Code ' + ARROW_RIGHT;
 
         // ===================== 6-DIGIT CODE INPUT BEHAVIOR =====================
         const codeBoxes = document.querySelectorAll('.code-box');
@@ -752,7 +915,7 @@
                 const data = await res.json();
 
                 btn.disabled = false;
-                btn.innerHTML = 'Verify Code &rarr;';
+                btn.innerHTML = LABEL_VERIFY;
 
                 if (!res.ok || !data.accountType) {
                     errorEl.textContent = data.error || 'Invalid code. Please check with your AY leader.';
@@ -766,7 +929,7 @@
                 showView('signUpView');
             } catch (err) {
                 btn.disabled = false;
-                btn.innerHTML = 'Verify Code &rarr;';
+                btn.innerHTML = LABEL_VERIFY;
                 errorEl.textContent = 'Server connection error. Ensure backend is running.';
             }
         }
@@ -808,6 +971,81 @@
             el.classList.remove('active');
         }
 
+        // ===================== SIGN UP: PHONE (exactly 10 digits) =====================
+        const signupPhoneInput = document.getElementById('signupPhone');
+        const phoneHint = document.getElementById('phoneHint');
+        const phoneHintText = document.getElementById('phoneHintText');
+        const phoneCount = document.getElementById('phoneCount');
+
+        function updatePhoneState() {
+            // Only digits allowed, never more than 10 (also handles pasted text)
+            signupPhoneInput.value = signupPhoneInput.value.replace(/\D/g, '').slice(0, 10);
+            const len = signupPhoneInput.value.length;
+
+            phoneCount.textContent = len + '/10';
+            phoneHint.classList.remove('valid', 'invalid');
+            signupPhoneInput.classList.remove('valid', 'invalid');
+
+            if (len === 10) {
+                phoneHint.classList.add('valid');
+                signupPhoneInput.classList.add('valid');
+                phoneHintText.textContent = 'Phone number looks good';
+            } else if (len > 0) {
+                phoneHint.classList.add('invalid');
+                signupPhoneInput.classList.add('invalid');
+                phoneHintText.textContent = 'Phone number must be exactly 10 digits';
+            } else {
+                phoneHintText.textContent = 'Enter exactly 10 digits';
+            }
+        }
+        signupPhoneInput.addEventListener('input', updatePhoneState);
+
+        // ===================== SIGN UP: PASSWORD STRENGTH =====================
+        const PW_RULES = {
+            length: (p) => p.length >= 6,
+            lower: (p) => /[a-z]/.test(p),
+            upper: (p) => /[A-Z]/.test(p),
+            digit: (p) => /\d/.test(p),
+            special: (p) => /[^A-Za-z0-9]/.test(p)
+        };
+        const PW_LEVELS = [
+            { label: 'Password strength', color: '#ef4444' },  // 0 rules met
+            { label: 'Very weak', color: '#ef4444' },          // 1
+            { label: 'Weak', color: '#f97316' },               // 2
+            { label: 'Fair', color: '#f59e0b' },               // 3
+            { label: 'Good', color: '#84cc16' },               // 4
+            { label: 'Strong', color: '#16a34a' }              // 5
+        ];
+
+        const signupPasswordInput = document.getElementById('signupPassword');
+        const pwBarFill = document.getElementById('pwBarFill');
+        const pwLabel = document.getElementById('pwLabel');
+        const pwCount = document.getElementById('pwCount');
+        const pwRuleItems = document.querySelectorAll('.pw-rules li');
+
+        function getPasswordScore(p) {
+            return Object.keys(PW_RULES).filter((k) => PW_RULES[k](p)).length;
+        }
+
+        function updatePasswordStrength() {
+            const p = signupPasswordInput.value;
+            let score = 0;
+
+            pwRuleItems.forEach((li) => {
+                const ok = PW_RULES[li.dataset.rule](p);
+                li.classList.toggle('met', ok);
+                if (ok) score++;
+            });
+
+            const level = PW_LEVELS[score];
+            pwBarFill.style.width = (score / 5 * 100) + '%';
+            pwBarFill.style.backgroundColor = level.color;
+            pwLabel.textContent = level.label;
+            pwLabel.style.color = score === 0 ? '' : level.color;
+            pwCount.textContent = score + '/5';
+        }
+        signupPasswordInput.addEventListener('input', updatePasswordStrength);
+
         // ===================== SIGN UP / SIGN IN =====================
         async function handleAuthSubmit(e, type) {
             e.preventDefault();
@@ -821,12 +1059,21 @@
                 const confirm = document.getElementById('confirmPassword').value;
                 const category = document.querySelector('input[name="role"]:checked').value;
 
-                if (pass !== confirm) {
-                    showError('signupError', 'Passwords do not match. Please try again.');
+                if (!fullName) {
+                    showError('signupError', 'Please enter your full name.');
                     return;
                 }
-                if (pass.length < 6) {
-                    showError('signupError', 'Password must be at least 6 characters.');
+                if (!/^\d{10}$/.test(phone)) {
+                    showError('signupError', 'Phone number must be exactly 10 digits.');
+                    document.getElementById('signupPhone').focus();
+                    return;
+                }
+                if (getPasswordScore(pass) < 5) {
+                    showError('signupError', 'Password must be at least 6 characters and include a lowercase letter, an uppercase letter, a digit and a special character.');
+                    return;
+                }
+                if (pass !== confirm) {
+                    showError('signupError', 'Passwords do not match. Please try again.');
                     return;
                 }
                 if (!pendingAccountType) {
@@ -856,7 +1103,7 @@
                     if (!res.ok) {
                         showError('signupError', data.error || 'Failed to create account.');
                         btn.disabled = false;
-                        btn.textContent = 'Create account →';
+                        btn.innerHTML = LABEL_SIGNUP;
                         return;
                     }
 
@@ -865,14 +1112,16 @@
                     e.target.reset();
                     document.getElementById('roleYouthCard').classList.add('selected');
                     document.getElementById('roleAmbassadorCard').classList.remove('selected');
+                    updatePhoneState();
+                    updatePasswordStrength();
                     btn.disabled = false;
-                    btn.textContent = 'Create account →';
+                    btn.innerHTML = LABEL_SIGNUP;
                     showView('signInView');
 
                 } catch (err) {
                     showError('signupError', 'Server connection error. Please try again.');
                     btn.disabled = false;
-                    btn.textContent = 'Create account →';
+                    btn.innerHTML = LABEL_SIGNUP;
                 }
 
             } else {
@@ -905,7 +1154,7 @@
                     if (!res.ok) {
                         showError('signinError', data.error || 'Invalid phone number or password.');
                         btn.disabled = false;
-                        btn.textContent = 'Sign In →';
+                        btn.innerHTML = LABEL_SIGNIN;
                         return;
                     }
 
@@ -933,7 +1182,7 @@
                 } catch (err) {
                     showError('signinError', 'Server connection error. Please try again.');
                     btn.disabled = false;
-                    btn.textContent = 'Sign In →';
+                    btn.innerHTML = LABEL_SIGNIN;
                 }
             }
         }
