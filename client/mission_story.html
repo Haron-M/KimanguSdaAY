@@ -27,7 +27,6 @@
             --text-gray: #64748b;
             --border-color: #e2e8f0;
             --header-mission: #15803d;
-            /* Green accent theme for mission stories */
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -215,6 +214,28 @@
             color: var(--text-gray);
         }
 
+        /* Complete lesson download button (left column) */
+        .complete-download-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1rem;
+            padding: 0.7rem 1rem;
+            background: var(--primary-dark);
+            color: var(--white);
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .complete-download-btn:hover {
+            background: var(--header-mission);
+            color: var(--white);
+        }
+
         /* Right Side Lesson Table List (3 Columns Desktop Layout) */
         .lessons-list {
             display: flex;
@@ -248,7 +269,7 @@
             border-bottom: none;
         }
 
-        /* Column 1: Date & Story Number */
+        /* Column 1: Date & Lesson Number */
         .lesson-date {
             display: flex;
             align-items: center;
@@ -267,12 +288,12 @@
             color: var(--header-mission);
         }
 
-        /* Highlights the upcoming / current Sabbath story */
+        /* Highlights the upcoming / current Sabbath lesson */
         .lesson-date .lesson-label.active-link {
             color: #0284c7;
         }
 
-        /* Column 2: Story Title */
+        /* Column 2: Lesson Title */
         .lesson-title-text {
             font-size: 0.95rem;
             font-weight: 600;
@@ -477,7 +498,7 @@
 
         <div class="quarter-container" id="quarterContainer">
 
-            <!-- LEFT COLUMN: Cover Image -->
+            <!-- LEFT COLUMN: Cover Image + Complete Lesson Download -->
             <div class="lesson-cover-box is-loading" id="coverBox">
                 <img id="coverImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                     alt="Mission Story Cover">
@@ -485,16 +506,20 @@
                     <h4>World Mission Reports</h4>
                     <p id="coverCaption">&nbsp;</p>
                 </div>
+
+                <a href="#" id="completeDownloadBtn" class="complete-download-btn">
+                    <i class="fa-solid fa-download"></i> Download Complete Lesson
+                </a>
             </div>
 
-            <!-- RIGHT COLUMN: Story List (Date | Title [Desktop Only] | Download) -->
+            <!-- RIGHT COLUMN: Lesson List (Date | Title [Desktop Only] | Download) -->
             <div class="lessons-list" id="lessonsList"></div>
 
         </div>
 
     </section>
 
-    <!-- JAVASCRIPT LOGIC: DYNAMIC MISSION STORIES FROM SUPABASE -->
+    <!-- JAVASCRIPT LOGIC: DYNAMIC LESSONS FROM SUPABASE -->
     <script>
         // ---------- Config ----------
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
@@ -519,7 +544,7 @@
         const state = {
             quarters: [],   // light list: { id, quarter, year, qNum }
             cache: {},      // id -> full record (so switching back is instant)
-            lessons: [],    // stories of the quarter currently on screen
+            lessons: [],    // lessons of the quarter currently on screen
             record: null,   // the record currently on screen
             token: 0        // guards against out-of-order responses
         };
@@ -561,6 +586,7 @@
             $('quarterContainer').classList.remove('no-cover');
             $('coverBox').style.display = '';
             $('coverBox').classList.add('is-loading');
+            $('completeDownloadBtn').style.display = 'none';
 
             let rows = '';
             for (let i = 0; i < 6; i++) {
@@ -625,6 +651,22 @@
             img.src = src || FALLBACK_COVER;
         }
 
+        // Shows / hides the "Download Complete Lesson" button under the cover
+        function setCompleteDownload(record, qNum) {
+            const btn = $('completeDownloadBtn');
+
+            if (record.complete_lesson) {
+                const niceName = `MissionStory_${record.year}_Q${qNum}_Complete_Lesson.pdf`;
+                const sep = record.complete_lesson.includes('?') ? '&' : '?';
+                // "?download=" makes Supabase Storage send the file as a download with this name
+                btn.href = record.complete_lesson + sep + 'download=' + encodeURIComponent(niceName);
+                btn.style.display = 'flex';
+            } else {
+                btn.style.display = 'none';
+                btn.removeAttribute('href');
+            }
+        }
+
         function renderQuarter(record) {
             const qNum = quarterNumber(record.quarter);
             const months = QUARTER_MONTHS[qNum];
@@ -638,8 +680,9 @@
             $('quarterContainer').classList.remove('no-cover');
             $('coverBox').style.display = '';
             setCover(record.cover_image);
+            setCompleteDownload(record, qNum);
 
-            // Stories come back as a JSONB array; sort by number to be safe
+            // Lessons come back as a JSONB array; sort by lesson number to be safe
             let lessons = record.lessons;
             if (typeof lessons === 'string') {
                 try { lessons = JSON.parse(lessons); } catch (e) { lessons = []; }
@@ -654,7 +697,7 @@
                 return;
             }
 
-            // Find the next upcoming (or today's) story to highlight
+            // Find the next upcoming (or today's) lesson to highlight
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const activeIdx = lessons.findIndex((l) => {
