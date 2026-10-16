@@ -14,6 +14,9 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --primary-dark: #0a192f;
@@ -109,6 +112,11 @@
             margin-bottom: 2.5rem;
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .quarter-header h2 {
@@ -122,11 +130,46 @@
             font-size: 0.95rem;
         }
 
+        /* Quarter picker (only shown when more than one quarter exists) */
+        .quarter-picker {
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .quarter-picker label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-gray);
+        }
+
+        .quarter-picker select {
+            padding: 0.55rem 0.9rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            background: #ffffff;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .quarter-picker select:focus {
+            border-color: var(--accent-gold);
+        }
+
         .quarter-container {
             display: grid;
             grid-template-columns: 280px 1fr;
             gap: 3.5rem;
             align-items: start;
+        }
+
+        .quarter-container.no-cover {
+            grid-template-columns: 1fr;
         }
 
         /* Left Side Cover Photo */
@@ -144,6 +187,16 @@
             border-radius: 8px;
             display: block;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: opacity 0.3s ease;
+        }
+
+        .lesson-cover-box.is-loading img {
+            min-height: 320px;
+            object-fit: cover;
+            opacity: 0.6;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite linear;
         }
 
         .cover-caption {
@@ -210,18 +263,13 @@
             font-size: 0.75rem;
         }
 
-        .lesson-date a {
-            text-decoration: none;
+        .lesson-date .lesson-label {
             color: #d97706;
-            transition: color 0.2s ease;
         }
 
-        .lesson-date a.active-link {
+        /* Highlights the upcoming / current Sabbath lesson */
+        .lesson-date .lesson-label.active-link {
             color: #0284c7;
-        }
-
-        .lesson-date a:hover {
-            text-decoration: underline;
         }
 
         /* Column 2: Lesson Title */
@@ -248,6 +296,7 @@
             padding: 4px 10px;
             border-radius: 6px;
             transition: background-color 0.2s ease;
+            cursor: pointer;
         }
 
         .download-btn:hover {
@@ -257,6 +306,102 @@
         .download-btn i {
             font-size: 1rem;
             color: #64748b;
+        }
+
+        .download-btn.disabled {
+            color: #94a3b8;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .download-btn.is-busy {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* ==========================================
+           LOADING / EMPTY / ERROR STATES
+        ========================================== */
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-block {
+            height: 14px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite linear;
+        }
+
+        .skeleton-block.w-date {
+            width: 150px;
+        }
+
+        .skeleton-block.w-title {
+            width: 70%;
+        }
+
+        .skeleton-block.w-btn {
+            width: 90px;
+            margin-left: auto;
+        }
+
+        .state-box {
+            padding: 4rem 1.5rem;
+            text-align: center;
+            color: var(--text-gray);
+        }
+
+        .state-box i.state-icon {
+            display: block;
+            font-size: 2.2rem;
+            color: var(--accent-gold);
+            margin-bottom: 1rem;
+        }
+
+        .state-box h3 {
+            color: var(--primary-dark);
+            font-size: 1.3rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .state-box p {
+            font-size: 0.95rem;
+            max-width: 460px;
+            margin: 0 auto;
+        }
+
+        .state-box .state-detail {
+            margin-top: 0.6rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .retry-btn {
+            margin-top: 1.25rem;
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
+            border: 1.5px solid var(--primary-dark);
+            background: var(--primary-dark);
+            color: var(--white);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .retry-btn:hover {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            color: var(--primary-dark);
         }
 
         /* ==========================================
@@ -290,6 +435,10 @@
                 text-align: right;
             }
 
+            .skeleton-block.w-title {
+                display: none;
+            }
+
             .adult-banner {
                 padding: 0 5%;
                 height: 200px;
@@ -310,231 +459,384 @@
         <h1 class="adult-title">Adult Sabbath School Lessons</h1>
     </div>
 
-    <!-- MAIN LESSONS SECTION -->
+    <!-- MAIN LESSONS SECTION (filled dynamically from Supabase) -->
     <section class="lessons-section">
 
-        <!-- 4th Quarter 2026 Header -->
+        <!-- Quarter Header -->
         <div class="quarter-header">
-            <h2>4th Quarter 2026</h2>
-            <p>Adult Sabbath School Bible Study Guides for October, November, and December 2026.</p>
+            <div>
+                <h2 id="quarterTitle">Loading lessons…</h2>
+                <p id="quarterSubtitle">Fetching the latest Adult Sabbath School Bible Study Guides.</p>
+            </div>
+
+            <div class="quarter-picker" id="quarterPicker">
+                <label for="quarterSelect">Quarter</label>
+                <select id="quarterSelect"></select>
+            </div>
         </div>
 
-        <div class="quarter-container">
+        <div class="quarter-container" id="quarterContainer">
 
             <!-- LEFT COLUMN: Cover Image -->
-            <div class="lesson-cover-box">
-                <img src="adult_lesson.png" alt="Adult Sabbath School 4th Quarter 2026 Cover">
+            <div class="lesson-cover-box is-loading" id="coverBox">
+                <img id="coverImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    alt="Adult Sabbath School Cover">
                 <div class="cover-caption">
                     <h4>Adult Bible Study Guide</h4>
-                    <p>4th Quarter 2026 Edition</p>
+                    <p id="coverCaption">&nbsp;</p>
                 </div>
             </div>
 
             <!-- RIGHT COLUMN: Lesson List (Date | Title [Desktop Only] | Download) -->
-            <div class="lessons-list">
-
-                <!-- Introduction -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Introduction</a>
-                    </div>
-                    <div class="lesson-title-text">Welcome & Quarterly Introduction</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_intro.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 01 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#" class="active-link">Lesson 01 – October 3</a>
-                    </div>
-                    <div class="lesson-title-text">The Foundation of Christian Hope</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson01.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 02 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 02 – October 10</a>
-                    </div>
-                    <div class="lesson-title-text">Covenant Promises Throughout History</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson02.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 03 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 03 – October 17</a>
-                    </div>
-                    <div class="lesson-title-text">Understanding God's Righteousness</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson03.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 04 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 04 – October 24</a>
-                    </div>
-                    <div class="lesson-title-text">The Sanctuary and Salvation</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson04.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 05 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 05 – October 31</a>
-                    </div>
-                    <div class="lesson-title-text">Faith, Obedience, and Grace</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson05.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 06 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 06 – November 7</a>
-                    </div>
-                    <div class="lesson-title-text">Living the Christian Life Daily</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson06.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 07 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 07 – November 14</a>
-                    </div>
-                    <div class="lesson-title-text">The Mission of the Remnant Church</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson07.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 08 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 08 – November 21</a>
-                    </div>
-                    <div class="lesson-title-text">Worship and the Sabbath Rest</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson08.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 09 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 09 – November 28</a>
-                    </div>
-                    <div class="lesson-title-text">Stewardship and Spiritual Gifts</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson09.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 10 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 10 – December 5</a>
-                    </div>
-                    <div class="lesson-title-text">Overcoming End-Time Delusions</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson10.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 11 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 11 – December 12</a>
-                    </div>
-                    <div class="lesson-title-text">Unity in Christ and Doctrine</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson11.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 12 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 12 – December 19</a>
-                    </div>
-                    <div class="lesson-title-text">The Final Judgment and Mercy</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson12.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Lesson 13 -->
-                <div class="lesson-row">
-                    <div class="lesson-date">
-                        <i class="fa-solid fa-chevron-right"></i>
-                        <a href="#">Lesson 13 – December 26</a>
-                    </div>
-                    <div class="lesson-title-text">The Earth Made New</div>
-                    <div class="download-col">
-                        <a href="lessons/adult_q4_2026_lesson13.pdf" download class="download-btn">
-                            <i class="fa-regular fa-file-pdf"></i> Download
-                        </a>
-                    </div>
-                </div>
-
-            </div>
+            <div class="lessons-list" id="lessonsList"></div>
 
         </div>
 
     </section>
 
+    <!-- JAVASCRIPT LOGIC: DYNAMIC LESSONS FROM SUPABASE -->
+    <script>
+        // ---------- Config ----------
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const CATEGORY = 'adult';                 // matches "Adult Lesson" in admin_material.html
+        const FALLBACK_COVER = 'adult_lesson.png'; // used when a quarter has no cover image saved
+
+        const QUARTER_MONTHS = {
+            1: 'January, February, and March',
+            2: 'April, May, and June',
+            3: 'July, August, and September',
+            4: 'October, November, and December'
+        };
+
+        const MONTH_INDEX = {
+            jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+            jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+        };
+
+        // ---------- State ----------
+        let supabaseClient = null;
+        const state = {
+            quarters: [],   // light list: { id, quarter, year, qNum }
+            cache: {},      // id -> full record (so switching back is instant)
+            lessons: [],    // lessons of the quarter currently on screen
+            record: null,   // the record currently on screen
+            token: 0        // guards against out-of-order responses
+        };
+
+        // ---------- DOM helpers ----------
+        const $ = (id) => document.getElementById(id);
+
+        function esc(value) {
+            return String(value === null || value === undefined ? '' : value).replace(/[&<>"']/g, (c) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function quarterNumber(label) {
+            const n = parseInt(label, 10); // "4th Quarter" -> 4
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        // Reads dates such as "October 3", "Oct 3" or "3 Oct" and returns a Date (or null)
+        function parseLessonDate(text, year) {
+            if (!text) return null;
+            let month, day;
+            let m = /([A-Za-z]{3,})\.?\s+(\d{1,2})/.exec(text);
+            if (m) {
+                month = m[1]; day = m[2];
+            } else {
+                m = /(\d{1,2})\s+([A-Za-z]{3,})/.exec(text);
+                if (!m) return null;
+                day = m[1]; month = m[2];
+            }
+            const mi = MONTH_INDEX[month.slice(0, 3).toLowerCase()];
+            if (mi === undefined) return null;
+            const d = new Date(year, mi, parseInt(day, 10));
+            return d.getMonth() === mi ? d : null; // rejects impossible dates like "Oct 91"
+        }
+
+        // ---------- UI states ----------
+        function showLoading() {
+            $('quarterContainer').classList.remove('no-cover');
+            $('coverBox').style.display = '';
+            $('coverBox').classList.add('is-loading');
+
+            let rows = '';
+            for (let i = 0; i < 6; i++) {
+                rows += `
+                    <div class="lesson-row">
+                        <div class="skeleton-block w-date"></div>
+                        <div class="skeleton-block w-title"></div>
+                        <div class="skeleton-block w-btn"></div>
+                    </div>`;
+            }
+            $('lessonsList').innerHTML = rows;
+        }
+
+        function showState(icon, title, message, detail, retryFn) {
+            $('quarterContainer').classList.add('no-cover');
+            $('coverBox').style.display = 'none';
+            $('lessonsList').innerHTML = `
+                <div class="state-box">
+                    <i class="state-icon ${icon}"></i>
+                    <h3>${esc(title)}</h3>
+                    <p>${esc(message)}</p>
+                    ${detail ? `<p class="state-detail">${esc(detail)}</p>` : ''}
+                    ${retryFn ? '<button type="button" class="retry-btn" id="retryBtn"><i class="fa-solid fa-rotate-right"></i> Try again</button>' : ''}
+                </div>`;
+            if (retryFn) $('retryBtn').addEventListener('click', retryFn);
+        }
+
+        function showEmpty() {
+            $('quarterTitle').textContent = 'No lessons yet';
+            $('quarterSubtitle').textContent = 'Adult Sabbath School lessons will appear here once they are uploaded.';
+            $('quarterPicker').style.display = 'none';
+            showState('fa-regular fa-folder-open', 'Nothing here yet', 'Please check back soon for the latest Adult Bible Study Guides.');
+        }
+
+        function showError(err, retryFn) {
+            console.error('Adult lessons load error:', err);
+            $('quarterTitle').textContent = 'Could not load lessons';
+            $('quarterSubtitle').textContent = 'Something went wrong while contacting the server.';
+            showState(
+                'fa-solid fa-triangle-exclamation',
+                'We couldn’t load the lessons',
+                'Please check your internet connection and try again.',
+                err && err.message ? err.message : '',
+                retryFn
+            );
+        }
+
+        // ---------- Rendering ----------
+        function setCover(src) {
+            const img = $('coverImg');
+            let triedFallback = false;
+
+            img.onload = () => $('coverBox').classList.remove('is-loading');
+            img.onerror = () => {
+                if (!triedFallback) {
+                    triedFallback = true;
+                    img.src = FALLBACK_COVER;
+                } else {
+                    $('coverBox').classList.remove('is-loading');
+                }
+            };
+            img.src = src || FALLBACK_COVER;
+        }
+
+        function renderQuarter(record) {
+            const qNum = quarterNumber(record.quarter);
+            const months = QUARTER_MONTHS[qNum];
+
+            $('quarterTitle').textContent = `${record.quarter} ${record.year}`;
+            $('quarterSubtitle').textContent = months
+                ? `Adult Sabbath School Bible Study Guides for ${months} ${record.year}.`
+                : `Adult Sabbath School Bible Study Guides for ${record.year}.`;
+            $('coverCaption').textContent = `${record.quarter} ${record.year} Edition`;
+
+            $('quarterContainer').classList.remove('no-cover');
+            $('coverBox').style.display = '';
+            setCover(record.cover_image);
+
+            // Lessons come back as a JSONB array; sort by lesson number to be safe
+            let lessons = record.lessons;
+            if (typeof lessons === 'string') {
+                try { lessons = JSON.parse(lessons); } catch (e) { lessons = []; }
+            }
+            lessons = Array.isArray(lessons) ? lessons.slice() : [];
+            lessons.sort((a, b) => (Number(a.lesson) || 0) - (Number(b.lesson) || 0));
+            state.lessons = lessons;
+            state.record = record;
+
+            if (!lessons.length) {
+                showState('fa-regular fa-folder-open', 'No lessons in this quarter', 'This quarter has been saved without any lessons.');
+                return;
+            }
+
+            // Find the next upcoming (or today's) lesson to highlight
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const activeIdx = lessons.findIndex((l) => {
+                const d = parseLessonDate(l.date, record.year);
+                return d && d >= today;
+            });
+
+            $('lessonsList').innerHTML = lessons.map((l, i) => {
+                const num = String(l.lesson || i + 1).padStart(2, '0');
+                const dateText = (l.date || '').trim();
+                const label = dateText ? `Lesson ${num} – ${dateText}` : `Lesson ${num}`;
+                const hasPdf = !!l.pdf_data;
+
+                return `
+                    <div class="lesson-row">
+                        <div class="lesson-date">
+                            <i class="fa-solid fa-chevron-right"></i>
+                            <span class="lesson-label${i === activeIdx ? ' active-link' : ''}">${esc(label)}</span>
+                        </div>
+                        <div class="lesson-title-text">${esc(l.title)}</div>
+                        <div class="download-col">
+                            ${hasPdf
+                        ? `<a href="#" class="download-btn" data-index="${i}" title="Download Lesson ${esc(num)}">
+                                       <i class="fa-regular fa-file-pdf"></i> Download
+                                   </a>`
+                        : `<span class="download-btn disabled" title="No file uploaded yet">
+                                       <i class="fa-regular fa-file-pdf"></i> Not available
+                                   </span>`}
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function buildQuarterPicker() {
+            const select = $('quarterSelect');
+            select.innerHTML = state.quarters
+                .map((q) => `<option value="${q.id}">${esc(q.quarter)} ${esc(q.year)}</option>`)
+                .join('');
+            // Only show the picker if there is something to choose between
+            $('quarterPicker').style.display = state.quarters.length > 1 ? 'flex' : 'none';
+        }
+
+        // ---------- Data loading ----------
+        async function loadQuarter(id) {
+            const myToken = ++state.token;
+            showLoading();
+
+            try {
+                let record = state.cache[id];
+
+                if (!record) {
+                    const { data, error } = await supabaseClient
+                        .from('quarterly_lessons')
+                        .select('*')
+                        .eq('id', id)
+                        .single();
+                    if (error) throw error;
+                    record = data;
+                    state.cache[id] = record;
+                }
+
+                if (myToken !== state.token) return; // a newer request took over
+                renderQuarter(record);
+                $('quarterSelect').value = String(id);
+            } catch (err) {
+                if (myToken !== state.token) return;
+                showError(err, () => loadQuarter(id));
+            }
+        }
+
+        async function init() {
+            showLoading();
+
+            try {
+                if (!window.supabase) throw new Error('The Supabase library could not be loaded.');
+                if (!supabaseClient) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
+
+                // Light query first: the table stores PDFs as Base64, so avoid pulling every row in full
+                const { data, error } = await supabaseClient
+                    .from('quarterly_lessons')
+                    .select('id, quarter, year, created_at')
+                    .eq('category', CATEGORY)
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+
+                // If a quarter was uploaded more than once, keep only the newest upload
+                const seen = new Set();
+                const list = [];
+                for (const row of data || []) {
+                    const qNum = quarterNumber(row.quarter);
+                    const key = `${row.year}-${qNum}`;
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    list.push({ id: row.id, quarter: row.quarter, year: row.year, qNum });
+                }
+
+                // Newest quarter first
+                list.sort((a, b) => (b.year - a.year) || (b.qNum - a.qNum));
+                state.quarters = list;
+
+                if (!list.length) {
+                    showEmpty();
+                    return;
+                }
+
+                buildQuarterPicker();
+                await loadQuarter(list[0].id);
+            } catch (err) {
+                showError(err, init);
+            }
+        }
+
+        // ---------- Downloads ----------
+        function dataUrlToBlob(dataUrl) {
+            const commaIdx = dataUrl.indexOf(',');
+            const meta = dataUrl.slice(0, commaIdx);
+            const base64 = dataUrl.slice(commaIdx + 1);
+            const mimeMatch = /data:(.*?);base64/.exec(meta);
+            const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return new Blob([bytes], { type: mime });
+        }
+
+        function downloadLesson(index, trigger) {
+            const lesson = state.lessons[index];
+            if (!lesson || !lesson.pdf_data) return;
+
+            const rec = state.record || {};
+            const num = String(lesson.lesson || index + 1).padStart(2, '0');
+            const filename = lesson.pdf_filename ||
+                `adult_${rec.year || ''}_q${quarterNumber(rec.quarter)}_lesson${num}.pdf`;
+
+            trigger.classList.add('is-busy');
+
+            // Let the browser repaint the "busy" state before the heavy Base64 decode
+            setTimeout(() => {
+                let href = lesson.pdf_data;
+                let isBlob = false;
+
+                try {
+                    if (href.startsWith('data:')) {
+                        href = URL.createObjectURL(dataUrlToBlob(href));
+                        isBlob = true;
+                    }
+
+                    const a = document.createElement('a');
+                    a.href = href;
+                    a.download = filename;
+                    a.rel = 'noopener';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+
+                    if (isBlob) setTimeout(() => URL.revokeObjectURL(href), 5000);
+                } catch (err) {
+                    console.error('Download error:', err);
+                    alert('Sorry, this file could not be downloaded. Please try again.');
+                } finally {
+                    trigger.classList.remove('is-busy');
+                }
+            }, 30);
+        }
+
+        // ---------- Events ----------
+        $('lessonsList').addEventListener('click', (e) => {
+            const btn = e.target.closest('.download-btn[data-index]');
+            if (!btn) return;
+            e.preventDefault();
+            downloadLesson(parseInt(btn.dataset.index, 10), btn);
+        });
+
+        $('quarterSelect').addEventListener('change', (e) => {
+            loadQuarter(e.target.value);
+        });
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 
 </html>

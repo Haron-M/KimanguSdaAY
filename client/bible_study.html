@@ -14,6 +14,9 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --primary-dark: #0a192f;
@@ -177,6 +180,13 @@
             border-color: var(--header-bible);
         }
 
+        .guide-count {
+            margin-top: 0.6rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-gray);
+        }
+
         /* ==========================================
            RIGHT SIDE BOOK GRID
         ========================================== */
@@ -217,12 +227,44 @@
             display: block;
         }
 
+        /* Shown instead of the cover when a guide has no cover image */
+        .cover-fallback {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            padding: 0.75rem;
+            text-align: center;
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            font-weight: 700;
+            line-height: 1.3;
+            background: linear-gradient(160deg, #1e293b, #0f172a);
+        }
+
+        .cover-fallback i {
+            font-size: 1.7rem;
+            color: var(--header-bible);
+        }
+
+        .book-cover-wrapper.no-cover .cover-fallback {
+            display: flex;
+        }
+
         .info-btn {
             position: absolute;
             bottom: 5px;
             right: 5px;
+            z-index: 3;
             width: 22px;
             height: 22px;
+            padding: 0;
             background: rgba(15, 23, 42, 0.82);
             color: #38bdf8;
             border: 1px solid rgba(255, 255, 255, 0.5);
@@ -239,6 +281,84 @@
             background: #0284c7;
             color: #ffffff;
             transform: scale(1.1);
+        }
+
+        /* Details panel that opens over the cover when the (i) button is pressed */
+        .book-info-panel {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            padding: 0.75rem 0.6rem 1.9rem;
+            text-align: center;
+            color: #ffffff;
+            background: rgba(15, 23, 42, 0.94);
+        }
+
+        .book-card.open .book-info-panel {
+            display: flex;
+        }
+
+        .info-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .info-meta {
+            font-size: 0.68rem;
+            color: #94a3b8;
+            word-break: break-word;
+        }
+
+        .info-action {
+            width: 100%;
+            max-width: 120px;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--header-bible);
+            background: var(--header-bible);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .info-action.secondary {
+            background: transparent;
+            color: #7dd3fc;
+            border-color: #7dd3fc;
+        }
+
+        .info-action:hover {
+            background: #ffffff;
+            color: #0f172a;
+            border-color: #ffffff;
+        }
+
+        .info-action.is-busy {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .info-unavailable {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #7dd3fc;
         }
 
         .book-title-link {
@@ -261,6 +381,99 @@
             text-decoration: underline;
         }
 
+        .book-title-link.is-busy {
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        /* ==========================================
+           LOADING / EMPTY / ERROR STATES
+        ========================================== */
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-cover,
+        .skeleton-line {
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite linear;
+        }
+
+        .skeleton-cover {
+            width: 100%;
+            height: 220px;
+            border-radius: 4px;
+        }
+
+        .skeleton-line {
+            width: 75%;
+            height: 12px;
+            margin: 0.6rem auto 0;
+            border-radius: 6px;
+        }
+
+        .books-grid .state-box {
+            grid-column: 1 / -1;
+            padding: 4rem 1.5rem;
+            text-align: center;
+            color: var(--text-gray);
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .state-box i.state-icon {
+            display: block;
+            font-size: 2.2rem;
+            color: var(--header-bible);
+            margin-bottom: 1rem;
+        }
+
+        .state-box h3 {
+            color: var(--primary-dark);
+            font-size: 1.3rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .state-box p {
+            font-size: 0.95rem;
+            max-width: 460px;
+            margin: 0 auto;
+        }
+
+        .state-box .state-detail {
+            margin-top: 0.6rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .retry-btn {
+            margin-top: 1.25rem;
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
+            border: 1.5px solid var(--primary-dark);
+            background: var(--primary-dark);
+            color: var(--white);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .retry-btn:hover {
+            background: var(--header-bible);
+            border-color: var(--header-bible);
+            color: var(--white);
+        }
+
         /* ==========================================
            RESPONSIVE LAYOUT
         ========================================== */
@@ -281,7 +494,8 @@
                 gap: 1.25rem 0.75rem;
             }
 
-            .book-cover-wrapper {
+            .book-cover-wrapper,
+            .skeleton-cover {
                 height: 180px;
             }
 
@@ -322,204 +536,337 @@
                     <h4>Topical Bible Guides</h4>
                     <p>Comprehensive study materials for personal devotion and group lessons.</p>
                 </div>
-                <input type="text" class="book-search-input" placeholder="Search study guide..."
-                    onkeyup="filterGuides(this.value)">
+                <input type="text" class="book-search-input" id="guideSearch" placeholder="Search study guide..."
+                    autocomplete="off">
+                <p class="guide-count" id="guideCount">&nbsp;</p>
             </div>
 
-            <!-- RIGHT COLUMN: Book Grid (Matching Image Height & Layout) -->
-            <div class="books-grid" id="booksGrid">
-
-                <!-- Guide 1 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=400&q=80"
-                            alt="Steps to Christ Study Guide">
-                        <button class="info-btn" onclick="showGuideInfo('Steps to Christ Study Guide')"
-                            title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('steps-to-christ')" class="book-title-link">Steps to
-                        Christ Guide</a>
-                </div>
-
-                <!-- Guide 2 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=400&q=80"
-                            alt="Daniel Prophecy Guide">
-                        <button class="info-btn" onclick="showGuideInfo('Daniel Prophecy Guide')" title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('daniel-prophecy')" class="book-title-link">Daniel
-                        Prophecy Series</a>
-                </div>
-
-                <!-- Guide 3 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=400&q=80"
-                            alt="Revelation Unsealed Guide">
-                        <button class="info-btn" onclick="showGuideInfo('Revelation Unsealed Guide')"
-                            title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('revelation-unsealed')"
-                        class="book-title-link">Revelation Unsealed</a>
-                </div>
-
-                <!-- Guide 4 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80"
-                            alt="28 Fundamental Beliefs">
-                        <button class="info-btn" onclick="showGuideInfo('28 Fundamental Beliefs')"
-                            title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('28-beliefs')" class="book-title-link">28
-                        Fundamental Beliefs</a>
-                </div>
-
-                <!-- Guide 5 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80"
-                            alt="Sanctuary Doctrine Study">
-                        <button class="info-btn" onclick="showGuideInfo('Sanctuary Doctrine Study')"
-                            title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('sanctuary-study')" class="book-title-link">The
-                        Sanctuary Study</a>
-                </div>
-
-                <!-- Guide 6 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80"
-                            alt="Sabbath Truth Lessons">
-                        <button class="info-btn" onclick="showGuideInfo('Sabbath Truth Lessons')" title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('sabbath-truth')" class="book-title-link">Sabbath
-                        Truth Lessons</a>
-                </div>
-
-                <!-- Guide 7 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400&q=80"
-                            alt="State of the Dead Guide">
-                        <button class="info-btn" onclick="showGuideInfo('State of the Dead Guide')"
-                            title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('state-of-dead')" class="book-title-link">State of
-                        the Dead</a>
-                </div>
-
-                <!-- Guide 8 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80"
-                            alt="Christian Stewardship">
-                        <button class="info-btn" onclick="showGuideInfo('Christian Stewardship')" title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('stewardship-guide')"
-                        class="book-title-link">Christian Stewardship</a>
-                </div>
-
-                <!-- Guide 9 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1476275466078-4007374efbbe?auto=format&fit=crop&w=400&q=80"
-                            alt="Health and Wholeness">
-                        <button class="info-btn" onclick="showGuideInfo('Health and Wholeness')" title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('health-wholeness')" class="book-title-link">Health
-                        & Wholeness</a>
-                </div>
-
-                <!-- Guide 10 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1463320726281-696a485928c7?auto=format&fit=crop&w=400&q=80"
-                            alt="Christian Prayer Life">
-                        <button class="info-btn" onclick="showGuideInfo('Christian Prayer Life')" title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('prayer-life')" class="book-title-link">Christian
-                        Prayer Life</a>
-                </div>
-
-                <!-- Guide 11 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=400&q=80"
-                            alt="Understanding the Law">
-                        <button class="info-btn" onclick="showGuideInfo('Understanding the Law')" title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('understanding-law')"
-                        class="book-title-link">Understanding the Law</a>
-                </div>
-
-                <!-- Guide 12 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80"
-                            alt="Second Coming Promises">
-                        <button class="info-btn" onclick="showGuideInfo('Second Coming Promises')"
-                            title="Guide Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openGuide('second-coming')" class="book-title-link">Second
-                        Coming Promises</a>
-                </div>
-
-            </div>
+            <!-- RIGHT COLUMN: Guide Grid (filled dynamically from Supabase) -->
+            <div class="books-grid" id="booksGrid"></div>
 
         </div>
 
     </section>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- JAVASCRIPT LOGIC: DYNAMIC STUDY GUIDES FROM SUPABASE -->
     <script>
-        function openGuide(guideId) {
-            alert(`Opening Bible study guide: ${guideId}`);
+        // ---------- Config ----------
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const CATEGORY = 'bible_study';   // matches "Bible Study Guide" in admin_material.html (Books & Guides tab)
+
+        // ---------- State ----------
+        let supabaseClient = null;
+        const state = {
+            guides: [],           // light records: id, title, cover_image, pdf_filename, created_at
+            token: 0,             // guards against out-of-order responses
+            fileCache: new Map()  // guide id -> Base64 PDF (keeps the last few so Read + Download is instant)
+        };
+
+        // ---------- Helpers ----------
+        const $ = (id) => document.getElementById(id);
+
+        function esc(value) {
+            return String(value === null || value === undefined ? '' : value).replace(/[&<>"']/g, (c) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
         }
 
-        function showGuideInfo(title) {
-            alert(`Information for: ${title}`);
+        // Sort key that ignores a leading "The", "An" or "A"
+        function sortKey(title) {
+            return String(title || '').toLowerCase().replace(/^(the|an|a)\s+/, '').trim();
         }
 
-        function filterGuides(query) {
-            const term = query.toLowerCase().trim();
-            const cards = document.querySelectorAll('.book-card');
+        function safeFileName(text) {
+            return String(text || 'guide').trim().replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '') || 'guide';
+        }
 
-            cards.forEach(card => {
-                const title = card.querySelector('.book-title-link').textContent.toLowerCase();
-                if (title.includes(term)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
+        function findGuide(card) {
+            return state.guides.find((g) => String(g.id) === card.dataset.id);
+        }
+
+        function renderState(opts) {
+            $('booksGrid').innerHTML = `
+                <div class="state-box">
+                    <i class="state-icon ${opts.icon}"></i>
+                    <h3>${esc(opts.title)}</h3>
+                    <p>${esc(opts.message)}</p>
+                    ${opts.detail ? `<p class="state-detail">${esc(opts.detail)}</p>` : ''}
+                    ${opts.retryFn ? '<button type="button" class="retry-btn"><i class="fa-solid fa-rotate-right"></i> Try again</button>' : ''}
+                </div>`;
+            if (opts.retryFn) $('booksGrid').querySelector('.retry-btn').addEventListener('click', opts.retryFn);
+        }
+
+        function showLoading() {
+            let cards = '';
+            for (let i = 0; i < 12; i++) {
+                cards += '<div class="book-card"><div class="skeleton-cover"></div><div class="skeleton-line"></div></div>';
+            }
+            $('booksGrid').innerHTML = cards;
+            $('guideCount').textContent = 'Loading guides…';
+        }
+
+        // ---------- Rendering ----------
+        function mountCover(wrapper, img, src) {
+            if (!src) {
+                wrapper.classList.add('no-cover');
+                img.remove();
+                return;
+            }
+            img.onerror = () => {
+                wrapper.classList.add('no-cover');
+                img.remove();
+            };
+            img.src = src; // set through the DOM so large Base64 strings never go through an HTML template
+        }
+
+        function renderGuides() {
+            const guides = state.guides;
+
+            $('booksGrid').innerHTML = guides.map((g) => {
+                const added = g.created_at
+                    ? new Date(g.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+                    : '';
+                const hasPdf = !!g.pdf_filename;
+
+                return `
+                    <div class="book-card" data-id="${esc(g.id)}" data-title="${esc(String(g.title || '').toLowerCase())}">
+                        <div class="book-cover-wrapper">
+                            <img alt="${esc(g.title)}">
+                            <div class="cover-fallback"><i class="fa-solid fa-book-bible"></i><span>${esc(g.title)}</span></div>
+
+                            <div class="book-info-panel">
+                                <div class="info-title">${esc(g.title)}</div>
+                                ${added ? `<div class="info-meta">Added ${esc(added)}</div>` : ''}
+                                ${hasPdf
+                        ? `<div class="info-meta">${esc(g.pdf_filename)}</div>
+                                       <button type="button" class="info-action" data-action="read">Read online</button>
+                                       <button type="button" class="info-action secondary" data-action="download">Download PDF</button>`
+                        : '<div class="info-unavailable">PDF not available yet</div>'}
+                            </div>
+
+                            <button type="button" class="info-btn" data-action="info" title="Guide Details" aria-label="Guide details">
+                                <i class="fa-solid fa-info"></i>
+                            </button>
+                        </div>
+                        <a href="#" class="book-title-link" data-action="read">${esc(g.title)}</a>
+                    </div>`;
+            }).join('') + `
+                <div class="state-box" id="noMatch" style="display: none;">
+                    <i class="state-icon fa-solid fa-magnifying-glass"></i>
+                    <h3>No matching guides</h3>
+                    <p>Try a different word from the title.</p>
+                </div>`;
+
+            // Covers
+            const cards = $('booksGrid').querySelectorAll('.book-card');
+            cards.forEach((card, i) => {
+                mountCover(card.querySelector('.book-cover-wrapper'), card.querySelector('img'), guides[i].cover_image);
             });
+
+            applyFilter();
         }
+
+        // ---------- Search ----------
+        function applyFilter() {
+            const term = $('guideSearch').value.toLowerCase().trim();
+            const total = state.guides.length;
+            let shown = 0;
+
+            $('booksGrid').querySelectorAll('.book-card').forEach((card) => {
+                const match = card.dataset.title.includes(term);
+                card.style.display = match ? '' : 'none';   // '' keeps the card's own flex layout
+                if (match) shown++;
+            });
+
+            const noMatch = $('noMatch');
+            if (noMatch) noMatch.style.display = (total && !shown) ? '' : 'none';
+
+            if (!total) $('guideCount').textContent = '';
+            else if (term) $('guideCount').textContent = `${shown} of ${total} guide${total === 1 ? '' : 's'}`;
+            else $('guideCount').textContent = `${total} guide${total === 1 ? '' : 's'}`;
+        }
+
+        // ---------- Data loading ----------
+        async function init() {
+            const myToken = ++state.token;
+            showLoading();
+
+            try {
+                if (!window.supabase) throw new Error('The Supabase library could not be loaded.');
+                if (!supabaseClient) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
+
+                // pdf_data is NOT requested here; the PDF is fetched only when someone opens or downloads a guide
+                const { data, error } = await supabaseClient
+                    .from('study_books')
+                    .select('id, title, cover_image, pdf_filename, created_at')
+                    .eq('category', CATEGORY)
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                if (myToken !== state.token) return;
+
+                // If the same title was uploaded more than once, keep only the newest upload
+                const seen = new Set();
+                const list = [];
+                for (const row of data || []) {
+                    const key = String(row.title || '').trim().toLowerCase();
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    list.push(row);
+                }
+
+                // A–Z, ignoring a leading "The", "An" or "A"
+                list.sort((a, b) => sortKey(a.title).localeCompare(sortKey(b.title)));
+                state.guides = list;
+
+                if (!list.length) {
+                    $('guideCount').textContent = '';
+                    renderState({
+                        icon: 'fa-regular fa-folder-open',
+                        title: 'Nothing here yet',
+                        message: 'Bible study guides will appear here once they are uploaded.'
+                    });
+                    return;
+                }
+
+                renderGuides();
+            } catch (err) {
+                if (myToken !== state.token) return;
+                console.error('Bible study load error:', err);
+                $('guideCount').textContent = '';
+                renderState({
+                    icon: 'fa-solid fa-triangle-exclamation',
+                    title: 'We couldn’t load the guides',
+                    message: 'Please check your internet connection and try again.',
+                    detail: err && err.message ? err.message : '',
+                    retryFn: init
+                });
+            }
+        }
+
+        // ---------- Opening / downloading a guide ----------
+        function dataUrlToBlob(dataUrl) {
+            const commaIdx = dataUrl.indexOf(',');
+            const meta = dataUrl.slice(0, commaIdx);
+            const base64 = dataUrl.slice(commaIdx + 1);
+            const mimeMatch = /data:(.*?);base64/.exec(meta);
+            const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return new Blob([bytes], { type: mime });
+        }
+
+        async function getGuideFile(id) {
+            const key = String(id);
+            if (state.fileCache.has(key)) return state.fileCache.get(key);
+
+            const { data, error } = await supabaseClient
+                .from('study_books')
+                .select('pdf_data')
+                .eq('id', id)
+                .single();
+            if (error) throw error;
+            if (!data || !data.pdf_data) throw new Error('No PDF has been uploaded for this title.');
+
+            state.fileCache.set(key, data.pdf_data);
+            if (state.fileCache.size > 3) state.fileCache.delete(state.fileCache.keys().next().value);
+            return data.pdf_data;
+        }
+
+        function toUrl(source) {
+            return source.indexOf('data:') === 0 ? URL.createObjectURL(dataUrlToBlob(source)) : source;
+        }
+
+        function downloadFile(url, guide) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = guide.pdf_filename || `${safeFileName(guide.title)}.pdf`;
+            a.rel = 'noopener';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        async function readGuide(card, trigger) {
+            const guide = findGuide(card);
+            if (!guide) return;
+
+            // No PDF yet: show the details panel, which explains it
+            if (!guide.pdf_filename) {
+                setInfoOpen(card, true);
+                return;
+            }
+
+            // Open the tab right away (inside the click) so pop-up blockers allow it
+            const win = window.open('', '_blank');
+            if (win) win.document.write('<p style="font-family: sans-serif; padding: 2rem;">Loading guide…</p>');
+
+            trigger.classList.add('is-busy');
+            try {
+                const source = await getGuideFile(guide.id);
+                const url = toUrl(source);
+                if (win) win.location.href = url;
+                else downloadFile(url, guide);          // pop-up blocked: download instead
+            } catch (err) {
+                console.error('Open guide error:', err);
+                if (win) win.close();
+                alert('Sorry, this guide could not be opened. ' + (err && err.message ? err.message : ''));
+            } finally {
+                trigger.classList.remove('is-busy');
+            }
+        }
+
+        async function downloadGuide(card, trigger) {
+            const guide = findGuide(card);
+            if (!guide || !guide.pdf_filename) return;
+
+            trigger.classList.add('is-busy');
+            try {
+                const source = await getGuideFile(guide.id);
+                const url = toUrl(source);
+                downloadFile(url, guide);
+                if (source.indexOf('data:') === 0) setTimeout(() => URL.revokeObjectURL(url), 5000);
+            } catch (err) {
+                console.error('Download guide error:', err);
+                alert('Sorry, this guide could not be downloaded. ' + (err && err.message ? err.message : ''));
+            } finally {
+                trigger.classList.remove('is-busy');
+            }
+        }
+
+        // ---------- Details panel (the little "i" button) ----------
+        function setInfoOpen(card, open) {
+            if (open) {
+                $('booksGrid').querySelectorAll('.book-card.open').forEach((c) => {
+                    if (c !== card) setInfoOpen(c, false);   // only one panel open at a time
+                });
+            }
+            card.classList.toggle('open', open);
+            const icon = card.querySelector('.info-btn i');
+            if (icon) icon.className = open ? 'fa-solid fa-xmark' : 'fa-solid fa-info';
+        }
+
+        // ---------- Events ----------
+        $('booksGrid').addEventListener('click', (e) => {
+            const el = e.target.closest('[data-action]');
+            if (!el) return;
+            e.preventDefault();
+
+            const card = el.closest('.book-card');
+            if (!card) return;
+
+            if (el.dataset.action === 'info') setInfoOpen(card, !card.classList.contains('open'));
+            else if (el.dataset.action === 'read') readGuide(card, el);
+            else if (el.dataset.action === 'download') downloadGuide(card, el);
+        });
+
+        $('guideSearch').addEventListener('input', applyFilter);
+
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 

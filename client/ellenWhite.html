@@ -14,6 +14,12 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- PDF.js (reads the first page of a PDF to build a cover) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
     <style>
         :root {
             --primary-dark: #0a192f;
@@ -24,7 +30,20 @@
             --text-gray: #64748b;
             --border-color: #e2e8f0;
             --header-dark: #1e1b18;
+            --egw-brown: #b45309;
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* ---- Height of the book area (left panel + scrolling books) ----
+               At least 620px, which fits the whole left panel and two full rows of books
+               with a peek of the third row. On taller screens it grows to fill the window.
+               index.html sets --app-vh (1% of the real window height) and the "embedded" class;
+               it keeps this page from growing with the iframe. */
+            --shell-h: 0px;
+            --books-h: max(620px, calc(var(--app-vh, 1vh) * 100 - var(--shell-h) - 215px));
+        }
+
+        html.embedded {
+            --shell-h: 77px;
         }
 
         * {
@@ -84,6 +103,10 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
+        .egw-banner-text {
+            max-width: 700px;
+        }
+
         .egw-title {
             color: #ffffff;
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -92,17 +115,26 @@
             line-height: 1.15;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            max-width: 700px;
+        }
+
+        .egw-hint {
+            margin-top: 0.75rem;
+            color: #fbbf24;
+            font-size: clamp(0.85rem, 1.6vw, 1rem);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .egw-hint i {
+            margin-right: 0.4rem;
         }
 
         /* ==========================================
-           MAIN CONTENT SECTION (Small Left Margin)
+           MAIN CONTENT SECTION
         ========================================== */
         .egw-section {
             padding: 2.5rem 2%;
-            /* Small margin left and right */
             background-color: #fafbfc;
-            min-height: 600px;
         }
 
         .section-intro-header {
@@ -122,16 +154,19 @@
             font-size: 0.95rem;
         }
 
+        /* Fixed-height area: left panel shows in full, books scroll on the right */
         .main-egw-container {
             display: grid;
-            grid-template-columns: 240px 1fr;
-            /* Sidebar on far left with small width */
+            grid-template-columns: 240px minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr);
             gap: 1.75rem;
-            align-items: start;
+            align-items: stretch;
+            height: var(--books-h);
         }
 
-        /* Left Side Card Cover/Sidebar */
+        /* Left side: portrait + search. Shows all its content, never scrolls */
         .egw-sidebar-box {
+            align-self: start;
             background: #ffffff;
             padding: 1rem;
             border-radius: 10px;
@@ -176,16 +211,28 @@
             border-color: var(--accent-gold);
         }
 
+        .book-count {
+            margin-top: 0.6rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-gray);
+        }
+
         /* ==========================================
-           RIGHT SIDE BOOK GRID (Uniform Height & Image 12 Fit)
+           RIGHT SIDE BOOK GRID (the only part that scrolls)
         ========================================== */
         .books-grid {
+            height: 100%;
+            overflow-y: auto;
+            align-content: start;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 1.25rem 0.85rem;
+            padding: 0.5rem 0.75rem 1.25rem 0.25rem;
+            scrollbar-width: thin;
+            scrollbar-color: #94a3b8 transparent;
         }
 
-        /* Individual Book Item Card */
         .book-card {
             display: flex;
             flex-direction: column;
@@ -193,12 +240,10 @@
             text-align: center;
         }
 
-        /* Fixed Uniform Aspect Ratio Matching Image 12 */
         .book-cover-wrapper {
             position: relative;
             width: 100%;
             height: 220px;
-            /* Fixed height matching Image 12 */
             background-color: #0f172a;
             border-radius: 4px;
             overflow: hidden;
@@ -216,17 +261,70 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            /* Ensures precise rectangular fitting without gaps */
+            object-position: top center;
             display: block;
         }
 
-        /* Corner info button (i icon matching image 12) */
+        /* Hide the <img> while the placeholder is showing */
+        .book-cover-wrapper.no-cover img {
+            display: none;
+        }
+
+        /* Shown instead of the cover when a book has no cover image yet */
+        .cover-fallback {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            padding: 0.75rem;
+            text-align: center;
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            font-weight: 700;
+            line-height: 1.3;
+            background: linear-gradient(160deg, #1e293b, #0f172a);
+        }
+
+        .cover-fallback i {
+            font-size: 1.7rem;
+            color: var(--egw-brown);
+        }
+
+        .book-cover-wrapper.no-cover .cover-fallback {
+            display: flex;
+        }
+
+        .book-cover-wrapper.generating .cover-fallback i {
+            animation: pulse 1.1s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Corner info button */
         .info-btn {
             position: absolute;
             bottom: 5px;
             right: 5px;
+            z-index: 3;
             width: 22px;
             height: 22px;
+            padding: 0;
             background: rgba(15, 23, 42, 0.82);
             color: #38bdf8;
             border: 1px solid rgba(255, 255, 255, 0.5);
@@ -245,7 +343,79 @@
             transform: scale(1.1);
         }
 
-        /* Title Link under book cover */
+        /* Details panel that opens over the cover when the (i) button is pressed */
+        .book-info-panel {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            padding: 0.75rem 0.6rem 1.9rem;
+            text-align: center;
+            color: #ffffff;
+            background: rgba(15, 23, 42, 0.94);
+        }
+
+        .book-card.open .book-info-panel {
+            display: flex;
+        }
+
+        .info-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .info-meta {
+            font-size: 0.68rem;
+            color: #94a3b8;
+            word-break: break-word;
+        }
+
+        .info-action {
+            width: 100%;
+            max-width: 120px;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--egw-brown);
+            background: var(--egw-brown);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .info-action:hover {
+            background: #ffffff;
+            color: #0f172a;
+            border-color: #ffffff;
+        }
+
+        .info-action.is-busy {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .info-unavailable {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #fbbf24;
+        }
+
+        /* Title Link under book cover (click = download) */
         .book-title-link {
             margin-top: 0.5rem;
             font-size: 0.85rem;
@@ -259,6 +429,7 @@
             line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .book-title-link:hover {
@@ -266,26 +437,125 @@
             text-decoration: underline;
         }
 
+        .book-title-link.is-busy {
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
         /* ==========================================
-           RESPONSIVE LAYOUT
+           LOADING / EMPTY / ERROR STATES
+        ========================================== */
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-cover,
+        .skeleton-line {
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite linear;
+        }
+
+        .skeleton-cover {
+            width: 100%;
+            height: 220px;
+            border-radius: 4px;
+        }
+
+        .skeleton-line {
+            width: 75%;
+            height: 12px;
+            margin: 0.6rem auto 0;
+            border-radius: 6px;
+        }
+
+        .books-grid .state-box {
+            grid-column: 1 / -1;
+            padding: 4rem 1.5rem;
+            text-align: center;
+            color: var(--text-gray);
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .state-box i.state-icon {
+            display: block;
+            font-size: 2.2rem;
+            color: var(--egw-brown);
+            margin-bottom: 1rem;
+        }
+
+        .state-box h3 {
+            color: var(--primary-dark);
+            font-size: 1.3rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .state-box p {
+            font-size: 0.95rem;
+            max-width: 460px;
+            margin: 0 auto;
+        }
+
+        .state-box .state-detail {
+            margin-top: 0.6rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .retry-btn {
+            margin-top: 1.25rem;
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
+            border: 1.5px solid var(--primary-dark);
+            background: var(--primary-dark);
+            color: var(--white);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .retry-btn:hover {
+            background: var(--egw-brown);
+            border-color: var(--egw-brown);
+            color: var(--white);
+        }
+
+        /* ==========================================
+           MOBILE / TABLET: panel on top, books scroll in a fixed-height box below it
         ========================================== */
         @media (max-width: 900px) {
             .main-egw-container {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: auto auto;
+                height: auto;
                 gap: 2rem;
             }
 
             .egw-sidebar-box {
+                width: 100%;
                 max-width: 280px;
                 margin: 0 auto;
+                align-self: auto;
             }
 
             .books-grid {
+                height: max(460px, calc(var(--app-vh, 1vh) * 75));
                 grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
                 gap: 1.25rem 0.75rem;
             }
 
-            .book-cover-wrapper {
+            .book-cover-wrapper,
+            .skeleton-cover {
                 height: 180px;
             }
 
@@ -306,7 +576,10 @@
     <!-- EGW BANNER HEADER -->
     <div class="egw-banner">
         <div class="egw-badge">SPIRIT OF PROPHECY</div>
-        <h1 class="egw-title">Ellen G. White Writings</h1>
+        <div class="egw-banner-text">
+            <h1 class="egw-title">Ellen G. White Writings</h1>
+            <p class="egw-hint"><i class="fa-solid fa-download"></i> Click the title of the book to download</p>
+        </div>
     </div>
 
     <!-- MAIN COLLECTION SECTION -->
@@ -319,208 +592,477 @@
 
         <div class="main-egw-container">
 
-            <!-- LEFT COLUMN: Sidebar & Search (On Far Left Edge) -->
+            <!-- LEFT COLUMN: Sidebar & Search (shows in full, does not scroll) -->
             <div class="egw-sidebar-box">
                 <img src="ellen_white.jpg" alt="Ellen G. White Portrait">
                 <div class="sidebar-caption">
                     <h4>Spirit of Prophecy</h4>
                     <p>Access published books, devotionals, and articles online.</p>
                 </div>
-                <input type="text" class="book-search-input" placeholder="Search book title..."
-                    onkeyup="filterBooks(this.value)">
+                <input type="text" class="book-search-input" id="bookSearch" placeholder="Search book title..."
+                    autocomplete="off">
+                <p class="book-count" id="bookCount">&nbsp;</p>
             </div>
 
-            <!-- RIGHT COLUMN: Book Grid (Matching Image 12 Height & Layout) -->
-            <div class="books-grid" id="booksGrid">
-
-                <!-- Book 1 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80"
-                            alt="The Acts of the Apostles">
-                        <button class="info-btn" onclick="showBookInfo('The Acts of the Apostles')"
-                            title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('acts-of-the-apostles')" class="book-title-link">The
-                        Acts of the Apostles</a>
-                </div>
-
-                <!-- Book 2 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80"
-                            alt="The Adventist Home">
-                        <button class="info-btn" onclick="showBookInfo('The Adventist Home')" title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('adventist-home')" class="book-title-link">The
-                        Adventist Home</a>
-                </div>
-
-                <!-- Book 3 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80"
-                            alt="An Appeal to Mothers">
-                        <button class="info-btn" onclick="showBookInfo('An Appeal to Mothers')" title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('appeal-to-mothers')" class="book-title-link">An
-                        Appeal to Mothers</a>
-                </div>
-
-                <!-- Book 4 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=400&q=80"
-                            alt="An Appeal to the Youth">
-                        <button class="info-btn" onclick="showBookInfo('An Appeal to the Youth')" title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('appeal-to-youth')" class="book-title-link">An Appeal
-                        to the Youth</a>
-                </div>
-
-                <!-- Book 5 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=400&q=80"
-                            alt="A Call to Medical Evangelism">
-                        <button class="info-btn" onclick="showBookInfo('A Call to Medical Evangelism')"
-                            title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('call-medical-evangelism')" class="book-title-link">A
-                        Call to Medical Evangelism</a>
-                </div>
-
-                <!-- Book 6 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=400&q=80"
-                            alt="A Call to Stand Apart">
-                        <button class="info-btn" onclick="showBookInfo('A Call to Stand Apart')" title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('call-stand-apart')" class="book-title-link">A Call
-                        to Stand Apart</a>
-                </div>
-
-                <!-- Book 7 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400&q=80"
-                            alt="Child Guidance">
-                        <button class="info-btn" onclick="showBookInfo('Child Guidance')" title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('child-guidance')" class="book-title-link">Child
-                        Guidance</a>
-                </div>
-
-                <!-- Book 8 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80"
-                            alt="Christ in His Sanctuary">
-                        <button class="info-btn" onclick="showBookInfo('Christ in His Sanctuary')" title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('christ-in-sanctuary')"
-                        class="book-title-link">Christ in His Sanctuary</a>
-                </div>
-
-                <!-- Book 9 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1476275466078-4007374efbbe?auto=format&fit=crop&w=400&q=80"
-                            alt="Christian Education">
-                        <button class="info-btn" onclick="showBookInfo('Christian Education')" title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('christian-education')"
-                        class="book-title-link">Christian Education</a>
-                </div>
-
-                <!-- Book 10 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1463320726281-696a485928c7?auto=format&fit=crop&w=400&q=80"
-                            alt="Christian Leadership">
-                        <button class="info-btn" onclick="showBookInfo('Christian Leadership')" title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('christian-leadership')"
-                        class="book-title-link">Christian Leadership</a>
-                </div>
-
-                <!-- Book 11 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=400&q=80"
-                            alt="Christian Service">
-                        <button class="info-btn" onclick="showBookInfo('Christian Service')" title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('christian-service')"
-                        class="book-title-link">Christian Service</a>
-                </div>
-
-                <!-- Book 12 -->
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80"
-                            alt="Counsels on Diet and Foods">
-                        <button class="info-btn" onclick="showBookInfo('Counsels on Diet and Foods')"
-                            title="Book Details">
-                            <i class="fa-solid fa-info"></i>
-                        </button>
-                    </div>
-                    <a href="javascript:void(0)" onclick="openBook('counsels-diet-foods')"
-                        class="book-title-link">Counsels on Diet and Foods</a>
-                </div>
-
-            </div>
+            <!-- RIGHT COLUMN: Book Grid (scrolls on its own; filled dynamically from Supabase) -->
+            <div class="books-grid" id="booksGrid"></div>
 
         </div>
 
     </section>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- JAVASCRIPT LOGIC: DYNAMIC BOOKS FROM SUPABASE -->
     <script>
-        function openBook(bookId) {
-            alert(`Opening book reader for: ${bookId}`);
+        // ---------- Config ----------
+        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
+        const CATEGORY = 'egw';   // matches "Ellen G. White Collection" in admin_material.html (Books & Guides tab)
+
+        const COVER_WIDTH = 260;      // px width of generated covers (small = faster)
+        const COVER_JOBS = 3;         // covers built at the same time
+
+        // PDF.js worker (needed to render PDF pages)
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
 
-        function showBookInfo(title) {
-            alert(`Information for: ${title}`);
+        // ---------- State ----------
+        let supabaseClient = null;
+        const state = {
+            books: [],            // light records: id, title, cover_image, pdf_filename, created_at
+            token: 0,             // guards against out-of-order responses
+            fileCache: new Map()  // book id -> Base64 PDF (keeps the last few so downloads right after a cover are instant)
+        };
+
+        // ---------- Helpers ----------
+        const $ = (id) => document.getElementById(id);
+
+        function esc(value) {
+            return String(value === null || value === undefined ? '' : value).replace(/[&<>"']/g, (c) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
         }
 
-        function filterBooks(query) {
-            const term = query.toLowerCase().trim();
-            const cards = document.querySelectorAll('.book-card');
+        // Sort key that ignores a leading "The", "An" or "A"
+        function sortKey(title) {
+            return String(title || '').toLowerCase().replace(/^(the|an|a)\s+/, '').trim();
+        }
 
-            cards.forEach(card => {
-                const title = card.querySelector('.book-title-link').textContent.toLowerCase();
-                if (title.includes(term)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
+        function safeFileName(text) {
+            return String(text || 'book').trim().replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '') || 'book';
+        }
+
+        function findBook(card) {
+            return state.books.find((b) => String(b.id) === card.dataset.id);
+        }
+
+        function renderState(opts) {
+            $('booksGrid').innerHTML = `
+                <div class="state-box">
+                    <i class="state-icon ${opts.icon}"></i>
+                    <h3>${esc(opts.title)}</h3>
+                    <p>${esc(opts.message)}</p>
+                    ${opts.detail ? `<p class="state-detail">${esc(opts.detail)}</p>` : ''}
+                    ${opts.retryFn ? '<button type="button" class="retry-btn"><i class="fa-solid fa-rotate-right"></i> Try again</button>' : ''}
+                </div>`;
+            if (opts.retryFn) $('booksGrid').querySelector('.retry-btn').addEventListener('click', opts.retryFn);
+        }
+
+        function showLoading() {
+            let cards = '';
+            for (let i = 0; i < 12; i++) {
+                cards += '<div class="book-card"><div class="skeleton-cover"></div><div class="skeleton-line"></div></div>';
+            }
+            $('booksGrid').innerHTML = cards;
+            $('bookCount').textContent = 'Loading books…';
+        }
+
+        // ---------- Saved covers (IndexedDB): covers built once are instant on every later visit ----------
+        const coverDB = (() => {
+            let dbPromise = null;
+
+            function open() {
+                if (dbPromise) return dbPromise;
+                dbPromise = new Promise((resolve) => {
+                    try {
+                        const rq = indexedDB.open('egw-covers', 1);
+                        rq.onupgradeneeded = () => rq.result.createObjectStore('covers');
+                        rq.onsuccess = () => resolve(rq.result);
+                        rq.onerror = () => resolve(null);
+                        rq.onblocked = () => resolve(null);
+                    } catch (e) {
+                        resolve(null);
+                    }
+                });
+                return dbPromise;
+            }
+
+            return {
+                async get(key) {
+                    const db = await open();
+                    if (!db) return null;
+                    return new Promise((resolve) => {
+                        try {
+                            const rq = db.transaction('covers').objectStore('covers').get(key);
+                            rq.onsuccess = () => resolve(rq.result || null);
+                            rq.onerror = () => resolve(null);
+                        } catch (e) { resolve(null); }
+                    });
+                },
+                async put(key, value) {
+                    const db = await open();
+                    if (!db) return;
+                    try { db.transaction('covers', 'readwrite').objectStore('covers').put(value, key); } catch (e) { /* ignore */ }
                 }
-            });
+            };
+        })();
+
+        // A new upload (different file or date) gets a new key, so old covers are never reused by mistake
+        function coverKey(book) {
+            return [book.id, book.pdf_filename || '', book.created_at || ''].join('|');
         }
+
+        // ---------- Auto cover from the PDF's first page ----------
+        const coverCache = new Map();   // book id -> JPEG data URL (this session)
+        const coverQueue = [];
+        let coverActive = 0;
+        let coverObserver = null;
+
+        // Watches the cards so only books near the visible part of the scrolling grid are processed
+        function getCoverObserver() {
+            if (!coverObserver) {
+                coverObserver = new IntersectionObserver((entries, obs) => {
+                    entries.forEach((entry) => {
+                        if (!entry.isIntersecting) return;
+                        obs.unobserve(entry.target);
+                        coverQueue.push(entry.target);
+                    });
+                    runCoverQueue();
+                }, { root: $('booksGrid'), rootMargin: '600px 0px' });
+            }
+            return coverObserver;
+        }
+
+        function runCoverQueue() {
+            while (coverActive < COVER_JOBS && coverQueue.length) {
+                const card = coverQueue.shift();
+                if (!card.isConnected) continue;   // grid was re-rendered meanwhile
+                coverActive++;
+                makeCover(card).finally(() => { coverActive--; runCoverQueue(); });
+            }
+        }
+
+        function applyCover(card, book, cover) {
+            const wrapper = card.querySelector('.book-cover-wrapper');
+            let img = wrapper.querySelector('img');
+            if (!img) {
+                img = document.createElement('img');
+                img.alt = book.title;
+                wrapper.insertBefore(img, wrapper.firstChild);
+            }
+            img.onerror = null;
+            img.src = cover;
+            wrapper.classList.remove('no-cover');
+        }
+
+        async function makeCover(card) {
+            const book = findBook(card);
+            if (!book) return;
+            const wrapper = card.querySelector('.book-cover-wrapper');
+            wrapper.classList.add('generating');
+            try {
+                let cover = coverCache.get(String(book.id));
+                if (!cover) {
+                    const source = await getBookFile(book.id);
+                    cover = await renderFirstPage(source);
+                    coverCache.set(String(book.id), cover);
+                    coverDB.put(coverKey(book), cover);   // remember it for next time
+                }
+                applyCover(card, book, cover);
+            } catch (err) {
+                console.warn('Could not build cover for', book.title, err);   // placeholder stays
+            } finally {
+                wrapper.classList.remove('generating');
+            }
+        }
+
+        async function renderFirstPage(source) {
+            if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
+
+            let params;
+            if (source.indexOf('data:') === 0) {
+                const binary = atob(source.slice(source.indexOf(',') + 1));
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                params = { data: bytes };
+            } else {
+                params = { url: source };
+            }
+
+            const pdf = await pdfjsLib.getDocument(params).promise;
+            try {
+                const page = await pdf.getPage(1);
+                const base = page.getViewport({ scale: 1 });
+                const viewport = page.getViewport({ scale: COVER_WIDTH / base.width });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(viewport.width);
+                canvas.height = Math.round(viewport.height);
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                return canvas.toDataURL('image/jpeg', 0.8);
+            } finally {
+                pdf.destroy();
+            }
+        }
+
+        // ---------- Rendering ----------
+        function mountCover(card, book) {
+            const wrapper = card.querySelector('.book-cover-wrapper');
+            const img = wrapper.querySelector('img');
+
+            // No saved cover (or it failed to load): use a remembered one, otherwise build it from the PDF's first page
+            const useFirstPage = async () => {
+                img.onerror = null;
+                img.removeAttribute('src');
+                wrapper.classList.add('no-cover');   // placeholder shows until the real cover is ready
+                if (!book.pdf_filename) return;
+
+                const cached = await coverDB.get(coverKey(book));
+                if (!card.isConnected) return;
+                if (cached) {
+                    coverCache.set(String(book.id), cached);
+                    applyCover(card, book, cached);
+                } else {
+                    getCoverObserver().observe(card);
+                }
+            };
+
+            if (!book.cover_image) { useFirstPage(); return; }
+            img.onerror = useFirstPage;
+            img.src = book.cover_image;   // set through the DOM so large Base64 strings never go through an HTML template
+        }
+
+        function renderBooks() {
+            const books = state.books;
+
+            $('booksGrid').innerHTML = books.map((b) => {
+                const added = b.created_at
+                    ? new Date(b.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+                    : '';
+                const hasPdf = !!b.pdf_filename;
+
+                return `
+                    <div class="book-card" data-id="${esc(b.id)}" data-title="${esc(String(b.title || '').toLowerCase())}">
+                        <div class="book-cover-wrapper">
+                            <img alt="${esc(b.title)}">
+                            <div class="cover-fallback"><i class="fa-solid fa-book"></i><span>${esc(b.title)}</span></div>
+
+                            <div class="book-info-panel">
+                                <div class="info-title">${esc(b.title)}</div>
+                                ${added ? `<div class="info-meta">Added ${esc(added)}</div>` : ''}
+                                ${hasPdf
+                        ? `<div class="info-meta">${esc(b.pdf_filename)}</div>
+                                       <button type="button" class="info-action" data-action="download">Download PDF</button>`
+                        : '<div class="info-unavailable">PDF not available yet</div>'}
+                            </div>
+
+                            <button type="button" class="info-btn" data-action="info" title="Book Details" aria-label="Book details">
+                                <i class="fa-solid fa-info"></i>
+                            </button>
+                        </div>
+                        <a href="#" class="book-title-link" data-action="download" title="Click to download">${esc(b.title)}</a>
+                    </div>`;
+            }).join('') + `
+                <div class="state-box" id="noMatch" style="display: none;">
+                    <i class="state-icon fa-solid fa-magnifying-glass"></i>
+                    <h3>No matching books</h3>
+                    <p>Try a different word from the title.</p>
+                </div>`;
+
+            // Covers
+            const cards = $('booksGrid').querySelectorAll('.book-card');
+            cards.forEach((card, i) => mountCover(card, books[i]));
+
+            applyFilter();
+        }
+
+        // ---------- Search ----------
+        function applyFilter() {
+            const term = $('bookSearch').value.toLowerCase().trim();
+            const total = state.books.length;
+            let shown = 0;
+
+            $('booksGrid').querySelectorAll('.book-card').forEach((card) => {
+                const match = card.dataset.title.includes(term);
+                card.style.display = match ? '' : 'none';   // '' keeps the card's own flex layout
+                if (match) shown++;
+            });
+
+            const noMatch = $('noMatch');
+            if (noMatch) noMatch.style.display = (total && !shown) ? '' : 'none';
+
+            if (!total) $('bookCount').textContent = '';
+            else if (term) $('bookCount').textContent = `${shown} of ${total} book${total === 1 ? '' : 's'}`;
+            else $('bookCount').textContent = `${total} book${total === 1 ? '' : 's'}`;
+        }
+
+        // ---------- Data loading ----------
+        async function init() {
+            const myToken = ++state.token;
+            showLoading();
+
+            try {
+                if (!window.supabase) throw new Error('The Supabase library could not be loaded.');
+                if (!supabaseClient) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
+
+                // pdf_data is NOT requested here; the PDF is fetched only when a cover is built or a book is downloaded
+                const { data, error } = await supabaseClient
+                    .from('study_books')
+                    .select('id, title, cover_image, pdf_filename, created_at')
+                    .eq('category', CATEGORY)
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                if (myToken !== state.token) return;
+
+                // If the same title was uploaded more than once, keep only the newest upload
+                const seen = new Set();
+                const list = [];
+                for (const row of data || []) {
+                    const key = String(row.title || '').trim().toLowerCase();
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    list.push(row);
+                }
+
+                // A–Z, ignoring a leading "The", "An" or "A"
+                list.sort((a, b) => sortKey(a.title).localeCompare(sortKey(b.title)));
+                state.books = list;
+
+                if (!list.length) {
+                    $('bookCount').textContent = '';
+                    renderState({
+                        icon: 'fa-regular fa-folder-open',
+                        title: 'Nothing here yet',
+                        message: 'Books in the Ellen G. White collection will appear here once they are uploaded.'
+                    });
+                    return;
+                }
+
+                renderBooks();
+            } catch (err) {
+                if (myToken !== state.token) return;
+                console.error('EGW load error:', err);
+                $('bookCount').textContent = '';
+                renderState({
+                    icon: 'fa-solid fa-triangle-exclamation',
+                    title: 'We couldn’t load the books',
+                    message: 'Please check your internet connection and try again.',
+                    detail: err && err.message ? err.message : '',
+                    retryFn: init
+                });
+            }
+        }
+
+        // ---------- Downloading a book ----------
+        function dataUrlToBlob(dataUrl) {
+            const commaIdx = dataUrl.indexOf(',');
+            const meta = dataUrl.slice(0, commaIdx);
+            const base64 = dataUrl.slice(commaIdx + 1);
+            const mimeMatch = /data:(.*?);base64/.exec(meta);
+            const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return new Blob([bytes], { type: mime });
+        }
+
+        async function getBookFile(id) {
+            const key = String(id);
+            if (state.fileCache.has(key)) return state.fileCache.get(key);
+
+            const { data, error } = await supabaseClient
+                .from('study_books')
+                .select('pdf_data')
+                .eq('id', id)
+                .single();
+            if (error) throw error;
+            if (!data || !data.pdf_data) throw new Error('No PDF has been uploaded for this title.');
+
+            state.fileCache.set(key, data.pdf_data);
+            if (state.fileCache.size > 3) state.fileCache.delete(state.fileCache.keys().next().value);
+            return data.pdf_data;
+        }
+
+        function downloadFile(url, book) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = book.pdf_filename || `${safeFileName(book.title)}.pdf`;
+            a.rel = 'noopener';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        // Downloads straight from the page: no new tab or window
+        async function downloadBook(card, trigger) {
+            const book = findBook(card);
+            if (!book) return;
+
+            // No PDF yet: show the details panel, which explains it
+            if (!book.pdf_filename) { setInfoOpen(card, true); return; }
+
+            trigger.classList.add('is-busy');
+            try {
+                const source = await getBookFile(book.id);
+                let blob;
+                if (source.indexOf('data:') === 0) {
+                    blob = dataUrlToBlob(source);
+                } else {
+                    blob = await (await fetch(source)).blob();   // makes the download attribute work for normal URLs too
+                }
+                const url = URL.createObjectURL(blob);
+                downloadFile(url, book);
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+            } catch (err) {
+                console.error('Download book error:', err);
+                alert('Sorry, this book could not be downloaded. ' + (err && err.message ? err.message : ''));
+            } finally {
+                trigger.classList.remove('is-busy');
+            }
+        }
+
+        // ---------- Details panel (the little "i" button) ----------
+        function setInfoOpen(card, open) {
+            if (open) {
+                $('booksGrid').querySelectorAll('.book-card.open').forEach((c) => {
+                    if (c !== card) setInfoOpen(c, false);   // only one panel open at a time
+                });
+            }
+            card.classList.toggle('open', open);
+            const icon = card.querySelector('.info-btn i');
+            if (icon) icon.className = open ? 'fa-solid fa-xmark' : 'fa-solid fa-info';
+        }
+
+        // ---------- Events ----------
+        $('booksGrid').addEventListener('click', (e) => {
+            const el = e.target.closest('[data-action]');
+            if (!el) return;
+            e.preventDefault();
+
+            const card = el.closest('.book-card');
+            if (!card) return;
+
+            if (el.dataset.action === 'info') setInfoOpen(card, !card.classList.contains('open'));
+            else if (el.dataset.action === 'download') downloadBook(card, el);
+        });
+
+        $('bookSearch').addEventListener('input', applyFilter);
+
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 
