@@ -17,6 +17,9 @@
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- PDF.js (reads the first page of a PDF to build a cover) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
     <style>
         :root {
             --primary-dark: #0a192f;
@@ -29,6 +32,18 @@
             --header-bible: #0284c7;
             /* Sky blue theme for Bible study guides */
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* ---- Height of the guide area (left panel + scrolling guides) ----
+               At least 620px, which fits the whole left panel and two full rows of guides
+               with a peek of the third row. On taller screens it grows to fill the window.
+               index.html sets --app-vh (1% of the real window height) and the "embedded" class;
+               it keeps this page from growing with the iframe. */
+            --shell-h: 0px;
+            --books-h: max(620px, calc(var(--app-vh, 1vh) * 100 - var(--shell-h) - 215px));
+        }
+
+        html.embedded {
+            --shell-h: 77px;
         }
 
         * {
@@ -88,6 +103,10 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
+        .bible-banner-text {
+            max-width: 700px;
+        }
+
         .bible-title {
             color: #ffffff;
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -96,16 +115,26 @@
             line-height: 1.15;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            max-width: 700px;
+        }
+
+        .bible-hint {
+            margin-top: 0.75rem;
+            color: #7dd3fc;
+            font-size: clamp(0.85rem, 1.6vw, 1rem);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .bible-hint i {
+            margin-right: 0.4rem;
         }
 
         /* ==========================================
-           MAIN CONTENT SECTION (Small Left Margin)
+           MAIN CONTENT SECTION
         ========================================== */
         .bible-section {
             padding: 2.5rem 2%;
             background-color: #fafbfc;
-            min-height: 600px;
         }
 
         .section-intro-header {
@@ -125,22 +154,24 @@
             font-size: 0.95rem;
         }
 
+        /* Fixed-height area: left panel shows in full, guides scroll on the right */
         .main-bible-container {
             display: grid;
-            grid-template-columns: 240px 1fr;
+            grid-template-columns: 240px minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr);
             gap: 1.75rem;
-            align-items: start;
+            align-items: stretch;
+            height: var(--books-h);
         }
 
-        /* Left Side Card Cover/Sidebar */
+        /* Left side: cover + search. Shows all its content, never scrolls */
         .bible-sidebar-box {
+            align-self: start;
             background: #ffffff;
             padding: 1rem;
             border-radius: 10px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
-            position: sticky;
-            top: 95px;
         }
 
         .bible-sidebar-box img {
@@ -188,12 +219,18 @@
         }
 
         /* ==========================================
-           RIGHT SIDE BOOK GRID
+           RIGHT SIDE GUIDE GRID (the only part that scrolls)
         ========================================== */
         .books-grid {
+            height: 100%;
+            overflow-y: auto;
+            align-content: start;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 1.25rem 0.85rem;
+            padding: 0.5rem 0.75rem 1.25rem 0.25rem;
+            scrollbar-width: thin;
+            scrollbar-color: #94a3b8 transparent;
         }
 
         .book-card {
@@ -224,10 +261,16 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: top center;
             display: block;
         }
 
-        /* Shown instead of the cover when a guide has no cover image */
+        /* Hide the <img> while the placeholder is showing */
+        .book-cover-wrapper.no-cover img {
+            display: none;
+        }
+
+        /* Shown instead of the cover when a guide has no cover image yet */
         .cover-fallback {
             display: none;
             position: absolute;
@@ -255,6 +298,22 @@
 
         .book-cover-wrapper.no-cover .cover-fallback {
             display: flex;
+        }
+
+        .book-cover-wrapper.generating .cover-fallback i {
+            animation: pulse 1.1s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
         }
 
         .info-btn {
@@ -338,12 +397,6 @@
             transition: background 0.2s ease, color 0.2s ease;
         }
 
-        .info-action.secondary {
-            background: transparent;
-            color: #7dd3fc;
-            border-color: #7dd3fc;
-        }
-
         .info-action:hover {
             background: #ffffff;
             color: #0f172a;
@@ -361,6 +414,7 @@
             color: #7dd3fc;
         }
 
+        /* Title link under the cover (click = download) */
         .book-title-link {
             margin-top: 0.5rem;
             font-size: 0.85rem;
@@ -374,6 +428,7 @@
             line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .book-title-link:hover {
@@ -475,21 +530,25 @@
         }
 
         /* ==========================================
-           RESPONSIVE LAYOUT
+           MOBILE / TABLET: panel on top, guides scroll in a fixed-height box below it
         ========================================== */
         @media (max-width: 900px) {
             .main-bible-container {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: auto auto;
+                height: auto;
                 gap: 2rem;
             }
 
             .bible-sidebar-box {
-                position: static;
+                width: 100%;
                 max-width: 280px;
                 margin: 0 auto;
+                align-self: auto;
             }
 
             .books-grid {
+                height: max(460px, calc(var(--app-vh, 1vh) * 75));
                 grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
                 gap: 1.25rem 0.75rem;
             }
@@ -516,7 +575,10 @@
     <!-- BIBLE STUDY BANNER HEADER -->
     <div class="bible-banner">
         <div class="bible-badge">SCRIPTURE STUDY</div>
-        <h1 class="bible-title">Bible Study Guides & Series</h1>
+        <div class="bible-banner-text">
+            <h1 class="bible-title">Bible Study Guides & Series</h1>
+            <p class="bible-hint"><i class="fa-solid fa-download"></i> Click the title of the guide to download</p>
+        </div>
     </div>
 
     <!-- MAIN COLLECTION SECTION -->
@@ -529,9 +591,9 @@
 
         <div class="main-bible-container">
 
-            <!-- LEFT COLUMN: Sidebar & Search -->
+            <!-- LEFT COLUMN: Sidebar & Search (shows in full, does not scroll) -->
             <div class="bible-sidebar-box">
-                <img src="bible_study.png" alt="Bible Study Guide Cover">
+                <img src="images/bible_study.jfif" alt="Bible Study Guide Cover">
                 <div class="sidebar-caption">
                     <h4>Topical Bible Guides</h4>
                     <p>Comprehensive study materials for personal devotion and group lessons.</p>
@@ -541,7 +603,7 @@
                 <p class="guide-count" id="guideCount">&nbsp;</p>
             </div>
 
-            <!-- RIGHT COLUMN: Guide Grid (filled dynamically from Supabase) -->
+            <!-- RIGHT COLUMN: Guide Grid (scrolls on its own; filled dynamically from Supabase) -->
             <div class="books-grid" id="booksGrid"></div>
 
         </div>
@@ -555,12 +617,21 @@
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
         const CATEGORY = 'bible_study';   // matches "Bible Study Guide" in admin_material.html (Books & Guides tab)
 
+        const COVER_WIDTH = 260;      // px width of generated covers (small = faster)
+        const COVER_JOBS = 3;         // covers built at the same time
+
+        // PDF.js worker (needed to render PDF pages)
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
         // ---------- State ----------
         let supabaseClient = null;
         const state = {
             guides: [],           // light records: id, title, cover_image, pdf_filename, created_at
             token: 0,             // guards against out-of-order responses
-            fileCache: new Map()  // guide id -> Base64 PDF (keeps the last few so Read + Download is instant)
+            fileCache: new Map()  // guide id -> Base64 PDF (keeps the last few so downloads right after a cover are instant)
         };
 
         // ---------- Helpers ----------
@@ -606,18 +677,169 @@
             $('guideCount').textContent = 'Loading guides…';
         }
 
-        // ---------- Rendering ----------
-        function mountCover(wrapper, img, src) {
-            if (!src) {
-                wrapper.classList.add('no-cover');
-                img.remove();
-                return;
+        // ---------- Saved covers (IndexedDB): covers built once are instant on every later visit ----------
+        const coverDB = (() => {
+            let dbPromise = null;
+
+            function open() {
+                if (dbPromise) return dbPromise;
+                dbPromise = new Promise((resolve) => {
+                    try {
+                        const rq = indexedDB.open('bible-study-covers', 1);
+                        rq.onupgradeneeded = () => rq.result.createObjectStore('covers');
+                        rq.onsuccess = () => resolve(rq.result);
+                        rq.onerror = () => resolve(null);
+                        rq.onblocked = () => resolve(null);
+                    } catch (e) {
+                        resolve(null);
+                    }
+                });
+                return dbPromise;
             }
-            img.onerror = () => {
-                wrapper.classList.add('no-cover');
-                img.remove();
+
+            return {
+                async get(key) {
+                    const db = await open();
+                    if (!db) return null;
+                    return new Promise((resolve) => {
+                        try {
+                            const rq = db.transaction('covers').objectStore('covers').get(key);
+                            rq.onsuccess = () => resolve(rq.result || null);
+                            rq.onerror = () => resolve(null);
+                        } catch (e) { resolve(null); }
+                    });
+                },
+                async put(key, value) {
+                    const db = await open();
+                    if (!db) return;
+                    try { db.transaction('covers', 'readwrite').objectStore('covers').put(value, key); } catch (e) { /* ignore */ }
+                }
             };
-            img.src = src; // set through the DOM so large Base64 strings never go through an HTML template
+        })();
+
+        // A new upload (different file or date) gets a new key, so old covers are never reused by mistake
+        function coverKey(guide) {
+            return [guide.id, guide.pdf_filename || '', guide.created_at || ''].join('|');
+        }
+
+        // ---------- Auto cover from the PDF's first page ----------
+        const coverCache = new Map();   // guide id -> JPEG data URL (this session)
+        const coverQueue = [];
+        let coverActive = 0;
+        let coverObserver = null;
+
+        // Watches the cards so only guides near the visible part of the scrolling grid are processed
+        function getCoverObserver() {
+            if (!coverObserver) {
+                coverObserver = new IntersectionObserver((entries, obs) => {
+                    entries.forEach((entry) => {
+                        if (!entry.isIntersecting) return;
+                        obs.unobserve(entry.target);
+                        coverQueue.push(entry.target);
+                    });
+                    runCoverQueue();
+                }, { root: $('booksGrid'), rootMargin: '600px 0px' });
+            }
+            return coverObserver;
+        }
+
+        function runCoverQueue() {
+            while (coverActive < COVER_JOBS && coverQueue.length) {
+                const card = coverQueue.shift();
+                if (!card.isConnected) continue;   // grid was re-rendered meanwhile
+                coverActive++;
+                makeCover(card).finally(() => { coverActive--; runCoverQueue(); });
+            }
+        }
+
+        function applyCover(card, guide, cover) {
+            const wrapper = card.querySelector('.book-cover-wrapper');
+            let img = wrapper.querySelector('img');
+            if (!img) {
+                img = document.createElement('img');
+                img.alt = guide.title;
+                wrapper.insertBefore(img, wrapper.firstChild);
+            }
+            img.onerror = null;
+            img.src = cover;
+            wrapper.classList.remove('no-cover');
+        }
+
+        async function makeCover(card) {
+            const guide = findGuide(card);
+            if (!guide) return;
+            const wrapper = card.querySelector('.book-cover-wrapper');
+            wrapper.classList.add('generating');
+            try {
+                let cover = coverCache.get(String(guide.id));
+                if (!cover) {
+                    const source = await getGuideFile(guide.id);
+                    cover = await renderFirstPage(source);
+                    coverCache.set(String(guide.id), cover);
+                    coverDB.put(coverKey(guide), cover);   // remember it for next time
+                }
+                applyCover(card, guide, cover);
+            } catch (err) {
+                console.warn('Could not build cover for', guide.title, err);   // placeholder stays
+            } finally {
+                wrapper.classList.remove('generating');
+            }
+        }
+
+        async function renderFirstPage(source) {
+            if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
+
+            let params;
+            if (source.indexOf('data:') === 0) {
+                const binary = atob(source.slice(source.indexOf(',') + 1));
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                params = { data: bytes };
+            } else {
+                params = { url: source };
+            }
+
+            const pdf = await pdfjsLib.getDocument(params).promise;
+            try {
+                const page = await pdf.getPage(1);
+                const base = page.getViewport({ scale: 1 });
+                const viewport = page.getViewport({ scale: COVER_WIDTH / base.width });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(viewport.width);
+                canvas.height = Math.round(viewport.height);
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                return canvas.toDataURL('image/jpeg', 0.8);
+            } finally {
+                pdf.destroy();
+            }
+        }
+
+        // ---------- Rendering ----------
+        function mountCover(card, guide) {
+            const wrapper = card.querySelector('.book-cover-wrapper');
+            const img = wrapper.querySelector('img');
+
+            // No saved cover (or it failed to load): use a remembered one, otherwise build it from the PDF's first page
+            const useFirstPage = async () => {
+                img.onerror = null;
+                img.removeAttribute('src');
+                wrapper.classList.add('no-cover');   // placeholder shows until the real cover is ready
+                if (!guide.pdf_filename) return;
+
+                const cached = await coverDB.get(coverKey(guide));
+                if (!card.isConnected) return;
+                if (cached) {
+                    coverCache.set(String(guide.id), cached);
+                    applyCover(card, guide, cached);
+                } else {
+                    getCoverObserver().observe(card);
+                }
+            };
+
+            if (!guide.cover_image) { useFirstPage(); return; }
+            img.onerror = useFirstPage;
+            img.src = guide.cover_image;   // set through the DOM so large Base64 strings never go through an HTML template
         }
 
         function renderGuides() {
@@ -640,8 +862,7 @@
                                 ${added ? `<div class="info-meta">Added ${esc(added)}</div>` : ''}
                                 ${hasPdf
                         ? `<div class="info-meta">${esc(g.pdf_filename)}</div>
-                                       <button type="button" class="info-action" data-action="read">Read online</button>
-                                       <button type="button" class="info-action secondary" data-action="download">Download PDF</button>`
+                                       <button type="button" class="info-action" data-action="download">Download PDF</button>`
                         : '<div class="info-unavailable">PDF not available yet</div>'}
                             </div>
 
@@ -649,7 +870,7 @@
                                 <i class="fa-solid fa-info"></i>
                             </button>
                         </div>
-                        <a href="#" class="book-title-link" data-action="read">${esc(g.title)}</a>
+                        <a href="#" class="book-title-link" data-action="download" title="Click to download">${esc(g.title)}</a>
                     </div>`;
             }).join('') + `
                 <div class="state-box" id="noMatch" style="display: none;">
@@ -660,9 +881,7 @@
 
             // Covers
             const cards = $('booksGrid').querySelectorAll('.book-card');
-            cards.forEach((card, i) => {
-                mountCover(card.querySelector('.book-cover-wrapper'), card.querySelector('img'), guides[i].cover_image);
-            });
+            cards.forEach((card, i) => mountCover(card, guides[i]));
 
             applyFilter();
         }
@@ -698,7 +917,7 @@
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
 
-                // pdf_data is NOT requested here; the PDF is fetched only when someone opens or downloads a guide
+                // pdf_data is NOT requested here; the PDF is fetched only when a cover is built or a guide is downloaded
                 const { data, error } = await supabaseClient
                     .from('study_books')
                     .select('id, title, cover_image, pdf_filename, created_at')
@@ -746,7 +965,7 @@
             }
         }
 
-        // ---------- Opening / downloading a guide ----------
+        // ---------- Downloading a guide ----------
         function dataUrlToBlob(dataUrl) {
             const commaIdx = dataUrl.indexOf(',');
             const meta = dataUrl.slice(0, commaIdx);
@@ -777,10 +996,6 @@
             return data.pdf_data;
         }
 
-        function toUrl(source) {
-            return source.indexOf('data:') === 0 ? URL.createObjectURL(dataUrlToBlob(source)) : source;
-        }
-
         function downloadFile(url, guide) {
             const a = document.createElement('a');
             a.href = url;
@@ -791,45 +1006,26 @@
             a.remove();
         }
 
-        async function readGuide(card, trigger) {
+        // Downloads straight from the page: no new tab or window
+        async function downloadGuide(card, trigger) {
             const guide = findGuide(card);
             if (!guide) return;
 
             // No PDF yet: show the details panel, which explains it
-            if (!guide.pdf_filename) {
-                setInfoOpen(card, true);
-                return;
-            }
-
-            // Open the tab right away (inside the click) so pop-up blockers allow it
-            const win = window.open('', '_blank');
-            if (win) win.document.write('<p style="font-family: sans-serif; padding: 2rem;">Loading guide…</p>');
+            if (!guide.pdf_filename) { setInfoOpen(card, true); return; }
 
             trigger.classList.add('is-busy');
             try {
                 const source = await getGuideFile(guide.id);
-                const url = toUrl(source);
-                if (win) win.location.href = url;
-                else downloadFile(url, guide);          // pop-up blocked: download instead
-            } catch (err) {
-                console.error('Open guide error:', err);
-                if (win) win.close();
-                alert('Sorry, this guide could not be opened. ' + (err && err.message ? err.message : ''));
-            } finally {
-                trigger.classList.remove('is-busy');
-            }
-        }
-
-        async function downloadGuide(card, trigger) {
-            const guide = findGuide(card);
-            if (!guide || !guide.pdf_filename) return;
-
-            trigger.classList.add('is-busy');
-            try {
-                const source = await getGuideFile(guide.id);
-                const url = toUrl(source);
+                let blob;
+                if (source.indexOf('data:') === 0) {
+                    blob = dataUrlToBlob(source);
+                } else {
+                    blob = await (await fetch(source)).blob();   // makes the download attribute work for normal URLs too
+                }
+                const url = URL.createObjectURL(blob);
                 downloadFile(url, guide);
-                if (source.indexOf('data:') === 0) setTimeout(() => URL.revokeObjectURL(url), 5000);
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
             } catch (err) {
                 console.error('Download guide error:', err);
                 alert('Sorry, this guide could not be downloaded. ' + (err && err.message ? err.message : ''));
@@ -860,7 +1056,6 @@
             if (!card) return;
 
             if (el.dataset.action === 'info') setInfoOpen(card, !card.classList.contains('open'));
-            else if (el.dataset.action === 'read') readGuide(card, el);
             else if (el.dataset.action === 'download') downloadGuide(card, el);
         });
 

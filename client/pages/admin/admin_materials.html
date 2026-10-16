@@ -43,48 +43,6 @@
             padding-bottom: 4rem;
         }
 
-        header {
-            background: var(--primary-dark);
-            color: var(--white);
-            padding: 1rem 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-        }
-
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: var(--white);
-        }
-
-        .header-logo img {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            border: 2px solid var(--accent-gold);
-        }
-
-        .header-logo h1 {
-            font-size: 1.15rem;
-            font-weight: 700;
-        }
-
-        .header-badge {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--accent-gold);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border: 1px solid var(--accent-gold);
-        }
-
         .admin-container {
             max-width: 1150px;
             margin: 2rem auto 0 auto;
@@ -247,6 +205,163 @@
             color: var(--accent-green);
         }
 
+        /* COMPLETE LESSON (SINGLE DOCUMENT) UPLOAD */
+        .complete-upload {
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.1rem 1.25rem;
+            margin-bottom: 1.75rem;
+            background: var(--off-white);
+        }
+
+        .complete-upload h4 {
+            margin-bottom: 0.2rem;
+            color: var(--primary-dark);
+            font-size: 1rem;
+        }
+
+        .complete-upload .hint {
+            font-size: 0.82rem;
+            color: var(--text-gray);
+            margin-bottom: 0.9rem;
+        }
+
+        .complete-row {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+
+        .complete-row .cover-upload-box {
+            flex: 1 1 260px;
+        }
+
+        .btn-upload {
+            padding: 0.75rem 1.6rem;
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.25s ease, color 0.25s ease;
+        }
+
+        .btn-upload:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        .btn-upload:disabled {
+            background: var(--text-gray);
+            color: var(--white);
+            cursor: not-allowed;
+        }
+
+        .progress-wrap {
+            display: none;
+            margin-top: 1rem;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .progress-wrap.show {
+            display: flex;
+        }
+
+        .progress-label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .ring {
+            position: relative;
+            width: 84px;
+            height: 84px;
+            flex: 0 0 auto;
+        }
+
+        .ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .ring circle {
+            fill: none;
+            stroke-width: 10;
+        }
+
+        .ring .ring-bg {
+            stroke: #e2e8f0;
+        }
+
+        .ring .ring-fg {
+            stroke: var(--accent-green);
+            stroke-linecap: round;
+            stroke-dasharray: 326.73;
+            stroke-dashoffset: 326.73;
+            transition: stroke-dashoffset 0.2s linear;
+        }
+
+        .ring .ring-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--primary-dark);
+        }
+
+        .form-actions .progress-wrap {
+            margin: 0 auto 0 0;
+        }
+
+        .form-actions .btn-save {
+            align-self: center;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.9rem 1.3rem;
+            border-radius: 10px;
+            background: var(--accent-green);
+            color: var(--white);
+            font-weight: 700;
+            font-size: 0.92rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .toast.error {
+            background: #dc2626;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         /* 13-LESSON GRID LAYOUT */
         .grid-wrapper {
             margin-top: 1rem;
@@ -380,14 +495,11 @@
 
 <body>
 
-    <header>
-        <a href="index.html" class="header-logo">
-            <img src="https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png"
-                alt="SDA Logo">
-            <h1>Kimangu AY Admin</h1>
-        </a>
-        <span class="header-badge"><i class="fa-solid fa-folder-open"></i> Materials Manager</span>
-    </header>
+    <!-- Toast notification -->
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        <i class="fa-solid fa-circle-check" id="toastIcon"></i>
+        <span id="toastMsg"></span>
+    </div>
 
     <div class="admin-container">
 
@@ -471,6 +583,40 @@
                     </div>
                 </div>
 
+                <!-- COMPLETE LESSON (SINGLE DOCUMENT) UPLOAD -->
+                <div class="complete-upload">
+                    <h4><i class="fa-solid fa-file-pdf"></i> Complete Lesson Document</h4>
+                    <p class="hint">Upload the whole quarter as one single document (PDF). It uses the material type,
+                        quarter and year selected above.</p>
+
+                    <div class="complete-row">
+                        <div class="cover-upload-box">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                            <span style="font-size: 0.8rem; display: block; color: var(--text-gray);">Click or drag
+                                the complete lesson PDF</span>
+                            <input type="file" id="completeLessonFile" accept=".pdf,application/pdf"
+                                onchange="updateCoverLabel(this, 'completeLessonName')">
+                            <div id="completeLessonName" class="file-preview-name"></div>
+                        </div>
+
+                        <button type="button" id="completeUploadBtn" class="btn-upload"
+                            onclick="uploadCompleteLesson()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                        </button>
+                    </div>
+
+                    <div class="progress-wrap" id="progressWrap">
+                        <div class="ring" id="ringComplete">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+                                <circle class="ring-fg" cx="60" cy="60" r="52"></circle>
+                            </svg>
+                            <span class="ring-text">0%</span>
+                        </div>
+                        <span class="progress-label" id="progressLabel">Uploading...</span>
+                    </div>
+                </div>
+
                 <!-- 13 LESSONS GRID -->
                 <div>
                     <h4 style="margin-bottom: 0.6rem; color: var(--primary-dark); font-size: 1rem;">
@@ -494,6 +640,16 @@
                 </div>
 
                 <div class="form-actions">
+                    <div class="progress-wrap" id="saveWrap">
+                        <div class="ring" id="ringSave">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+                                <circle class="ring-fg" cx="60" cy="60" r="52"></circle>
+                            </svg>
+                            <span class="ring-text">0%</span>
+                        </div>
+                        <span class="progress-label" id="saveLabel">Saving...</span>
+                    </div>
                     <button type="submit" id="submitQuarterlyBtn" class="btn-save">
                         <i class="fa-solid fa-floppy-disk"></i> Save Quarterly Materials
                     </button>
@@ -568,6 +724,12 @@
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
 
+        // Storage bucket used for the complete lesson documents (create it in Supabase > Storage)
+        const COMPLETE_LESSON_BUCKET = 'complete-lessons';
+
+        // Table that holds the quarterly lessons (needs a "complete_lesson" text column)
+        const COMPLETE_LESSON_TABLE = 'quarterly_lessons';
+
         if (typeof supabaseAdmin === 'undefined') {
             var supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         }
@@ -605,6 +767,159 @@
             } else {
                 label.textContent = '';
             }
+        }
+
+        // ---------- Toast (shows for 2 seconds, then disappears) ----------
+        let toastTimer = null;
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = message;
+            document.getElementById('toastIcon').className =
+                isError ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-check';
+            toast.classList.toggle('error', isError);
+            toast.classList.add('show');
+
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // ---------- Complete lesson upload with progress counter ----------
+        // Circular progress ring (0-100)
+        function setRing(ringId, percent) {
+            const ring = document.getElementById(ringId);
+            const C = 2 * Math.PI * 52;
+            ring.querySelector('.ring-fg').style.strokeDashoffset = C * (1 - percent / 100);
+            ring.querySelector('.ring-text').textContent = percent + '%';
+        }
+
+        function setProgress(percent) {
+            setRing('ringComplete', percent);
+        }
+
+        function uploadCompleteLesson() {
+            const fileInput = document.getElementById('completeLessonFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showToast('Please choose the complete lesson document first.', true);
+                return;
+            }
+
+            const category = document.getElementById('qCategory').value;
+            const quarter = document.getElementById('qQuarter').value;
+            const year = document.getElementById('qYear').value;
+
+            const btn = document.getElementById('completeUploadBtn');
+            const wrap = document.getElementById('progressWrap');
+            const label = document.getElementById('progressLabel');
+
+            // Build a safe, unique storage path
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const quarterSlug = quarter.replace(/\s+/g, '_');
+            const path = `${category}/${year}_${quarterSlug}/${Date.now()}_${safeName}`;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+            label.textContent = 'Uploading...';
+            setProgress(0);
+            wrap.classList.add('show');
+
+            // XMLHttpRequest gives us real upload progress events
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${COMPLETE_LESSON_BUCKET}/${path}`);
+            xhr.setRequestHeader('apikey', SUPABASE_KEY);
+            xhr.setRequestHeader('x-upsert', 'false');
+
+            xhr.upload.onprogress = (evt) => {
+                if (evt.lengthComputable) {
+                    // hold at 99% until the server confirms the file is stored
+                    const pct = Math.min(99, Math.floor((evt.loaded / evt.total) * 100));
+                    setProgress(pct);
+                }
+            };
+
+            const resetButton = () => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload';
+            };
+
+            xhr.onload = async () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // File is fully stored: counter reaches 100%
+                    setProgress(100);
+                    label.textContent = 'Upload complete';
+
+                    try {
+                        const { data: urlData } = supabaseAdmin.storage
+                            .from(COMPLETE_LESSON_BUCKET)
+                            .getPublicUrl(path);
+
+                        // Save a record so the document can be listed on the site
+                        const yearNum = parseInt(year, 10);
+
+                        // Is there already a row for this category + quarter + year?
+                        const { data: existing, error: findErr } = await supabaseAdmin
+                            .from(COMPLETE_LESSON_TABLE)
+                            .select('id')
+                            .eq('category', category)
+                            .eq('quarter', quarter)
+                            .eq('year', yearNum)
+                            .order('id', { ascending: false })
+                            .limit(1);
+                        if (findErr) throw findErr;
+
+                        let error;
+                        if (existing && existing.length) {
+                            ({ error } = await supabaseAdmin
+                                .from(COMPLETE_LESSON_TABLE)
+                                .update({ complete_lesson: urlData.publicUrl })
+                                .eq('id', existing[0].id));
+                        } else {
+                            ({ error } = await supabaseAdmin
+                                .from(COMPLETE_LESSON_TABLE)
+                                .insert([{
+                                    category: category,
+                                    quarter: quarter,
+                                    year: yearNum,
+                                    lessons: [],
+                                    complete_lesson: urlData.publicUrl
+                                }]));
+                        }
+                        if (error) throw error;
+                    } catch (err) {
+                        console.error('Database record error:', err);
+                        showToast('File uploaded, but saving its record failed: ' + (err.message || 'unknown error'), true);
+                        resetButton();
+                        return;
+                    }
+
+                    showToast('Complete lesson uploaded successfully!');
+                    fileInput.value = '';
+                    document.getElementById('completeLessonName').textContent = '';
+
+                    // hide the progress bar shortly after the toast disappears
+                    setTimeout(() => {
+                        wrap.classList.remove('show');
+                        setProgress(0);
+                    }, 2000);
+                    resetButton();
+                } else {
+                    let msg = 'Upload failed';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) { }
+                    console.error('Upload error:', xhr.status, xhr.responseText);
+                    wrap.classList.remove('show');
+                    showToast(msg, true);
+                    resetButton();
+                }
+            };
+
+            xhr.onerror = () => {
+                wrap.classList.remove('show');
+                showToast('Network error. Check your connection.', true);
+                resetButton();
+            };
+
+            xhr.send(file);
         }
 
         // Render Exactly 13 Rows for Lessons Grid
@@ -660,21 +975,53 @@
             });
         }
 
+        // Send JSON to Supabase REST with real upload progress (fraction 0-1)
+        function sendWithProgress(method, url, body, onProgress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open(method, url);
+                xhr.setRequestHeader('apikey', SUPABASE_KEY);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('Prefer', 'return=minimal');
+                xhr.upload.onprogress = (evt) => {
+                    if (evt.lengthComputable) onProgress(evt.loaded / evt.total);
+                };
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) return resolve();
+                    let msg = 'Request failed';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) { }
+                    reject(new Error(msg));
+                };
+                xhr.onerror = () => reject(new Error('Network error. Check your connection.'));
+                xhr.send(JSON.stringify(body));
+            });
+        }
+
         // Handle Quarterly Lessons Submission
         async function handleQuarterlySubmit(e) {
             e.preventDefault();
 
+            const form = e.target;
             const submitBtn = document.getElementById('submitQuarterlyBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading to Database...';
+            const wrap = document.getElementById('saveWrap');
+            const label = document.getElementById('saveLabel');
 
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+            label.textContent = 'Saving...';
+            setRing('ringSave', 0);
+            wrap.classList.add('show');
+
+            let success = false;
             try {
                 const category = document.getElementById('qCategory').value;
                 const quarter = document.getElementById('qQuarter').value;
                 const year = document.getElementById('qYear').value;
                 const coverImgFile = document.getElementById('qCoverImg').files[0];
 
+                // Stage 1 (0-30%): reading the files
                 const coverBase64 = coverImgFile ? await fileToBase64(coverImgFile) : null;
+                setRing('ringSave', 5);
 
                 const dates = document.querySelectorAll('.row-date');
                 const titles = document.querySelectorAll('.row-title');
@@ -692,6 +1039,7 @@
                         pdf_filename: pdfFile ? pdfFile.name : null,
                         pdf_data: pdfBase64
                     });
+                    setRing('ringSave', 5 + Math.round(((i + 1) / 13) * 25));
                 }
 
                 const payload = {
@@ -702,22 +1050,46 @@
                     lessons: lessonsArr
                 };
 
-                const { data, error } = await supabaseAdmin
+                // Update the row if one exists already (e.g. created by the complete lesson upload)
+                const { data: existing, error: findErr } = await supabaseAdmin
                     .from('quarterly_lessons')
-                    .insert([payload]);
+                    .select('id')
+                    .eq('category', payload.category)
+                    .eq('quarter', payload.quarter)
+                    .eq('year', payload.year)
+                    .order('id', { ascending: false })
+                    .limit(1);
+                if (findErr) throw findErr;
 
-                if (error) throw error;
+                const restUrl = `${SUPABASE_URL}/rest/v1/quarterly_lessons`;
+                const method = existing && existing.length ? 'PATCH' : 'POST';
+                const url = method === 'PATCH' ? `${restUrl}?id=eq.${existing[0].id}` : restUrl;
 
-                alert(`Successfully saved ${quarter} ${year} (${category}) materials to database!`);
-                e.target.reset();
+                // Stage 2 (30-99%): sending to the database
+                await sendWithProgress(method, url, payload, (frac) => {
+                    setRing('ringSave', Math.min(99, 30 + Math.floor(frac * 69)));
+                });
+
+                // Stage 3: saved -> 100%
+                setRing('ringSave', 100);
+                label.textContent = 'Saved';
+                success = true;
+
+                showToast(`${quarter} ${year} (${category}) materials saved successfully!`);
+                form.reset();
                 document.getElementById('qCoverName').textContent = '';
+                document.getElementById('completeLessonName').textContent = '';
                 render13GridRows();
             } catch (err) {
                 console.error('Supabase Error:', err);
-                alert(`Error saving to database: ${err.message || 'Check network connection'}`);
+                showToast(`Error saving: ${err.message || 'Check network connection'}`, true);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Quarterly Materials';
+                setTimeout(() => {
+                    wrap.classList.remove('show');
+                    setRing('ringSave', 0);
+                }, success ? 2000 : 0);
             }
         }
 
