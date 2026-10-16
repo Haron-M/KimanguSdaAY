@@ -214,6 +214,28 @@
             color: var(--text-gray);
         }
 
+        /* Complete lesson download button (left column) */
+        .complete-download-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1rem;
+            padding: 0.7rem 1rem;
+            background: var(--primary-dark);
+            color: var(--white);
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .complete-download-btn:hover {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
         /* Right Side Lesson Table List (3 Columns Desktop Layout) */
         .lessons-list {
             display: flex;
@@ -476,7 +498,7 @@
 
         <div class="quarter-container" id="quarterContainer">
 
-            <!-- LEFT COLUMN: Cover Image -->
+            <!-- LEFT COLUMN: Cover Image + Complete Lesson Download -->
             <div class="lesson-cover-box is-loading" id="coverBox">
                 <img id="coverImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                     alt="Cornerstone Connections Cover">
@@ -484,6 +506,10 @@
                     <h4>Youth Sabbath School</h4>
                     <p id="coverCaption">&nbsp;</p>
                 </div>
+
+                <a href="#" id="completeDownloadBtn" class="complete-download-btn">
+                    <i class="fa-solid fa-download"></i> Download Complete Lesson
+                </a>
             </div>
 
             <!-- RIGHT COLUMN: Lesson List (Date | Title [Desktop Only] | Download) -->
@@ -560,6 +586,7 @@
             $('quarterContainer').classList.remove('no-cover');
             $('coverBox').style.display = '';
             $('coverBox').classList.add('is-loading');
+            $('completeDownloadBtn').style.display = 'none';
 
             let rows = '';
             for (let i = 0; i < 6; i++) {
@@ -624,6 +651,22 @@
             img.src = src || FALLBACK_COVER;
         }
 
+        // Shows / hides the "Download Complete Lesson" button under the cover
+        function setCompleteDownload(record, qNum) {
+            const btn = $('completeDownloadBtn');
+
+            if (record.complete_lesson) {
+                const niceName = `Cornerstone_${record.year}_Q${qNum}_Complete_Lesson.pdf`;
+                const sep = record.complete_lesson.includes('?') ? '&' : '?';
+                // "?download=" makes Supabase Storage send the file as a download with this name
+                btn.href = record.complete_lesson + sep + 'download=' + encodeURIComponent(niceName);
+                btn.style.display = 'flex';
+            } else {
+                btn.style.display = 'none';
+                btn.removeAttribute('href');
+            }
+        }
+
         function renderQuarter(record) {
             const qNum = quarterNumber(record.quarter);
             const months = QUARTER_MONTHS[qNum];
@@ -637,6 +680,7 @@
             $('quarterContainer').classList.remove('no-cover');
             $('coverBox').style.display = '';
             setCover(record.cover_image);
+            setCompleteDownload(record, qNum);
 
             // Lessons come back as a JSONB array; sort by lesson number to be safe
             let lessons = record.lessons;
