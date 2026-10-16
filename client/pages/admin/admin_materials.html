@@ -710,6 +710,16 @@
                 </div>
 
                 <div class="form-actions">
+                    <div class="progress-wrap" id="bookWrap">
+                        <div class="ring" id="ringBook">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+                                <circle class="ring-fg" cx="60" cy="60" r="52"></circle>
+                            </svg>
+                            <span class="ring-text">0%</span>
+                        </div>
+                        <span class="progress-label" id="bookLabel">Uploading...</span>
+                    </div>
                     <button type="submit" id="submitBookBtn" class="btn-save">
                         <i class="fa-solid fa-cloud-arrow-up"></i> Upload Book / Guide
                     </button>
@@ -1097,18 +1107,29 @@
         async function handleBookSubmit(e) {
             e.preventDefault();
 
+            const form = e.target;
             const submitBtn = document.getElementById('submitBookBtn');
+            const wrap = document.getElementById('bookWrap');
+            const label = document.getElementById('bookLabel');
+
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading Book...';
+            label.textContent = 'Uploading...';
+            setRing('ringBook', 0);
+            wrap.classList.add('show');
 
+            let success = false;
             try {
                 const category = document.getElementById('bCategory').value;
                 const title = document.getElementById('bTitle').value;
                 const coverFile = document.getElementById('bCoverImg').files[0];
                 const pdfFile = document.getElementById('bPdfFile').files[0];
 
+                // Stage 1 (0-30%): reading the files
                 const coverBase64 = coverFile ? await fileToBase64(coverFile) : null;
+                setRing('ringBook', 10);
                 const pdfBase64 = pdfFile ? await fileToBase64(pdfFile) : null;
+                setRing('ringBook', 30);
 
                 const payload = {
                     category: category,
@@ -1118,22 +1139,30 @@
                     pdf_filename: pdfFile ? pdfFile.name : null
                 };
 
-                const { data, error } = await supabaseAdmin
-                    .from('study_books')
-                    .insert([payload]);
+                // Stage 2 (30-99%): sending to the database
+                await sendWithProgress('POST', `${SUPABASE_URL}/rest/v1/study_books`, payload, (frac) => {
+                    setRing('ringBook', Math.min(99, 30 + Math.floor(frac * 69)));
+                });
 
-                if (error) throw error;
+                // Stage 3: saved -> 100%
+                setRing('ringBook', 100);
+                label.textContent = 'Uploaded';
+                success = true;
 
-                alert(`Successfully uploaded "${title}" to database!`);
-                e.target.reset();
+                showToast(`"${title}" uploaded successfully!`);
+                form.reset();
                 document.getElementById('bCoverName').textContent = '';
                 document.getElementById('bPdfName').textContent = '';
             } catch (err) {
                 console.error('Supabase Error:', err);
-                alert(`Error uploading book: ${err.message || 'Check network connection'}`);
+                showToast(`Error uploading book: ${err.message || 'Check network connection'}`, true);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload Book / Guide';
+                setTimeout(() => {
+                    wrap.classList.remove('show');
+                    setRing('ringBook', 0);
+                }, success ? 2000 : 0);
             }
         }
 
