@@ -4,11 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cornerstone Connections Lessons | Kimangu AY</title>
+    <title>Kimangu AY Admin | Materials Manager</title>
 
     <!-- Google Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
 
     <!-- FontAwesome Icons -->
@@ -22,12 +21,12 @@
             --primary-dark: #0a192f;
             --primary-blue: #0f2b4c;
             --accent-gold: #f59e0b;
+            --accent-green: #10b981;
             --white: #ffffff;
             --off-white: #f8fafc;
             --text-gray: #64748b;
-            --border-color: #e2e8f0;
-            --header-brown: #5c3b28;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-color: #cbd5e1;
+            --card-shadow: 0 10px 25px rgba(10, 25, 47, 0.08);
         }
 
         * {
@@ -36,849 +35,1202 @@
             box-sizing: border-box;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
-
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
             color: var(--primary-dark);
-            background-color: var(--white);
-            line-height: 1.6;
-            overflow-x: hidden;
+            line-height: 1.5;
+            padding-bottom: 4rem;
         }
 
-        h1,
-        h2,
-        h3,
-        .serif-font {
-            font-family: 'Playfair Display', serif;
+        .admin-container {
+            max-width: 1150px;
+            margin: 2rem auto 0 auto;
+            padding: 0 1rem;
         }
 
-        /* ==========================================
-           CORNERSTONE PAGE HEADER BANNER
-        ========================================== */
-        .cornerstone-banner {
-            position: relative;
-            width: 100%;
-            height: 260px;
-            background-image: linear-gradient(rgba(20, 10, 5, 0.75),
-                    rgba(20, 10, 5, 0.85)), url('https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1800&q=80');
-            background-size: cover;
-            background-position: center 30%;
+        .page-title {
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .page-title p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+
+        .main-selector-box {
+            background: var(--white);
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
             display: flex;
             align-items: center;
-            padding: 0 8%;
-            overflow: hidden;
-            border-bottom: 6px solid #e2dcd5;
-        }
-
-        .cornerstone-badge {
-            position: absolute;
-            top: 0;
-            left: 12%;
-            background-color: var(--header-brown);
-            color: #ffffff;
-            padding: 6px 18px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .cornerstone-title {
-            color: #ffffff;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-            font-weight: 800;
-            line-height: 1.15;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            max-width: 700px;
-        }
-
-        /* ==========================================
-           MAIN CONTENT & LESSONS SECTION
-        ========================================== */
-        .lessons-section {
-            padding: 4rem 8%;
-            background-color: #fafbfc;
-            min-height: 600px;
-        }
-
-        .quarter-header {
-            margin-bottom: 2.5rem;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 0.8rem;
-            display: flex;
             justify-content: space-between;
-            align-items: flex-end;
-            gap: 1rem;
+            gap: 1.5rem;
             flex-wrap: wrap;
         }
 
-        .quarter-header h2 {
-            font-size: 1.8rem;
-            color: var(--primary-dark);
-            font-weight: 700;
-        }
-
-        .quarter-header p {
-            color: var(--text-gray);
-            font-size: 0.95rem;
-        }
-
-        /* Quarter picker (only shown when more than one quarter exists) */
-        .quarter-picker {
-            display: none;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .quarter-picker label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-gray);
-        }
-
-        .quarter-picker select {
-            padding: 0.55rem 0.9rem;
-            border: 1.5px solid var(--border-color);
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--primary-dark);
-            background: #ffffff;
-            cursor: pointer;
-            outline: none;
-            transition: border-color 0.2s ease;
-        }
-
-        .quarter-picker select:focus {
-            border-color: var(--accent-gold);
-        }
-
-        .quarter-container {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 3.5rem;
-            align-items: start;
-        }
-
-        .quarter-container.no-cover {
-            grid-template-columns: 1fr;
-        }
-
-        /* Left Side Cover Photo */
-        .lesson-cover-box {
-            background: #ffffff;
-            padding: 1rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
-            border: 1px solid var(--border-color);
-        }
-
-        .lesson-cover-box img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-            display: block;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: opacity 0.3s ease;
-        }
-
-        .lesson-cover-box.is-loading img {
-            min-height: 320px;
-            object-fit: cover;
-            opacity: 0.6;
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.4s infinite linear;
-        }
-
-        .cover-caption {
-            margin-top: 1rem;
-            text-align: center;
-        }
-
-        .cover-caption h4 {
-            font-size: 1.1rem;
-            color: var(--primary-dark);
-            font-weight: 700;
-        }
-
-        .cover-caption p {
-            font-size: 0.85rem;
-            color: var(--text-gray);
-        }
-
-        /* Complete lesson download button (left column) */
-        .complete-download-btn {
-            display: none;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 1rem;
-            padding: 0.7rem 1rem;
-            background: var(--primary-dark);
-            color: var(--white);
-            border-radius: 8px;
-            font-size: 0.88rem;
-            font-weight: 700;
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .complete-download-btn:hover {
-            background: var(--accent-gold);
-            color: var(--primary-dark);
-        }
-
-        /* Right Side Lesson Table List (3 Columns Desktop Layout) */
-        .lessons-list {
+        .tab-buttons {
             display: flex;
-            flex-direction: column;
-            border: 1px solid #f1f5f9;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-            background: #ffffff;
-        }
-
-        .lesson-row {
-            display: grid;
-            grid-template-columns: 220px 1fr 130px;
-            align-items: center;
-            padding: 0.9rem 1.25rem;
-            border-bottom: 1px solid #f1f5f9;
             gap: 1rem;
-            transition: background-color 0.2s ease;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.2rem;
+            overflow-x: auto;
         }
 
-        .lesson-row:nth-child(even) {
-            background-color: #f8fafc;
-        }
-
-        .lesson-row:hover {
-            background-color: #f1f5f9;
-        }
-
-        .lesson-row:last-child {
-            border-bottom: none;
-        }
-
-        /* Column 1: Date & Lesson Number */
-        .lesson-date {
+        .tab-btn {
+            padding: 0.75rem 1.25rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.92rem;
-            font-weight: 600;
+            gap: 8px;
             white-space: nowrap;
         }
 
-        .lesson-date i {
-            color: #d97706;
-            font-size: 0.75rem;
+        .tab-btn:hover {
+            color: var(--primary-dark);
         }
 
-        .lesson-date .lesson-label {
-            color: #d97706;
+        .tab-btn.active {
+            color: var(--primary-dark);
+            border-bottom-color: var(--accent-gold);
         }
 
-        /* Highlights the upcoming / current Sabbath lesson */
-        .lesson-date .lesson-label.active-link {
-            color: #0284c7;
+        .form-panel {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            display: none;
         }
 
-        /* Column 2: Lesson Title */
-        .lesson-title-text {
+        .form-panel.active {
+            display: block;
+        }
+
+        .panel-header {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .panel-header h3 {
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+        }
+
+        .form-grid-top {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .form-control {
+            padding: 0.65rem 0.8rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+            background: #ffffff;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .cover-upload-box {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 0.85rem;
+            text-align: center;
+            background: var(--off-white);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cover-upload-box:hover {
+            background: #e2e8f0;
+            border-color: var(--accent-gold);
+        }
+
+        .cover-upload-box input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-preview-name {
+            margin-top: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        /* COMPLETE LESSON (SINGLE DOCUMENT) UPLOAD */
+        .complete-upload {
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.1rem 1.25rem;
+            margin-bottom: 1.75rem;
+            background: var(--off-white);
+        }
+
+        .complete-upload h4 {
+            margin-bottom: 0.2rem;
+            color: var(--primary-dark);
+            font-size: 1rem;
+        }
+
+        .complete-upload .hint {
+            font-size: 0.82rem;
+            color: var(--text-gray);
+            margin-bottom: 0.9rem;
+        }
+
+        .complete-row {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+
+        .complete-row .cover-upload-box {
+            flex: 1 1 260px;
+        }
+
+        .btn-upload {
+            padding: 0.75rem 1.6rem;
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.25s ease, color 0.25s ease;
+        }
+
+        .btn-upload:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        .btn-upload:disabled {
+            background: var(--text-gray);
+            color: var(--white);
+            cursor: not-allowed;
+        }
+
+        .progress-wrap {
+            display: none;
+            margin-top: 1rem;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .progress-wrap.show {
+            display: flex;
+        }
+
+        .progress-label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .ring {
+            position: relative;
+            width: 84px;
+            height: 84px;
+            flex: 0 0 auto;
+        }
+
+        .ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .ring circle {
+            fill: none;
+            stroke-width: 10;
+        }
+
+        .ring .ring-bg {
+            stroke: #e2e8f0;
+        }
+
+        .ring .ring-fg {
+            stroke: var(--accent-green);
+            stroke-linecap: round;
+            stroke-dasharray: 326.73;
+            stroke-dashoffset: 326.73;
+            transition: stroke-dashoffset 0.2s linear;
+        }
+
+        .ring .ring-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
             font-size: 0.95rem;
-            font-weight: 600;
-            color: #334155;
-            padding-right: 1rem;
+            color: var(--primary-dark);
         }
 
-        /* Column 3: Download Button */
-        .download-col {
-            text-align: right;
+        .form-actions .progress-wrap {
+            margin: 0 auto 0 0;
         }
 
-        .download-btn {
+        .form-actions .btn-save {
+            align-self: center;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.9rem 1.3rem;
+            border-radius: 10px;
+            background: var(--accent-green);
+            color: var(--white);
+            font-weight: 700;
+            font-size: 0.92rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .toast.error {
+            background: #dc2626;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 13-LESSON GRID LAYOUT */
+        .grid-wrapper {
+            margin-top: 1rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            overflow-x: auto;
+            background: var(--white);
+            width: 100%;
+        }
+
+        .grid-inner-container {
+            min-width: 620px;
+        }
+
+        .grid-header {
+            display: grid;
+            grid-template-columns: 90px 110px 1fr 140px;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: var(--primary-dark);
+            color: var(--white);
+            font-weight: 700;
+            font-size: 0.85rem;
+            align-items: center;
+        }
+
+        .grid-body {
+            max-height: 580px;
+            overflow-y: auto;
+        }
+
+        .grid-row {
+            display: grid;
+            grid-template-columns: 90px 110px 1fr 140px;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .grid-row:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .grid-row:last-child {
+            border-bottom: none;
+        }
+
+        .lesson-tag {
+            font-weight: 800;
+            color: var(--primary-dark);
+            font-size: 0.82rem;
+            background: #e2e8f0;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            display: block;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .file-mini-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.38rem 0.6rem;
+            background: #e2e8f0;
+            color: var(--primary-dark);
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            overflow: hidden;
+            transition: background 0.2s ease;
+            white-space: nowrap;
+            width: 100%;
+            max-width: 140px;
+        }
+
+        .file-mini-btn:hover {
+            background: #cbd5e1;
+        }
+
+        .file-mini-btn input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-mini-btn.has-file {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .form-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-save {
+            padding: 0.85rem 2rem;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: #d97706;
-            text-decoration: none;
-            font-size: 0.88rem;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-            cursor: pointer;
+            transition: background 0.25s ease;
         }
 
-        .download-btn:hover {
-            background-color: rgba(217, 119, 6, 0.1);
-        }
-
-        .download-btn i {
-            font-size: 1rem;
-            color: #64748b;
-        }
-
-        .download-btn.disabled {
-            color: #94a3b8;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .download-btn.is-busy {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        /* ==========================================
-           LOADING / EMPTY / ERROR STATES
-        ========================================== */
-        @keyframes shimmer {
-            0% {
-                background-position: 200% 0;
-            }
-
-            100% {
-                background-position: -200% 0;
-            }
-        }
-
-        .skeleton-block {
-            height: 14px;
-            border-radius: 6px;
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.4s infinite linear;
-        }
-
-        .skeleton-block.w-date {
-            width: 150px;
-        }
-
-        .skeleton-block.w-title {
-            width: 70%;
-        }
-
-        .skeleton-block.w-btn {
-            width: 90px;
-            margin-left: auto;
-        }
-
-        .state-box {
-            padding: 4rem 1.5rem;
-            text-align: center;
-            color: var(--text-gray);
-        }
-
-        .state-box i.state-icon {
-            display: block;
-            font-size: 2.2rem;
-            color: var(--accent-gold);
-            margin-bottom: 1rem;
-        }
-
-        .state-box h3 {
-            color: var(--primary-dark);
-            font-size: 1.3rem;
-            margin-bottom: 0.4rem;
-        }
-
-        .state-box p {
-            font-size: 0.95rem;
-            max-width: 460px;
-            margin: 0 auto;
-        }
-
-        .state-box .state-detail {
-            margin-top: 0.6rem;
-            font-size: 0.8rem;
-            color: #94a3b8;
-        }
-
-        .retry-btn {
-            margin-top: 1.25rem;
-            padding: 0.6rem 1.4rem;
-            border-radius: 6px;
-            border: 1.5px solid var(--primary-dark);
-            background: var(--primary-dark);
-            color: var(--white);
-            font-family: inherit;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .retry-btn:hover {
+        .btn-save:hover {
             background: var(--accent-gold);
-            border-color: var(--accent-gold);
             color: var(--primary-dark);
         }
 
-        /* ==========================================
-           RESPONSIVE LAYOUT & MOBILE OPTIMIZATIONS
-        ========================================== */
-        @media (max-width: 900px) {
-            .quarter-container {
-                grid-template-columns: 1fr;
-                gap: 2.5rem;
-            }
-
-            .lesson-cover-box {
-                max-width: 280px;
-                margin: 0 auto;
-            }
-
-            /* --- MOBILE LESSON ROW ALIGNMENT FIX --- */
-            .lesson-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0.85rem 1rem;
-            }
-
-            /* Hide title text on mobile for clean 1-line alignment */
-            .lesson-title-text {
-                display: none;
-            }
-
-            .download-col {
-                text-align: right;
-            }
-
-            .skeleton-block.w-title {
-                display: none;
-            }
-
-            .cornerstone-banner {
-                padding: 0 5%;
-                height: 200px;
-            }
-
-            .cornerstone-title {
-                font-size: 1.6rem;
-            }
+        .btn-save:disabled {
+            background: var(--text-gray);
+            cursor: not-allowed;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- CORNERSTONE CONNECTIONS BANNER HEADER -->
-    <div class="cornerstone-banner">
-        <div class="cornerstone-badge">CONNECTIONS</div>
-        <h1 class="cornerstone-title">Cornerstone Connections Lessons</h1>
+    <!-- Toast notification -->
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        <i class="fa-solid fa-circle-check" id="toastIcon"></i>
+        <span id="toastMsg"></span>
     </div>
 
-    <!-- MAIN LESSONS SECTION (filled dynamically from Supabase) -->
-    <section class="lessons-section">
+    <div class="admin-container">
 
-        <!-- Quarter Header -->
-        <div class="quarter-header">
-            <div>
-                <h2 id="quarterTitle">Loading lessons…</h2>
-                <p id="quarterSubtitle">Fetching the latest Youth Sabbath School study guides.</p>
-            </div>
-
-            <div class="quarter-picker" id="quarterPicker">
-                <label for="quarterSelect">Quarter</label>
-                <select id="quarterSelect"></select>
-            </div>
+        <div class="page-title">
+            <h2>Study Materials & Book Upload Portal</h2>
+            <p>Upload Sabbath School quarterly lessons, mission stories, Bible study guides, and Spirit of Prophecy
+                books.</p>
         </div>
 
-        <div class="quarter-container" id="quarterContainer">
+        <!-- MAIN CATEGORY SELECTOR DROPDOWN -->
+        <div class="main-selector-box">
+            <div>
+                <label style="font-size: 0.9rem; font-weight: 800; color: var(--primary-dark);">
+                    <i class="fa-solid fa-sliders"></i> What would you like to upload?
+                </label>
+                <p style="font-size: 0.82rem; color: var(--text-gray);">Select the section you wish to manage below.</p>
+            </div>
+            <select id="mainUploadType" class="form-control" style="min-width: 250px; font-weight: 700;"
+                onchange="handleMainTypeChange(this.value)">
+                <option value="quarterly">Quarterly Lessons (Cornerstone, Adult, Mission)</option>
+                <option value="books">Books & Guides (Bible Study, Ellen G. White)</option>
+            </select>
+        </div>
 
-            <!-- LEFT COLUMN: Cover Image + Complete Lesson Download -->
-            <div class="lesson-cover-box is-loading" id="coverBox">
-                <img id="coverImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                    alt="Cornerstone Connections Cover">
-                <div class="cover-caption">
-                    <h4>Youth Sabbath School</h4>
-                    <p id="coverCaption">&nbsp;</p>
+        <!-- TAB NAVIGATION BUTTONS -->
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="tabQuarterlyBtn" onclick="switchToTab('quarterly')">
+                <i class="fa-solid fa-calendar-days"></i> Quarterly Lessons (Cornerstone, Adult, Mission)
+            </button>
+            <button class="tab-btn" id="tabBooksBtn" onclick="switchToTab('books')">
+                <i class="fa-solid fa-book-bible"></i> Books & Guides (Bible Study, Ellen G. White)
+            </button>
+        </div>
+
+        <!-- ==========================================
+           TAB 1: QUARTERLY LESSONS (13 LESSON GRID)
+        ========================================== -->
+        <div class="form-panel active" id="quarterlyPanel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-layer-group"></i> Quarterly Lesson Upload Form</h3>
+            </div>
+
+            <form id="quarterlyForm" onsubmit="handleQuarterlySubmit(event)">
+
+                <div class="form-grid-top">
+                    <div class="form-group">
+                        <label for="qCategory">Select Material Type</label>
+                        <select id="qCategory" class="form-control" required>
+                            <option value="cornerstone">Cornerstone Lesson</option>
+                            <option value="adult">Adult Lesson</option>
+                            <option value="mission_story">Mission Story</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qQuarter">Quarter</label>
+                        <select id="qQuarter" class="form-control" required>
+                            <option value="1st Quarter">1st Quarter</option>
+                            <option value="2nd Quarter">2nd Quarter</option>
+                            <option value="3rd Quarter">3rd Quarter</option>
+                            <option value="4th Quarter" selected>4th Quarter</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qYear">Year</label>
+                        <input type="number" id="qYear" class="form-control" value="2026" min="2020" max="2035"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Upload Cover Image</label>
+                        <div class="cover-upload-box">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span style="font-size: 0.8rem; display: block; color: var(--text-gray);">Click or drag
+                                cover</span>
+                            <input type="file" id="qCoverImg" accept="image/*"
+                                onchange="updateCoverLabel(this, 'qCoverName')">
+                            <div id="qCoverName" class="file-preview-name"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <a href="#" id="completeDownloadBtn" class="complete-download-btn">
-                    <i class="fa-solid fa-download"></i> Download Complete Lesson
-                </a>
-            </div>
+                <!-- COMPLETE LESSON (SINGLE DOCUMENT) UPLOAD -->
+                <div class="complete-upload">
+                    <h4><i class="fa-solid fa-file-pdf"></i> Complete Lesson Document</h4>
+                    <p class="hint">Upload the whole quarter as one single document (PDF). It uses the material type,
+                        quarter and year selected above.</p>
 
-            <!-- RIGHT COLUMN: Lesson List (Date | Title [Desktop Only] | Download) -->
-            <div class="lessons-list" id="lessonsList"></div>
+                    <div class="complete-row">
+                        <div class="cover-upload-box">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                            <span style="font-size: 0.8rem; display: block; color: var(--text-gray);">Click or drag
+                                the complete lesson PDF</span>
+                            <input type="file" id="completeLessonFile" accept=".pdf,application/pdf"
+                                onchange="updateCoverLabel(this, 'completeLessonName')">
+                            <div id="completeLessonName" class="file-preview-name"></div>
+                        </div>
 
+                        <button type="button" id="completeUploadBtn" class="btn-upload"
+                            onclick="uploadCompleteLesson()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                        </button>
+                    </div>
+
+                    <div class="progress-wrap" id="progressWrap">
+                        <div class="ring" id="ringComplete">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+                                <circle class="ring-fg" cx="60" cy="60" r="52"></circle>
+                            </svg>
+                            <span class="ring-text">0%</span>
+                        </div>
+                        <span class="progress-label" id="progressLabel">Uploading...</span>
+                    </div>
+                </div>
+
+                <!-- 13 LESSONS GRID -->
+                <div>
+                    <h4 style="margin-bottom: 0.6rem; color: var(--primary-dark); font-size: 1rem;">
+                        <i class="fa-solid fa-list-check"></i> Lessons 01 – 13 Content Grid
+                    </h4>
+
+                    <div class="grid-wrapper">
+                        <div class="grid-inner-container">
+                            <div class="grid-header">
+                                <div>Lesson</div>
+                                <div>Date</div>
+                                <div>Lesson Title</div>
+                                <div>Upload File</div>
+                            </div>
+
+                            <div class="grid-body" id="gridBody">
+                                <!-- 13 Rows render here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <div class="progress-wrap" id="saveWrap">
+                        <div class="ring" id="ringSave">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+                                <circle class="ring-fg" cx="60" cy="60" r="52"></circle>
+                            </svg>
+                            <span class="ring-text">0%</span>
+                        </div>
+                        <span class="progress-label" id="saveLabel">Saving...</span>
+                    </div>
+                    <button type="submit" id="submitQuarterlyBtn" class="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Quarterly Materials
+                    </button>
+                </div>
+
+            </form>
         </div>
 
-    </section>
+        <!-- ==========================================
+           TAB 2: BOOKS & GUIDES (Bible Study & EGW)
+        ========================================== -->
+        <div class="form-panel" id="booksPanel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-book"></i> Book & Topical Study Guide Form</h3>
+            </div>
 
-    <!-- JAVASCRIPT LOGIC: DYNAMIC LESSONS FROM SUPABASE -->
+            <form id="booksForm" onsubmit="handleBookSubmit(event)">
+                <div class="form-grid-top">
+                    <div class="form-group">
+                        <label for="bCategory">Collection Category</label>
+                        <select id="bCategory" class="form-control" required>
+                            <option value="bible_study">Bible Study Guide</option>
+                            <option value="egw">Ellen G. White Collection</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="bTitle">Title of Book / Study Guide</label>
+                        <input type="text" id="bTitle" class="form-control"
+                            placeholder="e.g. Steps to Christ or Revelation Unsealed" required>
+                    </div>
+                </div>
+
+                <div class="form-grid-top">
+                    <div class="form-group">
+                        <label>Book Cover Image</label>
+                        <div class="cover-upload-box">
+                            <i class="fa-solid fa-image"></i>
+                            <span style="font-size: 0.8rem; display: block; color: var(--text-gray);">Upload Cover
+                                Photo</span>
+                            <input type="file" id="bCoverImg" accept="image/*"
+                                onchange="updateCoverLabel(this, 'bCoverName')">
+                            <div id="bCoverName" class="file-preview-name"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>E-Book Document (PDF)</label>
+                        <div class="cover-upload-box">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span style="font-size: 0.8rem; display: block; color: var(--text-gray);">Upload Complete
+                                E-Book PDF</span>
+                            <input type="file" id="bPdfFile" accept=".pdf"
+                                onchange="updateCoverLabel(this, 'bPdfName')">
+                            <div id="bPdfName" class="file-preview-name"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <div class="progress-wrap" id="bookWrap">
+                        <div class="ring" id="ringBook">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+                                <circle class="ring-fg" cx="60" cy="60" r="52"></circle>
+                            </svg>
+                            <span class="ring-text">0%</span>
+                        </div>
+                        <span class="progress-label" id="bookLabel">Uploading...</span>
+                    </div>
+                    <button type="submit" id="submitBookBtn" class="btn-save">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload Book / Guide
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT -->
     <script>
-        // ---------- Config ----------
         const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
-        const CATEGORY = 'cornerstone';           // matches the value saved by admin_material.html
-        const FALLBACK_COVER = 'images/connerstone.png'; // used when a quarter has no cover image saved
 
-        const QUARTER_MONTHS = {
-            1: 'January, February, and March',
-            2: 'April, May, and June',
-            3: 'July, August, and September',
-            4: 'October, November, and December'
-        };
+        // Storage bucket used for the complete lesson documents (create it in Supabase > Storage)
+        const COMPLETE_LESSON_BUCKET = 'complete-lessons';
 
-        const MONTH_INDEX = {
-            jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
-            jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
-        };
+        // Table that holds the quarterly lessons (needs a "complete_lesson" text column)
+        const COMPLETE_LESSON_TABLE = 'quarterly_lessons';
 
-        // ---------- State ----------
-        let supabaseClient = null;
-        const state = {
-            quarters: [],   // light list: { id, quarter, year, qNum }
-            cache: {},      // id -> full record (so switching back is instant)
-            lessons: [],    // lessons of the quarter currently on screen
-            record: null,   // the record currently on screen
-            token: 0        // guards against out-of-order responses
-        };
-
-        // ---------- DOM helpers ----------
-        const $ = (id) => document.getElementById(id);
-
-        function esc(value) {
-            return String(value === null || value === undefined ? '' : value).replace(/[&<>"']/g, (c) => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-            }[c]));
+        if (typeof supabaseAdmin === 'undefined') {
+            var supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         }
 
-        function quarterNumber(label) {
-            const n = parseInt(label, 10); // "4th Quarter" -> 4
-            return Number.isFinite(n) ? n : 0;
-        }
+        function switchToTab(type) {
+            const quarterlyPanel = document.getElementById('quarterlyPanel');
+            const booksPanel = document.getElementById('booksPanel');
+            const qBtn = document.getElementById('tabQuarterlyBtn');
+            const bBtn = document.getElementById('tabBooksBtn');
+            const mainDropdown = document.getElementById('mainUploadType');
 
-        // Reads dates such as "October 3", "Oct 3" or "3 Oct" and returns a Date (or null)
-        function parseLessonDate(text, year) {
-            if (!text) return null;
-            let month, day;
-            let m = /([A-Za-z]{3,})\.?\s+(\d{1,2})/.exec(text);
-            if (m) {
-                month = m[1]; day = m[2];
+            if (type === 'quarterly') {
+                quarterlyPanel.classList.add('active');
+                booksPanel.classList.remove('active');
+                qBtn.classList.add('active');
+                bBtn.classList.remove('active');
+                mainDropdown.value = 'quarterly';
             } else {
-                m = /(\d{1,2})\s+([A-Za-z]{3,})/.exec(text);
-                if (!m) return null;
-                day = m[1]; month = m[2];
+                booksPanel.classList.add('active');
+                quarterlyPanel.classList.remove('active');
+                bBtn.classList.add('active');
+                qBtn.classList.remove('active');
+                mainDropdown.value = 'books';
             }
-            const mi = MONTH_INDEX[month.slice(0, 3).toLowerCase()];
-            if (mi === undefined) return null;
-            const d = new Date(year, mi, parseInt(day, 10));
-            return d.getMonth() === mi ? d : null; // rejects impossible dates like "Oct 91"
         }
 
-        // ---------- UI states ----------
-        function showLoading() {
-            $('quarterContainer').classList.remove('no-cover');
-            $('coverBox').style.display = '';
-            $('coverBox').classList.add('is-loading');
-            $('completeDownloadBtn').style.display = 'none';
-
-            let rows = '';
-            for (let i = 0; i < 6; i++) {
-                rows += `
-                    <div class="lesson-row">
-                        <div class="skeleton-block w-date"></div>
-                        <div class="skeleton-block w-title"></div>
-                        <div class="skeleton-block w-btn"></div>
-                    </div>`;
-            }
-            $('lessonsList').innerHTML = rows;
+        function handleMainTypeChange(val) {
+            switchToTab(val);
         }
 
-        function showState(icon, title, message, detail, retryFn) {
-            $('quarterContainer').classList.add('no-cover');
-            $('coverBox').style.display = 'none';
-            $('lessonsList').innerHTML = `
-                <div class="state-box">
-                    <i class="state-icon ${icon}"></i>
-                    <h3>${esc(title)}</h3>
-                    <p>${esc(message)}</p>
-                    ${detail ? `<p class="state-detail">${esc(detail)}</p>` : ''}
-                    ${retryFn ? '<button type="button" class="retry-btn" id="retryBtn"><i class="fa-solid fa-rotate-right"></i> Try again</button>' : ''}
-                </div>`;
-            if (retryFn) $('retryBtn').addEventListener('click', retryFn);
-        }
-
-        function showEmpty() {
-            $('quarterTitle').textContent = 'No lessons yet';
-            $('quarterSubtitle').textContent = 'Cornerstone Connections lessons will appear here once they are uploaded.';
-            $('quarterPicker').style.display = 'none';
-            showState('fa-regular fa-folder-open', 'Nothing here yet', 'Please check back soon for the latest Youth Sabbath School study guides.');
-        }
-
-        function showError(err, retryFn) {
-            console.error('Cornerstone load error:', err);
-            $('quarterTitle').textContent = 'Could not load lessons';
-            $('quarterSubtitle').textContent = 'Something went wrong while contacting the server.';
-            showState(
-                'fa-solid fa-triangle-exclamation',
-                'We couldn’t load the lessons',
-                'Please check your internet connection and try again.',
-                err && err.message ? err.message : '',
-                retryFn
-            );
-        }
-
-        // ---------- Rendering ----------
-        function setCover(src) {
-            const img = $('coverImg');
-            let triedFallback = false;
-
-            img.onload = () => $('coverBox').classList.remove('is-loading');
-            img.onerror = () => {
-                if (!triedFallback) {
-                    triedFallback = true;
-                    img.src = FALLBACK_COVER;
-                } else {
-                    $('coverBox').classList.remove('is-loading');
-                }
-            };
-            img.src = src || FALLBACK_COVER;
-        }
-
-        // Shows / hides the "Download Complete Lesson" button under the cover
-        function setCompleteDownload(record, qNum) {
-            const btn = $('completeDownloadBtn');
-
-            if (record.complete_lesson) {
-                const niceName = `Cornerstone_${record.year}_Q${qNum}_Complete_Lesson.pdf`;
-                const sep = record.complete_lesson.includes('?') ? '&' : '?';
-                // "?download=" makes Supabase Storage send the file as a download with this name
-                btn.href = record.complete_lesson + sep + 'download=' + encodeURIComponent(niceName);
-                btn.style.display = 'flex';
+        function updateCoverLabel(input, targetId) {
+            const label = document.getElementById(targetId);
+            if (input.files && input.files[0]) {
+                label.textContent = `Selected: ${input.files[0].name}`;
             } else {
-                btn.style.display = 'none';
-                btn.removeAttribute('href');
+                label.textContent = '';
             }
         }
 
-        function renderQuarter(record) {
-            const qNum = quarterNumber(record.quarter);
-            const months = QUARTER_MONTHS[qNum];
+        // ---------- Toast (shows for 2 seconds, then disappears) ----------
+        let toastTimer = null;
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = message;
+            document.getElementById('toastIcon').className =
+                isError ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-check';
+            toast.classList.toggle('error', isError);
+            toast.classList.add('show');
 
-            $('quarterTitle').textContent = `${record.quarter} ${record.year}`;
-            $('quarterSubtitle').textContent = months
-                ? `Youth Sabbath School Study Guides for ${months} ${record.year}.`
-                : `Youth Sabbath School Study Guides for ${record.year}.`;
-            $('coverCaption').textContent = `${record.quarter} ${record.year} Edition`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+        }
 
-            $('quarterContainer').classList.remove('no-cover');
-            $('coverBox').style.display = '';
-            setCover(record.cover_image);
-            setCompleteDownload(record, qNum);
+        // ---------- Complete lesson upload with progress counter ----------
+        // Circular progress ring (0-100)
+        function setRing(ringId, percent) {
+            const ring = document.getElementById(ringId);
+            const C = 2 * Math.PI * 52;
+            ring.querySelector('.ring-fg').style.strokeDashoffset = C * (1 - percent / 100);
+            ring.querySelector('.ring-text').textContent = percent + '%';
+        }
 
-            // Lessons come back as a JSONB array; sort by lesson number to be safe
-            let lessons = record.lessons;
-            if (typeof lessons === 'string') {
-                try { lessons = JSON.parse(lessons); } catch (e) { lessons = []; }
-            }
-            lessons = Array.isArray(lessons) ? lessons.slice() : [];
-            lessons.sort((a, b) => (Number(a.lesson) || 0) - (Number(b.lesson) || 0));
-            state.lessons = lessons;
-            state.record = record;
+        function setProgress(percent) {
+            setRing('ringComplete', percent);
+        }
 
-            if (!lessons.length) {
-                showState('fa-regular fa-folder-open', 'No lessons in this quarter', 'This quarter has been saved without any lessons.');
+        async function uploadCompleteLesson() {
+            const fileInput = document.getElementById('completeLessonFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showToast('Please choose the complete lesson document first.', true);
                 return;
             }
 
-            // Find the next upcoming (or today's) lesson to highlight
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const activeIdx = lessons.findIndex((l) => {
-                const d = parseLessonDate(l.date, record.year);
-                return d && d >= today;
-            });
+            const category = document.getElementById('qCategory').value;
+            const quarter = document.getElementById('qQuarter').value;
+            const year = document.getElementById('qYear').value;
 
-            $('lessonsList').innerHTML = lessons.map((l, i) => {
-                const num = String(l.lesson || i + 1).padStart(2, '0');
-                const dateText = (l.date || '').trim();
-                const label = dateText ? `Lesson ${num} – ${dateText}` : `Lesson ${num}`;
-                const hasPdf = !!l.pdf_data;
-
-                return `
-                    <div class="lesson-row">
-                        <div class="lesson-date">
-                            <i class="fa-solid fa-chevron-right"></i>
-                            <span class="lesson-label${i === activeIdx ? ' active-link' : ''}">${esc(label)}</span>
-                        </div>
-                        <div class="lesson-title-text">${esc(l.title)}</div>
-                        <div class="download-col">
-                            ${hasPdf
-                        ? `<a href="#" class="download-btn" data-index="${i}" title="Download Lesson ${esc(num)}">
-                                       <i class="fa-regular fa-file-pdf"></i> Download
-                                   </a>`
-                        : `<span class="download-btn disabled" title="No file uploaded yet">
-                                       <i class="fa-regular fa-file-pdf"></i> Not available
-                                   </span>`}
-                        </div>
-                    </div>`;
-            }).join('');
-        }
-
-        function buildQuarterPicker() {
-            const select = $('quarterSelect');
-            select.innerHTML = state.quarters
-                .map((q) => `<option value="${q.id}">${esc(q.quarter)} ${esc(q.year)}</option>`)
-                .join('');
-            // Only show the picker if there is something to choose between
-            $('quarterPicker').style.display = state.quarters.length > 1 ? 'flex' : 'none';
-        }
-
-        // ---------- Data loading ----------
-        async function loadQuarter(id) {
-            const myToken = ++state.token;
-            showLoading();
-
+            // Duplicate check: same category + quarter + year already has a complete lesson?
+            const checkBtn = document.getElementById('completeUploadBtn');
+            checkBtn.disabled = true;
+            checkBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
             try {
-                let record = state.cache[id];
+                const { data: dup, error: dupErr } = await supabaseAdmin
+                    .from(COMPLETE_LESSON_TABLE)
+                    .select('id, complete_lesson')
+                    .eq('category', category)
+                    .eq('quarter', quarter)
+                    .eq('year', parseInt(year, 10));
+                if (dupErr) throw dupErr;
 
-                if (!record) {
-                    const { data, error } = await supabaseClient
-                        .from('quarterly_lessons')
-                        .select('*')
-                        .eq('id', id)
-                        .single();
-                    if (error) throw error;
-                    record = data;
-                    state.cache[id] = record;
+                if (dup && dup.some((r) => r.complete_lesson)) {
+                    const catSel = document.getElementById('qCategory');
+                    const catName = catSel.options[catSel.selectedIndex].text;
+                    showToast(`The file you are uploading already exists (${catName}, ${quarter} ${year}).`, true);
+                    checkBtn.disabled = false;
+                    checkBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload';
+                    return;
                 }
-
-                if (myToken !== state.token) return; // a newer request took over
-                renderQuarter(record);
-                $('quarterSelect').value = String(id);
             } catch (err) {
-                if (myToken !== state.token) return;
-                showError(err, () => loadQuarter(id));
+                console.error('Duplicate check error:', err);
+                showToast('Could not check for an existing file: ' + (err.message || 'unknown error'), true);
+                checkBtn.disabled = false;
+                checkBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload';
+                return;
+            }
+
+            const btn = document.getElementById('completeUploadBtn');
+            const wrap = document.getElementById('progressWrap');
+            const label = document.getElementById('progressLabel');
+
+            // Build a safe, unique storage path
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const quarterSlug = quarter.replace(/\s+/g, '_');
+            const path = `${category}/${year}_${quarterSlug}/${Date.now()}_${safeName}`;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+            label.textContent = 'Uploading...';
+            setProgress(0);
+            wrap.classList.add('show');
+
+            // XMLHttpRequest gives us real upload progress events
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${COMPLETE_LESSON_BUCKET}/${path}`);
+            xhr.setRequestHeader('apikey', SUPABASE_KEY);
+            xhr.setRequestHeader('x-upsert', 'false');
+
+            xhr.upload.onprogress = (evt) => {
+                if (evt.lengthComputable) {
+                    // hold at 99% until the server confirms the file is stored
+                    const pct = Math.min(99, Math.floor((evt.loaded / evt.total) * 100));
+                    setProgress(pct);
+                }
+            };
+
+            const resetButton = () => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload';
+            };
+
+            xhr.onload = async () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // File is fully stored: counter reaches 100%
+                    setProgress(100);
+                    label.textContent = 'Upload complete';
+
+                    try {
+                        const { data: urlData } = supabaseAdmin.storage
+                            .from(COMPLETE_LESSON_BUCKET)
+                            .getPublicUrl(path);
+
+                        // Save a record so the document can be listed on the site
+                        const yearNum = parseInt(year, 10);
+
+                        // Is there already a row for this category + quarter + year?
+                        const { data: existing, error: findErr } = await supabaseAdmin
+                            .from(COMPLETE_LESSON_TABLE)
+                            .select('id')
+                            .eq('category', category)
+                            .eq('quarter', quarter)
+                            .eq('year', yearNum)
+                            .order('id', { ascending: false })
+                            .limit(1);
+                        if (findErr) throw findErr;
+
+                        let error;
+                        if (existing && existing.length) {
+                            ({ error } = await supabaseAdmin
+                                .from(COMPLETE_LESSON_TABLE)
+                                .update({ complete_lesson: urlData.publicUrl })
+                                .eq('id', existing[0].id));
+                        } else {
+                            ({ error } = await supabaseAdmin
+                                .from(COMPLETE_LESSON_TABLE)
+                                .insert([{
+                                    category: category,
+                                    quarter: quarter,
+                                    year: yearNum,
+                                    lessons: [],
+                                    complete_lesson: urlData.publicUrl
+                                }]));
+                        }
+                        if (error) throw error;
+                    } catch (err) {
+                        console.error('Database record error:', err);
+                        showToast('File uploaded, but saving its record failed: ' + (err.message || 'unknown error'), true);
+                        resetButton();
+                        return;
+                    }
+
+                    showToast('Complete lesson uploaded successfully!');
+                    fileInput.value = '';
+                    document.getElementById('completeLessonName').textContent = '';
+
+                    // hide the progress bar shortly after the toast disappears
+                    setTimeout(() => {
+                        wrap.classList.remove('show');
+                        setProgress(0);
+                    }, 2000);
+                    resetButton();
+                } else {
+                    let msg = 'Upload failed';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) { }
+                    console.error('Upload error:', xhr.status, xhr.responseText);
+                    wrap.classList.remove('show');
+                    showToast(msg, true);
+                    resetButton();
+                }
+            };
+
+            xhr.onerror = () => {
+                wrap.classList.remove('show');
+                showToast('Network error. Check your connection.', true);
+                resetButton();
+            };
+
+            xhr.send(file);
+        }
+
+        // Render Exactly 13 Rows for Lessons Grid
+        function render13GridRows() {
+            const gridBody = document.getElementById('gridBody');
+            if (!gridBody) return;
+
+            let html = '';
+            for (let i = 1; i <= 13; i++) {
+                const numStr = i < 10 ? `0${i}` : `${i}`;
+                html += `
+                    <div class="grid-row">
+                        <div>
+                            <span class="lesson-tag">Lesson ${numStr}</span>
+                        </div>
+                        <div>
+                            <input type="text" class="form-control row-date" placeholder="Date" value="Oct ${i * 7}">
+                        </div>
+                        <div>
+                            <input type="text" class="form-control row-title" placeholder="Enter Lesson ${numStr} Title..." required>
+                        </div>
+                        <div>
+                            <div class="file-mini-btn" id="wrapMini${i}">
+                                <i class="fa-regular fa-file-pdf"></i>&nbsp;<span id="labelMini${i}">PDF...</span>
+                                <input type="file" accept=".pdf" class="row-file" onchange="handleMiniFile(this, 'labelMini${i}', 'wrapMini${i}')">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            gridBody.innerHTML = html;
+        }
+
+        function handleMiniFile(input, labelId, wrapId) {
+            const label = document.getElementById(labelId);
+            const wrapper = document.getElementById(wrapId);
+            if (input.files && input.files[0]) {
+                label.textContent = input.files[0].name.substring(0, 10) + '...';
+                wrapper.classList.add('has-file');
+            } else {
+                label.textContent = 'PDF...';
+                wrapper.classList.remove('has-file');
             }
         }
 
-        async function init() {
-            showLoading();
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) return resolve(null);
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
 
+        // Send JSON to Supabase REST with real upload progress (fraction 0-1)
+        function sendWithProgress(method, url, body, onProgress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open(method, url);
+                xhr.setRequestHeader('apikey', SUPABASE_KEY);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('Prefer', 'return=minimal');
+                xhr.upload.onprogress = (evt) => {
+                    if (evt.lengthComputable) onProgress(evt.loaded / evt.total);
+                };
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) return resolve();
+                    let msg = 'Request failed';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) { }
+                    reject(new Error(msg));
+                };
+                xhr.onerror = () => reject(new Error('Network error. Check your connection.'));
+                xhr.send(JSON.stringify(body));
+            });
+        }
+
+        // Handle Quarterly Lessons Submission
+        async function handleQuarterlySubmit(e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const submitBtn = document.getElementById('submitQuarterlyBtn');
+            const wrap = document.getElementById('saveWrap');
+            const label = document.getElementById('saveLabel');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+            label.textContent = 'Saving...';
+            setRing('ringSave', 0);
+            wrap.classList.add('show');
+
+            let success = false;
             try {
-                if (!window.supabase) throw new Error('The Supabase library could not be loaded.');
-                if (!supabaseClient) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                }
+                const category = document.getElementById('qCategory').value;
+                const quarter = document.getElementById('qQuarter').value;
+                const year = document.getElementById('qYear').value;
+                const coverImgFile = document.getElementById('qCoverImg').files[0];
 
-                // Light query first: the table stores PDFs as Base64, so avoid pulling every row in full
-                const { data, error } = await supabaseClient
+                // Duplicate check: lessons already saved for this category + quarter + year?
+                // (a row that only holds a complete lesson is still allowed to be filled in)
+                const { data: dup, error: dupErr } = await supabaseAdmin
                     .from('quarterly_lessons')
-                    .select('id, quarter, year, created_at')
-                    .eq('category', CATEGORY)
-                    .order('created_at', { ascending: false });
-                if (error) throw error;
+                    .select('id, first_lesson:lessons->0->>lesson')
+                    .eq('category', category)
+                    .eq('quarter', quarter)
+                    .eq('year', parseInt(year, 10));
+                if (dupErr) throw dupErr;
 
-                // If a quarter was uploaded more than once, keep only the newest upload
-                const seen = new Set();
-                const list = [];
-                for (const row of data || []) {
-                    const qNum = quarterNumber(row.quarter);
-                    const key = `${row.year}-${qNum}`;
-                    if (seen.has(key)) continue;
-                    seen.add(key);
-                    list.push({ id: row.id, quarter: row.quarter, year: row.year, qNum });
-                }
-
-                // Newest quarter first
-                list.sort((a, b) => (b.year - a.year) || (b.qNum - a.qNum));
-                state.quarters = list;
-
-                if (!list.length) {
-                    showEmpty();
+                if (dup && dup.some((r) => r.first_lesson)) {
+                    const catSel = document.getElementById('qCategory');
+                    const catName = catSel.options[catSel.selectedIndex].text;
+                    showToast(`The file you are uploading already exists (${catName}, ${quarter} ${year}).`, true);
                     return;
                 }
 
-                buildQuarterPicker();
-                await loadQuarter(list[0].id);
+                // Stage 1 (0-30%): reading the files
+                const coverBase64 = coverImgFile ? await fileToBase64(coverImgFile) : null;
+                setRing('ringSave', 5);
+
+                const dates = document.querySelectorAll('.row-date');
+                const titles = document.querySelectorAll('.row-title');
+                const files = document.querySelectorAll('.row-file');
+
+                const lessonsArr = [];
+                for (let i = 0; i < 13; i++) {
+                    const pdfFile = files[i] && files[i].files[0] ? files[i].files[0] : null;
+                    const pdfBase64 = pdfFile ? await fileToBase64(pdfFile) : null;
+
+                    lessonsArr.push({
+                        lesson: i + 1,
+                        date: dates[i] ? dates[i].value : '',
+                        title: titles[i] ? titles[i].value : '',
+                        pdf_filename: pdfFile ? pdfFile.name : null,
+                        pdf_data: pdfBase64
+                    });
+                    setRing('ringSave', 5 + Math.round(((i + 1) / 13) * 25));
+                }
+
+                const payload = {
+                    category: category,
+                    quarter: quarter,
+                    year: parseInt(year, 10),
+                    cover_image: coverBase64,
+                    lessons: lessonsArr
+                };
+
+                // Update the row if one exists already (e.g. created by the complete lesson upload)
+                const { data: existing, error: findErr } = await supabaseAdmin
+                    .from('quarterly_lessons')
+                    .select('id')
+                    .eq('category', payload.category)
+                    .eq('quarter', payload.quarter)
+                    .eq('year', payload.year)
+                    .order('id', { ascending: false })
+                    .limit(1);
+                if (findErr) throw findErr;
+
+                const restUrl = `${SUPABASE_URL}/rest/v1/quarterly_lessons`;
+                const method = existing && existing.length ? 'PATCH' : 'POST';
+                const url = method === 'PATCH' ? `${restUrl}?id=eq.${existing[0].id}` : restUrl;
+
+                // Stage 2 (30-99%): sending to the database
+                await sendWithProgress(method, url, payload, (frac) => {
+                    setRing('ringSave', Math.min(99, 30 + Math.floor(frac * 69)));
+                });
+
+                // Stage 3: saved -> 100%
+                setRing('ringSave', 100);
+                label.textContent = 'Saved';
+                success = true;
+
+                showToast(`${quarter} ${year} (${category}) materials saved successfully!`);
+                form.reset();
+                document.getElementById('qCoverName').textContent = '';
+                document.getElementById('completeLessonName').textContent = '';
+                render13GridRows();
             } catch (err) {
-                showError(err, init);
+                console.error('Supabase Error:', err);
+                showToast(`Error saving: ${err.message || 'Check network connection'}`, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Quarterly Materials';
+                setTimeout(() => {
+                    wrap.classList.remove('show');
+                    setRing('ringSave', 0);
+                }, success ? 2000 : 0);
             }
         }
 
-        // ---------- Downloads ----------
-        function dataUrlToBlob(dataUrl) {
-            const commaIdx = dataUrl.indexOf(',');
-            const meta = dataUrl.slice(0, commaIdx);
-            const base64 = dataUrl.slice(commaIdx + 1);
-            const mimeMatch = /data:(.*?);base64/.exec(meta);
-            const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
-
-            const binary = atob(base64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-            return new Blob([bytes], { type: mime });
-        }
-
-        function downloadLesson(index, trigger) {
-            const lesson = state.lessons[index];
-            if (!lesson || !lesson.pdf_data) return;
-
-            const rec = state.record || {};
-            const num = String(lesson.lesson || index + 1).padStart(2, '0');
-            const filename = lesson.pdf_filename ||
-                `cornerstone_${rec.year || ''}_q${quarterNumber(rec.quarter)}_lesson${num}.pdf`;
-
-            trigger.classList.add('is-busy');
-
-            // Let the browser repaint the "busy" state before the heavy Base64 decode
-            setTimeout(() => {
-                let href = lesson.pdf_data;
-                let isBlob = false;
-
-                try {
-                    if (href.startsWith('data:')) {
-                        href = URL.createObjectURL(dataUrlToBlob(href));
-                        isBlob = true;
-                    }
-
-                    const a = document.createElement('a');
-                    a.href = href;
-                    a.download = filename;
-                    a.rel = 'noopener';
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-
-                    if (isBlob) setTimeout(() => URL.revokeObjectURL(href), 5000);
-                } catch (err) {
-                    console.error('Download error:', err);
-                    alert('Sorry, this file could not be downloaded. Please try again.');
-                } finally {
-                    trigger.classList.remove('is-busy');
-                }
-            }, 30);
-        }
-
-        // ---------- Events ----------
-        $('lessonsList').addEventListener('click', (e) => {
-            const btn = e.target.closest('.download-btn[data-index]');
-            if (!btn) return;
+        // Handle Books & Study Guides Submission
+        async function handleBookSubmit(e) {
             e.preventDefault();
-            downloadLesson(parseInt(btn.dataset.index, 10), btn);
-        });
 
-        $('quarterSelect').addEventListener('change', (e) => {
-            loadQuarter(e.target.value);
-        });
+            const form = e.target;
+            const submitBtn = document.getElementById('submitBookBtn');
+            const wrap = document.getElementById('bookWrap');
+            const label = document.getElementById('bookLabel');
 
-        document.addEventListener('DOMContentLoaded', init);
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading Book...';
+            label.textContent = 'Uploading...';
+            setRing('ringBook', 0);
+            wrap.classList.add('show');
+
+            let success = false;
+            try {
+                const category = document.getElementById('bCategory').value;
+                const title = document.getElementById('bTitle').value;
+                const coverFile = document.getElementById('bCoverImg').files[0];
+                const pdfFile = document.getElementById('bPdfFile').files[0];
+
+                // Duplicate check: same category + title + PDF file name already uploaded?
+                let dupQuery = supabaseAdmin
+                    .from('study_books')
+                    .select('id')
+                    .eq('category', category)
+                    .eq('title', title.trim());
+                dupQuery = pdfFile
+                    ? dupQuery.eq('pdf_filename', pdfFile.name)
+                    : dupQuery.is('pdf_filename', null);
+                const { data: dupBooks, error: dupErr } = await dupQuery.limit(1);
+                if (dupErr) throw dupErr;
+
+                if (dupBooks && dupBooks.length) {
+                    showToast(`The file you are uploading already exists ("${title.trim()}").`, true);
+                    return;
+                }
+
+                // Stage 1 (0-30%): reading the files
+                const coverBase64 = coverFile ? await fileToBase64(coverFile) : null;
+                setRing('ringBook', 10);
+                const pdfBase64 = pdfFile ? await fileToBase64(pdfFile) : null;
+                setRing('ringBook', 30);
+
+                const payload = {
+                    category: category,
+                    title: title.trim(),
+                    cover_image: coverBase64,
+                    pdf_data: pdfBase64,
+                    pdf_filename: pdfFile ? pdfFile.name : null
+                };
+
+                // Stage 2 (30-99%): sending to the database
+                await sendWithProgress('POST', `${SUPABASE_URL}/rest/v1/study_books`, payload, (frac) => {
+                    setRing('ringBook', Math.min(99, 30 + Math.floor(frac * 69)));
+                });
+
+                // Stage 3: saved -> 100%
+                setRing('ringBook', 100);
+                label.textContent = 'Uploaded';
+                success = true;
+
+                showToast(`"${title}" uploaded successfully!`);
+                form.reset();
+                document.getElementById('bCoverName').textContent = '';
+                document.getElementById('bPdfName').textContent = '';
+            } catch (err) {
+                console.error('Supabase Error:', err);
+                showToast(`Error uploading book: ${err.message || 'Check network connection'}`, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload Book / Guide';
+                setTimeout(() => {
+                    wrap.classList.remove('show');
+                    setRing('ringBook', 0);
+                }, success ? 2000 : 0);
+            }
+        }
+
+        // Initialize 13 rows on load
+        render13GridRows();
     </script>
 </body>
 
