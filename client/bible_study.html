@@ -1062,6 +1062,15 @@
         $('guideSearch').addEventListener('input', applyFilter);
 
         document.addEventListener('DOMContentLoaded', init);
+        // Tell the parent page (index.html) how tall this page is, so the iframe always fits it
+        function sendHeight() {
+            const h = document.body.offsetHeight;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'iframe-height', height: h }, '*');
+            }
+        }
+        new ResizeObserver(sendHeight).observe(document.body);
+        window.addEventListener('load', sendHeight);
     </script>
 </body>
 

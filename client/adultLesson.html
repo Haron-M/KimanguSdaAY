@@ -710,7 +710,7 @@
                 const num = String(l.lesson || i + 1).padStart(2, '0');
                 const dateText = (l.date || '').trim();
                 const label = dateText ? `Lesson ${num} – ${dateText}` : `Lesson ${num}`;
-                const hasPdf = !!l.pdf_data;
+                const hasPdf = !!(l.pdf_data || l.has_pdf);
 
                 return `
                     <div class="lesson-row">
@@ -750,13 +750,11 @@
                 let record = state.cache[id];
 
                 if (!record) {
-                    const { data, error } = await supabaseClient
-                        .from('quarterly_lessons')
-                        .select('*')
-                        .eq('id', id)
-                        .single();
+                    // Light read: lesson PDFs are NOT sent, only their titles/dates (PDFs load when clicked)
+                    const { data, error } = await supabaseClient.rpc('quarter_meta', { p_id: Number(id) });
                     if (error) throw error;
-                    record = data;
+                    record = Array.isArray(data) ? data[0] : data;
+                    if (!record) throw new Error('This quarter could not be found.');
                     state.cache[id] = record;
                 }
 
@@ -827,9 +825,9 @@
             return new Blob([bytes], { type: mime });
         }
 
-        function downloadLesson(index, trigger) {
+        async function downloadLesson(index, trigger) {
             const lesson = state.lessons[index];
-            if (!lesson || !lesson.pdf_data) return;
+            if (!lesson || !(lesson.pdf_data || lesson.has_pdf)) return;
 
             const rec = state.record || {};
             const num = String(lesson.lesson || index + 1).padStart(2, '0');
@@ -838,9 +836,28 @@
 
             trigger.classList.add('is-busy');
 
+            // Fetch just this one PDF on demand
+            let pdfData = lesson.pdf_data;
+            if (!pdfData) {
+                try {
+                    const { data, error } = await supabaseClient.rpc('lesson_pdf', {
+                        p_id: Number(rec.id),
+                        p_lesson: Number(lesson.lesson)
+                    });
+                    if (error) throw error;
+                    if (!data) throw new Error('File not found.');
+                    pdfData = data;
+                } catch (err) {
+                    console.error('Download error:', err);
+                    alert('Sorry, this file could not be downloaded. ' + (err && err.message ? err.message : ''));
+                    trigger.classList.remove('is-busy');
+                    return;
+                }
+            }
+
             // Let the browser repaint the "busy" state before the heavy Base64 decode
             setTimeout(() => {
-                let href = lesson.pdf_data;
+                let href = pdfData;
                 let isBlob = false;
 
                 try {
@@ -880,6 +897,15 @@
         });
 
         document.addEventListener('DOMContentLoaded', init);
+        // Tell the parent page (index.html) how tall this page is, so the iframe always fits it
+        function sendHeight() {
+            const h = document.body.offsetHeight;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'iframe-height', height: h }, '*');
+            }
+        }
+        new ResizeObserver(sendHeight).observe(document.body);
+        window.addEventListener('load', sendHeight);
     </script>
 </body>
 

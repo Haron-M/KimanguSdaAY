@@ -303,9 +303,8 @@
             display: block;
             width: 100%;
             height: 60vh;
+            /* starting height only; the page reports its real height and replaces this */
             border: 0;
-            opacity: 0;
-            transition: opacity 0.25s ease;
         }
 
         .frame-loader {
@@ -708,7 +707,13 @@
             resizeObs: null
         };
         let pendingSection = null;           // section to scroll to once a page has loaded
-
+        window.addEventListener('message', (e) => {
+            if (!e.data || e.data.type !== 'iframe-height') return;
+            const frame = document.getElementById('contentFrame');   // your iframe's id
+            if (frame && e.source === frame.contentWindow) {
+                frame.style.height = e.data.height + 'px';
+            }
+        });
         // ---------- Mobile menu (header) ----------
         document.addEventListener('DOMContentLoaded', () => {
             const menuBtn = $('menuBtn');

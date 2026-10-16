@@ -542,6 +542,33 @@
             }
 
             .egw-sidebar-box {
+                padding: 0;
+                overflow: hidden;
+            }
+
+            .egw-sidebar-box img {
+                width: 100%;
+                height: auto;
+                /* whole book shows, nothing is cropped */
+                border-radius: 0;
+                box-shadow: none;
+                margin-bottom: 0;
+            }
+
+            .sidebar-caption {
+                padding: 0.85rem 1rem 0;
+            }
+
+            .book-search-input {
+                width: calc(100% - 2rem);
+                margin: 0.85rem 1rem 0;
+            }
+
+            .book-count {
+                padding: 0 1rem 1rem;
+            }
+
+            .egw-sidebar-box {
                 width: 100%;
                 max-width: 280px;
                 margin: 0 auto;
@@ -1063,6 +1090,15 @@
         $('bookSearch').addEventListener('input', applyFilter);
 
         document.addEventListener('DOMContentLoaded', init);
+        // Tell the parent page (index.html) how tall this page is, so the iframe always fits it
+        function sendHeight() {
+            const h = document.body.offsetHeight;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'iframe-height', height: h }, '*');
+            }
+        }
+        new ResizeObserver(sendHeight).observe(document.body);
+        window.addEventListener('load', sendHeight);
     </script>
 </body>
 
