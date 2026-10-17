@@ -302,9 +302,9 @@
         #contentFrame {
             display: block;
             width: 100%;
-            height: 60vh;
-            /* starting height only; the page reports its real height and replaces this */
+            min-height: 60vh;
             border: 0;
+            overflow: hidden;
         }
 
         .frame-loader {
@@ -772,12 +772,33 @@
         function fitFrame() {
             try {
                 const doc = frame.contentDocument;
-                if (!doc || !doc.documentElement) return;
-                const h = Math.ceil(doc.documentElement.getBoundingClientRect().height);
-                if (h > 0 && h < 40000 && Math.abs(h - frame.offsetHeight) > 1) {
-                    frame.style.height = h + 'px';
+
+                if (!doc || !doc.documentElement || !doc.body) {
+                    return;
                 }
-            } catch (e) { /* cross-origin: nothing to measure */ }
+
+                const root = doc.documentElement;
+                const body = doc.body;
+
+                const height = Math.max(
+                    root.scrollHeight,
+                    root.offsetHeight,
+                    root.clientHeight,
+                    body.scrollHeight,
+                    body.offsetHeight,
+                    body.clientHeight
+                );
+
+                if (height > 0 && height < 40000) {
+                    const currentHeight = parseFloat(frame.style.height) || 0;
+
+                    if (Math.abs(height - currentHeight) > 2) {
+                        frame.style.height = height + 'px';
+                    }
+                }
+            } catch (error) {
+                console.error('Unable to calculate iframe height:', error);
+            }
         }
 
         // Gives pages a vh replacement that does not grow with the iframe (see index_home.html)
