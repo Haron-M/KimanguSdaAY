@@ -1370,6 +1370,39 @@
                 }
             });
         }
+        function sendHeight() {
+            const body = document.body;
+            const root = document.documentElement;
+
+            const height = Math.max(
+                body.scrollHeight,
+                body.offsetHeight,
+                root.scrollHeight,
+                root.offsetHeight,
+                root.clientHeight
+            );
+
+            if (window.parent !== window) {
+                window.parent.postMessage(
+                    {
+                        type: 'iframe-height',
+                        height: height
+                    },
+                    '*'
+                );
+            }
+        }
+
+        const heightObserver = new ResizeObserver(() => {
+            requestAnimationFrame(sendHeight);
+        });
+
+        heightObserver.observe(document.body);
+        heightObserver.observe(document.documentElement);
+
+        window.addEventListener('load', sendHeight);
+
+        window.addEventListener('resize', sendHeight);
 
         initMemberCounter();
         loadVerseOfTheDay();
