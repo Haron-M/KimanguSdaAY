@@ -415,6 +415,40 @@
             color: var(--primary-dark);
         }
 
+        /* "Coming soon" bubble shown above a social icon when it is clicked */
+        .coming-soon-tip {
+            position: fixed;
+            z-index: 99999;
+            padding: 7px 14px;
+            border-radius: 8px;
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, 6px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .coming-soon-tip.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        .coming-soon-tip::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -5px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-gold);
+            transform: translateX(-50%) rotate(45deg);
+        }
+
         .footer-bottom {
             text-align: center;
             padding-top: 2rem;
@@ -640,12 +674,18 @@
                     A Christ-centered youth ministry growing faith, friendship, and service in Kimangu and beyond.
                 </p>
 
-                <!-- Replace javascript:void(0) with your real social media links -->
+                <!-- Each icon shows a "Coming soon" bubble when clicked.
+                     When a real account is ready: replace href="javascript:void(0)" with the real link
+                     and delete that icon's onclick="showComingSoon(event, this)". -->
                 <div class="social-icons">
-                    <a href="javascript:void(0)"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="javascript:void(0)"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="javascript:void(0)"><i class="fa-brands fa-youtube"></i></a>
-                    <a href="javascript:void(0)"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="javascript:void(0)" aria-label="Facebook" onclick="showComingSoon(event, this)"><i
+                            class="fa-brands fa-facebook-f"></i></a>
+                    <a href="javascript:void(0)" aria-label="Instagram" onclick="showComingSoon(event, this)"><i
+                            class="fa-brands fa-instagram"></i></a>
+                    <a href="javascript:void(0)" aria-label="YouTube" onclick="showComingSoon(event, this)"><i
+                            class="fa-brands fa-youtube"></i></a>
+                    <a href="javascript:void(0)" aria-label="WhatsApp" onclick="showComingSoon(event, this)"><i
+                            class="fa-brands fa-whatsapp"></i></a>
                 </div>
             </div>
 
@@ -746,6 +786,37 @@
             const dropdown = $('resourcesDropdown');
             if (dropdown) dropdown.classList.remove('active');
         }
+
+        // ---------- Footer social icons: "Coming soon" bubble ----------
+        let comingSoonTip = null;
+        let comingSoonTimer = null;
+
+        function showComingSoon(e, el) {
+            e.preventDefault();
+
+            if (!comingSoonTip) {
+                comingSoonTip = document.createElement('div');
+                comingSoonTip.className = 'coming-soon-tip';
+                comingSoonTip.setAttribute('role', 'status');
+                comingSoonTip.textContent = 'Coming soon';
+                document.body.appendChild(comingSoonTip);
+            }
+
+            const r = el.getBoundingClientRect();
+            comingSoonTip.style.left = (r.left + r.width / 2) + 'px';
+            comingSoonTip.style.top = (r.top - 42) + 'px';
+
+            comingSoonTip.classList.add('show');
+            clearTimeout(comingSoonTimer);
+            comingSoonTimer = setTimeout(hideComingSoon, 2200);
+        }
+
+        function hideComingSoon() {
+            if (comingSoonTip) comingSoonTip.classList.remove('show');
+        }
+
+        // The bubble is fixed to the screen, so hide it if the page moves
+        window.addEventListener('scroll', hideComingSoon, { passive: true });
 
         // ---------- Nav highlight ----------
         function updateNav(hash) {

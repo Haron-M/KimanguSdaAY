@@ -527,110 +527,114 @@
             color: var(--accent-gold);
         }
 
-        /* ---- Single upcoming event: wide featured layout (poster left, details right) ---- */
+        /* ---- Single upcoming event: wide featured layout, LARGE screens only (901px and up).
+           On phones/tablets, and whenever there are 2 or more events, the regular card above is used unchanged. ---- */
+        .event-poster,
         .event-date-inline {
             display: none;
         }
 
-        .events-grid.is-single {
-            grid-template-columns: minmax(0, 1000px);
-        }
+        @media (min-width: 901px) {
+            .events-grid.is-single {
+                grid-template-columns: minmax(0, 1000px);
+            }
 
-        .events-grid.is-single .event-card {
-            flex-direction: row;
-            min-height: 400px;
-        }
-
-        .events-grid.is-single .event-img {
-            flex: 0 0 52%;
-            height: auto;
-            min-height: 400px;
-            background-image: none;
-        }
-
-        /* Poster shown whole (no cropping) on top of a soft blurred copy of itself */
-        .events-grid.is-single .event-img::before,
-        .events-grid.is-single .event-img::after {
-            content: '';
-            position: absolute;
-            background-image: var(--event-img);
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
-        .events-grid.is-single .event-img::before {
-            top: -24px;
-            left: -24px;
-            right: -24px;
-            bottom: -24px;
-            background-size: cover;
-            filter: blur(20px) brightness(0.65);
-        }
-
-        .events-grid.is-single .event-img::after {
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-size: contain;
-        }
-
-        /* The date moves out of the poster so it no longer covers the artwork */
-        .events-grid.is-single .event-date-tag {
-            display: none;
-        }
-
-        .events-grid.is-single .event-body {
-            justify-content: center;
-            padding: 2.5rem;
-        }
-
-        .events-grid.is-single .event-date-inline {
-            display: inline-flex;
-            align-items: center;
-            align-self: flex-start;
-            gap: 8px;
-            margin-bottom: 1rem;
-            padding: 6px 14px;
-            border-radius: 999px;
-            background: rgba(245, 158, 11, 0.12);
-            color: #92400e;
-            font-size: 0.85rem;
-            font-weight: 700;
-        }
-
-        .events-grid.is-single .event-body h3 {
-            font-size: 2rem;
-            line-height: 1.2;
-        }
-
-        .events-grid.is-single .event-body p {
-            font-size: 1.05rem;
-        }
-
-        .events-grid.is-single .event-meta {
-            margin-top: 0.5rem;
-            font-size: 0.95rem;
-        }
-
-        @media (max-width: 900px) {
             .events-grid.is-single .event-card {
-                flex-direction: column;
-                min-height: 0;
+                flex-direction: row;
+                background: var(--primary-dark);
+                border-color: var(--primary-dark);
             }
 
+            /* Left: the poster itself sets the card height. If it does not fill the
+               column, the spare room shows a soft blurred copy of the same image. */
             .events-grid.is-single .event-img {
-                flex: none;
-                height: 260px;
-                min-height: 0;
+                flex: 0 0 55%;
+                height: auto;
+                background: var(--primary-dark);
             }
 
+            .events-grid.is-single .event-img::before {
+                content: '';
+                position: absolute;
+                top: -24px;
+                left: -24px;
+                right: -24px;
+                bottom: -24px;
+                background-image: var(--event-img);
+                background-size: cover;
+                background-position: center;
+                filter: blur(20px) brightness(0.6);
+            }
+
+            .events-grid.is-single .event-poster {
+                display: block;
+                position: relative;
+                z-index: 1;
+                width: 100%;
+                height: auto;
+                max-height: 480px;
+                object-fit: contain;
+            }
+
+            /* The date moves out of the poster so it no longer covers the artwork */
+            .events-grid.is-single .event-date-tag {
+                display: none;
+            }
+
+            /* Right: navy panel, larger type, date and time as icon rows */
             .events-grid.is-single .event-body {
-                padding: 1.75rem;
+                justify-content: center;
+                padding: 2.5rem;
+                background: linear-gradient(160deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
             }
 
             .events-grid.is-single .event-body h3 {
-                font-size: 1.5rem;
+                margin-bottom: 1rem;
+                color: var(--white);
+                font-size: 2rem;
+                line-height: 1.2;
+            }
+
+            .events-grid.is-single .event-body p {
+                margin-bottom: 1.75rem;
+                color: #cbd5e1;
+                font-size: 1.05rem;
+            }
+
+            .events-grid.is-single .event-date-inline,
+            .events-grid.is-single .event-meta {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                color: var(--white);
+                font-size: 1rem;
+                font-weight: 600;
+            }
+
+            .events-grid.is-single .event-date-inline {
+                margin-bottom: 1rem;
+                padding-top: 1.5rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.15);
+            }
+
+            .events-grid.is-single .event-meta {
+                margin-top: 0;
+                padding-top: 0;
+                border-top: none;
+            }
+
+            .events-grid.is-single .event-date-inline i,
+            .events-grid.is-single .event-meta i {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: rgba(245, 158, 11, 0.15);
+                color: var(--accent-gold);
+                font-size: 1rem;
             }
         }
 
@@ -1843,14 +1847,15 @@
                 return `
                     <div class="event-card">
                         <div class="event-img reveal-left" style="--event-img: url('${imageUrl}');">
+                            <img class="event-poster" src="${imageUrl}" alt="${escapeHtml(ev.title)}">
                             <div class="event-date-tag">
                                 ${month}<br><strong>${day}</strong>
                             </div>
                         </div>
                         <div class="event-body reveal-right">
-                            <span class="event-date-inline"><i class="fa-regular fa-calendar"></i> ${fullDate}</span>
                             <h3>${escapeHtml(ev.title)}</h3>
                             <p>${escapeHtml(ev.content)}</p>
+                            <span class="event-date-inline"><i class="fa-regular fa-calendar"></i> ${fullDate}</span>
                             ${timeLabel ? `
                             <div class="event-meta">
                                 <i class="fa-regular fa-clock"></i>
