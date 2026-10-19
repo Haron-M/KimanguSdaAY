@@ -35,6 +35,9 @@
 
         html {
             scroll-behavior: smooth;
+            /* Always reserve the scrollbar so the page width (and the iframe's width) never
+               jumps when the scrollbar appears, which would change the page's height. */
+            overflow-y: scroll;
         }
 
         body {
@@ -293,16 +296,21 @@
             padding-top: var(--header-height);
         }
 
+        /* No permanent min-height here: it would act as a floor and leave white space.
+           It only applies while a page is loading, so the spinner has room. */
         .frame-wrap {
             position: relative;
-            min-height: calc(100vh - var(--header-height));
             background: var(--white);
         }
 
+        .frame-wrap.is-loading {
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* No min-height here either. JavaScript sets the real height. */
         #contentFrame {
             display: block;
             width: 100%;
-            min-height: 60vh;
             border: 0;
             overflow: hidden;
         }
@@ -441,9 +449,7 @@
                 flex-direction: column;
                 align-items: center;
                 gap: 0;
-                /* cancels the 2.5rem desktop gap */
                 padding: 0.5rem 0;
-                /* equal space at top and bottom */
                 box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
                 z-index: 999;
                 border-top: 1px solid var(--border-color);
@@ -459,7 +465,6 @@
 
             .nav-links.active {
                 max-height: 700px;
-                /* raised so the open dropdown isn't clipped */
                 opacity: 1;
                 visibility: visible;
                 display: flex !important;
@@ -476,7 +481,6 @@
                 border-bottom: none;
             }
 
-            /* --- ALL MAIN LINKS USE IDENTICAL, EQUAL PADDING --- */
             .nav-links li a,
             .nav-links li.dropdown>a {
                 display: flex;
@@ -484,7 +488,6 @@
                 justify-content: center;
                 width: 100%;
                 padding: 1rem;
-                /* same top/bottom/left/right */
                 font-size: 0.95rem;
                 font-weight: 600;
                 color: var(--primary-dark);
@@ -528,7 +531,6 @@
                 visibility: visible;
             }
 
-            /* --- DROPDOWN SUB-LINKS: equal top and bottom padding --- */
             .dropdown-menu li a {
                 display: flex;
                 align-items: center;
@@ -537,13 +539,11 @@
                 color: #f1f5f9 !important;
                 border-bottom: 1px solid #334155;
                 padding: 0.85rem 1rem;
-                /* equal top and bottom */
                 font-weight: 500;
                 font-size: 0.92rem;
                 text-decoration: none;
             }
 
-            /* No hover indent on touch devices, keeps text centered */
             .dropdown-menu li a:hover {
                 padding-left: 1rem;
                 background-color: #0f172a;
@@ -613,7 +613,7 @@
          MIDDLE AREA: pages load inside this iframe
     ========================================== -->
     <main>
-        <div class="frame-wrap">
+        <div class="frame-wrap is-loading" id="frameWrap">
             <div class="frame-loader" id="frameLoader">
                 <div class="spinner"></div>
             </div>
@@ -697,6 +697,7 @@
         const $ = (id) => document.getElementById(id);
         const frame = $('contentFrame');
         const loader = $('frameLoader');
+        const frameWrap = $('frameWrap');
 
         const current = {
             slug: null,        // page on screen (or loading)
@@ -707,13 +708,10 @@
             resizeObs: null
         };
         let pendingSection = null;           // section to scroll to once a page has loaded
-        window.addEventListener('message', (e) => {
-            if (!e.data || e.data.type !== 'iframe-height') return;
-            const frame = document.getElementById('contentFrame');   // your iframe's id
-            if (frame && e.source === frame.contentWindow) {
-                frame.style.height = e.data.height + 'px';
-            }
-        });
+
+        // NOTE: the old "iframe-height" postMessage listener was removed.
+        // fitFrame() is now the only thing that sets the iframe height.
+
         // ---------- Mobile menu (header) ----------
         document.addEventListener('DOMContentLoaded', () => {
             const menuBtn = $('menuBtn');
@@ -765,43 +763,51 @@
         // ---------- Loader / reveal ----------
         function setLoading(isLoading) {
             loader.classList.toggle('is-hidden', !isLoading);
+            frameWrap.classList.toggle('is-loading', isLoading);
             frame.style.opacity = isLoading ? '0' : '1';
         }
 
-        // ---------- Sizing: iframe is as tall as the page inside it, so only ONE scrollbar exists ----------
+        // ---------- Sizing: iframe is as tall as the CONTENT of the page inside it ----------
+        // IMPORTANT: we measure the <body>'s own box, not documentElement.scrollHeight/clientHeight.
+        // Those two are never smaller than the iframe's current height, so the frame could grow
+        // but never shrink, which is what left the white space.
+        let fitting = false;
         function fitFrame() {
+            if (fitting) return;
+            fitting = true;
             try {
                 const doc = frame.contentDocument;
-
-                if (!doc || !doc.documentElement || !doc.body) {
-                    return;
-                }
+                if (!doc || !doc.documentElement || !doc.body) return;
 
                 const root = doc.documentElement;
-                const body = doc.body;
+                const outerY = window.scrollY;
+                const before = frame.style.height;
 
-                const height = Math.max(
-                    root.scrollHeight,
-                    root.offsetHeight,
-                    root.clientHeight,
-                    body.scrollHeight,
-                    body.offsetHeight,
-                    body.clientHeight
-                );
+                // Collapse the frame so the page's scrollHeight is its REAL content height.
+                // (With a tall frame, scrollHeight can never be smaller than the frame itself.)
+                // Everything below happens in one synchronous step, so nothing flashes on screen.
+                frame.style.height = '0px';
+                const height = Math.ceil(Math.max(root.scrollHeight, doc.body.scrollHeight));
 
                 if (height > 0 && height < 40000) {
-                    const currentHeight = parseFloat(frame.style.height) || 0;
+                    frame.style.height = height + 'px';
+                } else {
+                    frame.style.height = before;
+                }
 
-                    if (Math.abs(height - currentHeight) > 2) {
-                        frame.style.height = height + 'px';
-                    }
+                // Collapsing the frame for a moment can clamp the outer scroll position; put it back.
+                if (window.scrollY !== outerY) {
+                    window.scrollTo({ top: outerY, behavior: 'instant' });
                 }
             } catch (error) {
                 console.error('Unable to calculate iframe height:', error);
+            } finally {
+                fitting = false;
             }
         }
 
         // Gives pages a vh replacement that does not grow with the iframe (see index_home.html)
+        // In child pages use:  min-height: calc(var(--app-vh) * 100);   instead of 100vh
         function setAppVh(doc) {
             doc.documentElement.style.setProperty('--app-vh', (window.innerHeight / 100) + 'px');
         }
@@ -810,7 +816,7 @@
         window.addEventListener('resize', () => {
             if (window.innerWidth !== lastWidth) {      // ignore mobile address-bar height changes
                 lastWidth = window.innerWidth;
-                if (current.doc) { try { setAppVh(current.doc); } catch (e) { } }
+                if (current.doc) { try { setAppVh(current.doc); fitFrame(); } catch (e) { } }
             }
         });
 
@@ -885,7 +891,7 @@
             // The shell already has a header and footer, so hide the ones inside the page
             const style = doc.createElement('style');
             style.textContent = `
-                html, body { overflow: hidden !important; }
+                html, body { overflow: hidden !important; height: auto !important; }
                 body > header, body > footer { display: none !important; }
             `;
             doc.head.appendChild(style);
@@ -894,15 +900,36 @@
             trimHeaderOffset(doc);
             doc.addEventListener('click', onChildClick);
 
-            // Keep the iframe as tall as the page, even when content loads in later
+            // Keep the iframe as tall as the page, even when content loads in later.
+            // Observe BOTH <html> and <body> so shrinking and growing are both caught.
             const RO = frame.contentWindow.ResizeObserver;
             if (RO) {
                 if (current.resizeObs) current.resizeObs.disconnect();
                 current.resizeObs = new RO(fitFrame);
                 current.resizeObs.observe(root);
+                current.resizeObs.observe(doc.body);
             }
 
             current.doc = doc;
+
+            // Re-fit whenever the page's content changes (lists built by JS, images, fonts...)
+            let fitQueued = false;
+            const queueFit = () => {
+                if (fitQueued) return;
+                fitQueued = true;
+                requestAnimationFrame(() => { fitQueued = false; if (current.doc === doc) fitFrame(); });
+            };
+            if (current.mutObs) current.mutObs.disconnect();
+            const MO = frame.contentWindow.MutationObserver;
+            if (MO) {
+                current.mutObs = new MO(queueFit);
+                current.mutObs.observe(doc.body, { childList: true, subtree: true, attributes: true, characterData: true });
+            }
+            doc.querySelectorAll('img').forEach((img) => img.addEventListener('load', queueFit));
+            doc.defaultView.addEventListener('load', queueFit);
+            if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(queueFit);
+            [300, 800, 1500, 3000].forEach((ms) => setTimeout(queueFit, ms));
+
             if (doc.title) document.title = doc.title;
 
             fitFrame();
@@ -932,8 +959,9 @@
 
         // If the browser blocks access to the page (e.g. file:// or another domain), show it with its own scrollbar
         function fallbackShow(token) {
-            if (token !== current.token) return;
+            if (token !== current.token || current.ready) return;   // never override a page that is already fitted
             frame.style.height = 'calc(100vh - ' + HEADER_H + 'px)';
+            frame.style.overflow = 'auto';
             current.ready = false;
             setLoading(false);
         }
@@ -943,6 +971,7 @@
 
             (function poll() {
                 if (token !== current.token) return;
+                if (current.ready) return;   // the load event already prepared this page: stop polling
 
                 try {
                     const doc = frame.contentDocument;
@@ -992,7 +1021,15 @@
             pendingSection = section;
 
             if (current.resizeObs) { current.resizeObs.disconnect(); current.resizeObs = null; }
+            if (current.mutObs) { current.mutObs.disconnect(); current.mutObs = null; }
+            current.doc = null;
             setLoading(true);
+
+            // Reset the height so a tall previous page can't leave a tall empty frame
+            // behind a shorter new page.
+            frame.style.height = '0px';
+            frame.style.overflow = 'hidden';
+
             window.scrollTo({ top: 0, behavior: 'instant' });
 
             try {

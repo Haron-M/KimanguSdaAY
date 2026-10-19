@@ -91,7 +91,7 @@
             height: 100%;
             min-height: 0;
             overflow: hidden;
-            background: linear-gradient(180deg, rgba(10, 25, 47, 0.55) 0%, rgba(10, 25, 47, 0.85) 100%), url('kimangu-worship.jpg') center/cover no-repeat;
+            background: linear-gradient(180deg, rgba(10, 25, 47, 0.55) 0%, rgba(10, 25, 47, 0.85) 100%), url('images/kimangu-worship.jpg') center/cover no-repeat;
             background-color: var(--primary-dark);
             display: flex;
             align-items: flex-end;
@@ -1121,7 +1121,7 @@
                                     <input type="radio" name="role" value="youth" checked
                                         onchange="selectRole('youth')">
                                     <span class="role-check"><i class="fa-solid fa-check"></i></span>
-                                    <span class="role-icon">🧑‍🦱</span>
+                                    <span class="role-icon">🧑</span>
                                     <h5>Youth</h5>
                                     <p>Regular member</p>
                                 </label>
@@ -1338,7 +1338,7 @@
             } catch (err) {
                 btn.disabled = false;
                 btn.innerHTML = LABEL_VERIFY;
-                errorEl.textContent = 'Server connection error. Ensure backend is running.';
+                errorEl.textContent = 'Server connection error';
             }
         }
 
@@ -1393,7 +1393,7 @@
         const signupNameInput = document.getElementById('signupName');
         const nameHint = document.getElementById('nameHint');
         const nameHintText = document.getElementById('nameHintText');
-        const NAME_HINT_DEFAULT = 'Enter at least two names, e.g. John Kamau';
+        const NAME_HINT_DEFAULT = 'Enter at least two names, e.g. James Mwangi';
         let nameTouched = false;
 
         function validateFullName(value) {
