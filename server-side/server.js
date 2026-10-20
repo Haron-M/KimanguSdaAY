@@ -4,14 +4,26 @@ const path = require('path');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const OpenAI = require('openai');
+const fs = require('fs');
 
 const app = express();
 
-// ===================== AI SETTINGS =====================
 const AI_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b';
-const AI_HISTORY_LIMIT = 12;      // past messages sent to the AI for context
-const AI_MAX_TOKENS = 2048;
-const AI_DEBUG = process.env.AI_DEBUG === 'true';   // set AI_DEBUG=true in Vercel to see real AI errors in the chat
+const AI_HISTORY_LIMIT = 12;
+const AI_MAX_TOKENS = 800;        // shorter answers = more precise
+const AI_DEBUG = process.env.AI_DEBUG === 'true';
+
+function readKnowledge(file, maxChars) {
+    try {
+        return fs.readFileSync(path.join(__dirname, 'knowledge', file), 'utf8').slice(0, maxChars);
+    } catch (err) {
+        console.warn(`Knowledge file missing: ${file}`);
+        return '';
+    }
+}
+const BELIEFS_TEXT = readKnowledge('adventist-beliefs.md', 12000);
+const SITE_TEXT = readKnowledge('site-content.txt', 15000);
+// set AI_DEBUG=true in Vercel to see real AI errors in the chat
 
 // Created on first use, so a missing key only breaks the chat, never the whole server
 let nvidiaClient = null;
@@ -452,30 +464,60 @@ app.get('/api/events', authenticateUser, async (req, res) => {
     }
 });
 
-// ===================== AI CHAT =====================
-
-// Builds the system prompt: who the member is, plus current events and announcements
 async function buildAiContext(userId) {
     const today = new Date().toISOString().split('T')[0];
-    const [{ data: profile }, { data: events }, { data: news }] = await Promise.all([
+    const [{ data: profile }, { data: events }, { data: news }, { data: books }] = await Promise.all([
         supabase.from('profiles').select('full_name, category').eq('id', userId).maybeSingle(),
-        supabase.from('events').select('*').gte('event_date', today).order('event_date', { ascending: true }).limit(5),
-        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(5)
+        supabase.from('events').select('*').gte('event_date', today).order('event_date', { ascending: true }).limit(8),
+        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(8),
+        supabase.from('study_books').select('*').limit(60)
     ]);
 
     const eventLines = (events || []).map(e =>
         `- ${e.title || e.name || 'Event'} on ${e.event_date}${e.location ? ' at ' + e.location : ''}`).join('\n') || 'None listed.';
     const newsLines = (news || []).map(a =>
         `- ${a.title || a.message || a.content || 'Announcement'}`).join('\n') || 'None.';
+    const bookLines = (books || []).map(b =>
+        `- ${b.title || b.name || 'Book'}${b.author ? ' by ' + b.author : ''}`).join('\n') || 'None listed.';
 
-    return `You are "Ask AI", the friendly assistant inside the Kimangu AY (Seventh-day Adventist Youth) members dashboard.
-Member: ${profile?.full_name || 'Member'} (category: ${profile?.category || 'N/A'}).
-The dashboard has: Home, Media Center, Resources, My Schedules, Accounts, and a Treasury Desk (Payment, Transaction History, Report Analysis).
-Upcoming events:
+    return `You are "Ask AI", the Bible and Adventist-faith assistant of the Kimangu AY (Seventh-day Adventist Youth) platform.
+
+SCOPE
+- Answer ONLY religious questions: the Bible, Christian living, prayer, church life, and above all Seventh-day Adventist beliefs, history, lifestyle, Sabbath School, Adventist Youth and the Spirit of Prophecy.
+- You may also explain how to use this platform (its pages, events, announcements, resources, books), since that is part of church life here.
+- For anything else (politics, maths, coding, entertainment, general trivia, medical or legal advice), decline in one short sentence and invite a faith question. Do not answer any part of it.
+
+PRECISION
+- Answer exactly what was asked. The first sentence must be the direct answer. No preamble, no repeating the question, no unrequested extras.
+- Default to 2 to 5 sentences. Go longer only if the member asks for detail or a study.
+- Support doctrinal claims with Bible references (book chapter:verse). Paraphrase; quote at most a short phrase.
+- For Adventist teaching, base the answer on the 28 Fundamental Beliefs below and name the belief number. When citing Ellen G. White, name the book.
+- If asked about another denomination or religion, describe it respectfully and accurately, then give the Adventist position.
+- Reply in the language the member writes in (English or Swahili).
+
+HONESTY
+- If something is not in the knowledge below or you are unsure, say so. Never invent verses, quotes, dates or church details.
+- For local details (service times, leaders, programs), use only the platform information below; otherwise tell the member to ask the AY leaders.
+- Never ask for passwords. Never share other members' details.
+
+MEMBER: ${profile?.full_name || 'Member'} (category: ${profile?.category || 'N/A'})
+
+UPCOMING EVENTS
 ${eventLines}
-Latest announcements:
+
+LATEST ANNOUNCEMENTS
 ${newsLines}
-Be warm, clear and concise. Answer Bible and church questions respectfully. If you don't know something specific to this church, say so instead of guessing. Never ask for passwords or share other members' details.`;
+
+BOOKS AVAILABLE ON THE PLATFORM
+${bookLines}
+
+PLATFORM PAGES: Home, Media Center, Resources, My Schedules, Accounts, Treasury Desk (Payment, Transaction History, Report Analysis).
+
+PLATFORM CONTENT
+${SITE_TEXT || 'Not available.'}
+
+ADVENTIST KNOWLEDGE
+${BELIEFS_TEXT || 'Not available.'}`;
 }
 
 // Saved conversation for the logged-in member
@@ -530,8 +572,8 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
         const stream = await getNvidia().chat.completions.create({
             model: AI_MODEL,
             messages,
-            temperature: 0.7,
-            top_p: 0.95,
+            temperature: 0.3,
+            top_p: 0.9,
             max_tokens: AI_MAX_TOKENS,
             // Node SDK: extra fields go at the top level (extra_body is Python only).
             // Set enable_thinking to true for deeper (but slower) reasoning.

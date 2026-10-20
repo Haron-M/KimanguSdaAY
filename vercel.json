@@ -3,7 +3,13 @@
     "builds": [
         {
             "src": "server-side/server.js",
-            "use": "@vercel/node"
+            "use": "@vercel/node",
+            "config": {
+                "includeFiles": [
+                    "server-side/knowledge/**"
+                ],
+                "maxDuration": 60
+            }
         }
     ],
     "routes": [
