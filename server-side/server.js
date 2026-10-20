@@ -3,6 +3,13 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const OpenAI = require('openai');
+const nvidia = new OpenAI({
+    baseURL: 'https://integrate.api.nvidia.com/v1',
+    apiKey: process.env.NVIDIA_API_KEY
+});
+const AI_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b';
+const AI_HISTORY_LIMIT = 12;   // past messages sent to the AI for context
 
 const app = express();
 
@@ -427,6 +434,111 @@ app.get('/api/events', authenticateUser, async (req, res) => {
         res.json(events || []);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+// ===================== AI CHAT =====================
+async function buildAiContext(userId) {
+    const today = new Date().toISOString().split('T')[0];
+    const [{ data: profile }, { data: events }, { data: news }] = await Promise.all([
+        supabase.from('profiles').select('full_name, category').eq('id', userId).maybeSingle(),
+        supabase.from('events').select('*').gte('event_date', today).order('event_date', { ascending: true }).limit(5),
+        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(5)
+    ]);
+
+    const eventLines = (events || []).map(e =>
+        `- ${e.title || e.name || 'Event'} on ${e.event_date}${e.location ? ' at ' + e.location : ''}`).join('\n') || 'None listed.';
+    const newsLines = (news || []).map(a =>
+        `- ${a.title || a.message || a.content || 'Announcement'}`).join('\n') || 'None.';
+
+    return `You are "Ask AI", the friendly assistant inside the Kimangu AY (Seventh-day Adventist Youth) members dashboard.
+Member: ${profile?.full_name || 'Member'} (category: ${profile?.category || 'N/A'}).
+The dashboard has: Home, Media Center, Resources, My Schedules, Accounts, and a Treasury Desk (Payment, Transaction History, Report Analysis).
+Upcoming events:\n${eventLines}
+Latest announcements:\n${newsLines}
+Be warm, clear and concise. Answer Bible and church questions respectfully. If you don't know something specific to this church, say so instead of guessing. Never ask for passwords or share other members' details.`;
+}
+
+app.get('/api/ai/history', authenticateUser, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('ai_chat_messages')
+            .select('role, content, created_at')
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false })
+            .limit(30);
+        if (error) throw error;
+        res.json((data || []).reverse());
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/ai/history', authenticateUser, async (req, res) => {
+    try {
+        const { error } = await supabase.from('ai_chat_messages').delete().eq('user_id', req.user.id);
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/ai/chat', authenticateUser, async (req, res) => {
+    const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
+    if (!message || message.length > 2000) {
+        return res.status(400).json({ error: 'Message must be 1 to 2000 characters.' });
+    }
+
+    try {
+        const userId = req.user.id;
+
+        const [{ data: past }, system] = await Promise.all([
+            supabase.from('ai_chat_messages').select('role, content').eq('user_id', userId)
+                .order('created_at', { ascending: false }).limit(AI_HISTORY_LIMIT),
+            buildAiContext(userId)
+        ]);
+
+        await supabase.from('ai_chat_messages').insert({ user_id: userId, role: 'user', content: message });
+
+        const messages = [
+            { role: 'system', content: system },
+            ...(past || []).reverse(),
+            { role: 'user', content: message }
+        ];
+
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('X-Accel-Buffering', 'no');
+
+        const stream = await nvidia.chat.completions.create({
+            model: AI_MODEL,
+            messages,
+            temperature: 0.7,
+            top_p: 0.95,
+            max_tokens: 2048,
+            // Set to true for deeper reasoning (slower). Reasoning text is never sent to the browser.
+            extra_body: { chat_template_kwargs: { enable_thinking: false } },
+            stream: true
+        });
+
+        let reply = '';
+        for await (const chunk of stream) {
+            const delta = chunk.choices?.[0]?.delta?.content;
+            if (delta) {
+                reply += delta;
+                res.write(delta);
+            }
+        }
+        res.end();
+
+        if (reply.trim()) {
+            await supabase.from('ai_chat_messages').insert({ user_id: userId, role: 'assistant', content: reply });
+        }
+    } catch (err) {
+        console.error('AI chat error:', err.message);
+        if (!res.headersSent) return res.status(500).json({ error: 'The assistant is unavailable right now.' });
+        res.write('\n\n[Connection interrupted. Please try again.]');
+        res.end();
     }
 });
 
