@@ -1808,6 +1808,7 @@
                     class="fa-solid fa-paper-plane"></i></button>
         </div>
     </section>
+    <script src="ai-format.js"></script>
 
     <script>
         // ===================== SERVER API =====================
@@ -1837,10 +1838,21 @@
 
         const AI_SUGGESTIONS = ['What events are coming up?', 'Give me a Bible verse for today', 'How do I make a payment?'];
 
-        function aiAddMessage(role, text, extraClass = '') {
+        // Bot answers are drawn as formatted HTML (headings, numbering, italic references).
+        // Everything else (member messages, errors, welcome text) stays plain text.
+        function aiRender(el, text) {
+            el.innerHTML = formatAiReply(text);
+        }
+
+        function aiAddMessage(role, text, extraClass = '', rich = false) {
             const el = document.createElement('div');
             el.className = `ai-msg ${role} ${extraClass}`.trim();
-            el.textContent = text;
+            if (rich && role === 'bot') {
+                el.classList.add('ai-rich');
+                aiRender(el, text);
+            } else {
+                el.textContent = text;
+            }
             aiMessages.appendChild(el);
             aiMessages.scrollTop = aiMessages.scrollHeight;
             return el;
@@ -1868,7 +1880,10 @@
                 const rows = await api('/api/ai/history');
                 if (Array.isArray(rows) && rows.length) {
                     aiMessages.innerHTML = '';
-                    rows.forEach(r => aiAddMessage(r.role === 'user' ? 'user' : 'bot', r.content));
+                    rows.forEach(r => {
+                        if (r.role === 'user') aiAddMessage('user', r.content);
+                        else aiAddMessage('bot', r.content, '', true);   // formatted
+                    });
                     return;
                 }
             } catch (err) { /* fall through to welcome */ }
@@ -1921,22 +1936,41 @@
             if (suggest) suggest.remove();
 
             aiAddMessage('user', text);
-            const bot = aiAddMessage('bot', '', 'ai-typing');
+            const bot = aiAddMessage('bot', '', 'ai-typing ai-rich');
 
             try {
                 const res = await aiStreamReply(text);
                 const reader = res.body.getReader();
                 const decoder = new TextDecoder();
                 let reply = '';
+                let pending = false;
+
+                // Draw at most once per screen frame so long answers stay smooth
+                const draw = () => {
+                    pending = false;
+                    aiRender(bot, reply);
+                    aiMessages.scrollTop = aiMessages.scrollHeight;
+                };
+
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
                     reply += decoder.decode(value, { stream: true });
-                    bot.textContent = reply;
-                    aiMessages.scrollTop = aiMessages.scrollHeight;
+                    if (!pending) {
+                        pending = true;
+                        requestAnimationFrame(draw);
+                    }
                 }
-                if (!reply.trim()) bot.textContent = 'I could not come up with a reply. Please try again.';
+                reply += decoder.decode();   // flush any last bytes
+                aiRender(bot, reply);
+                aiMessages.scrollTop = aiMessages.scrollHeight;
+
+                if (!reply.trim()) {
+                    bot.classList.remove('ai-rich');
+                    bot.textContent = 'I could not come up with a reply. Please try again.';
+                }
             } catch (err) {
+                bot.classList.remove('ai-rich');
                 bot.textContent = err.message || 'Something went wrong. Please try again.';
                 bot.classList.add('error');
             } finally {

@@ -8,11 +8,15 @@ const fs = require('fs');
 
 const app = express();
 
-const AI_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b';
-const AI_HISTORY_LIMIT = 12;
-const AI_MAX_TOKENS = 800;        // shorter answers = more precise
+// ===================== AI SETTINGS =====================
+// Tip: a smaller NVIDIA model (set AI_MODEL in .env / Vercel) is the biggest speed boost.
+const AI_MODEL = process.env.AI_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b';
+const AI_HISTORY_LIMIT = 8;       // fewer past messages = smaller prompt = faster
+const AI_MAX_TOKENS = 1400;       // room to FINISH the answer (the prompt asks for short answers anyway)
 const AI_DEBUG = process.env.AI_DEBUG === 'true';
+const PLATFORM_CACHE_MS = 60 * 1000;
 
+// ===================== KNOWLEDGE (loaded once, sent only when relevant) =====================
 function readKnowledge(file, maxChars) {
     try {
         return fs.readFileSync(path.join(__dirname, 'knowledge', file), 'utf8').slice(0, maxChars);
@@ -21,10 +25,49 @@ function readKnowledge(file, maxChars) {
         return '';
     }
 }
-const BELIEFS_TEXT = readKnowledge('adventist-beliefs.md', 12000);
-const SITE_TEXT = readKnowledge('site-content.txt', 15000);
-// set AI_DEBUG=true in Vercel to see real AI errors in the chat
 
+// Split text into small sections (by headings, then by size) so we can send only what matches the question
+function toSections(text, headingRegex, maxSize = 2500) {
+    const parts = text.split(headingRegex).filter(p => p && p.trim());
+    const out = [];
+    for (const part of parts) {
+        if (part.length <= maxSize) { out.push(part); continue; }
+        for (let i = 0; i < part.length; i += 2000) out.push(part.slice(i, i + 2000));
+    }
+    return out;
+}
+
+const BELIEFS_TEXT = readKnowledge('adventist-beliefs.md', 40000);
+const SITE_TEXT = readKnowledge('site-content.txt', 40000);
+const BELIEF_SECTIONS = toSections(BELIEFS_TEXT, /\n(?=#{1,4}\s)/);
+const SITE_SECTIONS = toSections(SITE_TEXT, /\n(?=## Page:)/);
+
+const STOP_WORDS = new Set([
+    'what', 'which', 'when', 'where', 'that', 'this', 'with', 'from', 'have', 'does', 'about',
+    'explain', 'tell', 'please', 'mean', 'your', 'there', 'their', 'would', 'could', 'should',
+    'verse', 'bible', 'continue', 'more', 'give', 'show', 'make', 'know', 'like'
+]);
+
+function keywords(text) {
+    const words = String(text || '').toLowerCase().match(/[a-z]{4,}/g) || [];
+    return [...new Set(words.filter(w => !STOP_WORDS.has(w)))];
+}
+
+function pickRelevant(sections, words, limit, maxChars) {
+    if (!words.length || !sections.length) return '';
+    return sections
+        .map(s => {
+            const lower = s.toLowerCase();
+            return { s, score: words.reduce((n, w) => n + (lower.includes(w) ? 1 : 0), 0) };
+        })
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit)
+        .map(x => x.s.slice(0, maxChars))
+        .join('\n\n');
+}
+
+// ===================== AI CLIENT =====================
 // Created on first use, so a missing key only breaks the chat, never the whole server
 let nvidiaClient = null;
 function getNvidia() {
@@ -34,7 +77,9 @@ function getNvidia() {
     if (!nvidiaClient) {
         nvidiaClient = new OpenAI({
             baseURL: 'https://integrate.api.nvidia.com/v1',
-            apiKey: process.env.NVIDIA_API_KEY
+            apiKey: process.env.NVIDIA_API_KEY,
+            maxRetries: 1,
+            timeout: 55 * 1000
         });
     }
     return nvidiaClient;
@@ -464,21 +509,37 @@ app.get('/api/events', authenticateUser, async (req, res) => {
     }
 });
 
-async function buildAiContext(userId) {
+// ===================== AI ASSISTANT =====================
+
+// Events, announcements and books are the same for everyone, so cache them for a minute
+let platformCache = { at: 0, data: null };
+async function getPlatformData() {
+    if (platformCache.data && Date.now() - platformCache.at < PLATFORM_CACHE_MS) {
+        return platformCache.data;
+    }
     const today = new Date().toISOString().split('T')[0];
-    const [{ data: profile }, { data: events }, { data: news }, { data: books }] = await Promise.all([
-        supabase.from('profiles').select('full_name, category').eq('id', userId).maybeSingle(),
+    const [{ data: events }, { data: news }, { data: books }] = await Promise.all([
         supabase.from('events').select('*').gte('event_date', today).order('event_date', { ascending: true }).limit(8),
         supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(8),
         supabase.from('study_books').select('*').limit(60)
     ]);
+    platformCache = { at: Date.now(), data: { events: events || [], news: news || [], books: books || [] } };
+    return platformCache.data;
+}
 
-    const eventLines = (events || []).map(e =>
+function buildSystemPrompt(profile, platform, topicText) {
+    const words = keywords(topicText);
+
+    const eventLines = platform.events.map(e =>
         `- ${e.title || e.name || 'Event'} on ${e.event_date}${e.location ? ' at ' + e.location : ''}`).join('\n') || 'None listed.';
-    const newsLines = (news || []).map(a =>
+    const newsLines = platform.news.map(a =>
         `- ${a.title || a.message || a.content || 'Announcement'}`).join('\n') || 'None.';
-    const bookLines = (books || []).map(b =>
+    const bookLines = platform.books.map(b =>
         `- ${b.title || b.name || 'Book'}${b.author ? ' by ' + b.author : ''}`).join('\n') || 'None listed.';
+
+    // Only the parts of the knowledge base that match the question (keeps the prompt small = faster)
+    const beliefs = pickRelevant(BELIEF_SECTIONS, words, 4, 2200) || BELIEFS_TEXT.slice(0, 2000) || 'Not available.';
+    const sitePages = pickRelevant(SITE_SECTIONS, words, 2, 1800) || 'Not needed for this question.';
 
     return `You are "Ask AI", the Bible and Adventist-faith assistant of the Kimangu AY (Seventh-day Adventist Youth) platform.
 
@@ -489,11 +550,20 @@ SCOPE
 
 PRECISION
 - Answer exactly what was asked. The first sentence must be the direct answer. No preamble, no repeating the question, no unrequested extras.
-- Default to 2 to 5 sentences. Go longer only if the member asks for detail or a study.
-- Support doctrinal claims with Bible references (book chapter:verse). Paraphrase; quote at most a short phrase.
-- For Adventist teaching, base the answer on the 28 Fundamental Beliefs below and name the belief number. When citing Ellen G. White, name the book.
+- Keep answers under about 220 words. Go longer only if the member asks for detail or a study, and even then stay under 350 words. ALWAYS finish your last sentence; if the topic is big, cover the main points and offer to continue.
+- Support doctrinal claims with Bible references. Paraphrase; quote at most a short phrase.
+- For Adventist teaching, base the answer on the Fundamental Beliefs below and name the belief number. When citing Ellen G. White, name the book.
 - If asked about another denomination or religion, describe it respectfully and accurately, then give the Adventist position.
 - Reply in the language the member writes in (English or Swahili).
+
+OUTPUT FORMAT (very important, the app does the styling)
+- Plain text only. NEVER use asterisks, hash symbols, backticks, tables, vertical bars, horizontal lines, or HTML tags.
+- Heading: put "## " at the start of its own line. Use headings only when the answer has several parts; short answers need none.
+- Numbered points: start the line with "1. ", "2. ", "3. " and so on. Unordered points: start the line with "- ".
+- Wrap EVERY Bible reference in double square brackets, like [[John 3:16]] or [[Hebrews 7:1-4]]. Wrap book titles of Ellen G. White the same way, like [[Steps to Christ]].
+- Never write a Bible reference outside double square brackets.
+- To compare things, use numbered points or short paragraphs, never a table.
+- Put a blank line between sections. Keep each point to one or two sentences.
 
 HONESTY
 - If something is not in the knowledge below or you are unsure, say so. Never invent verses, quotes, dates or church details.
@@ -513,11 +583,11 @@ ${bookLines}
 
 PLATFORM PAGES: Home, Media Center, Resources, My Schedules, Accounts, Treasury Desk (Payment, Transaction History, Report Analysis).
 
-PLATFORM CONTENT
-${SITE_TEXT || 'Not available.'}
+PLATFORM CONTENT (relevant parts)
+${sitePages}
 
-ADVENTIST KNOWLEDGE
-${BELIEFS_TEXT || 'Not available.'}`;
+ADVENTIST KNOWLEDGE (relevant parts)
+${beliefs}`;
 }
 
 // Saved conversation for the logged-in member
@@ -554,22 +624,32 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
         return res.status(400).json({ error: 'Message must be 1 to 2000 characters.' });
     }
 
+    let stream = null;
+
     try {
         const userId = req.user.id;
 
-        const [{ data: past }, system] = await Promise.all([
+        // All database work runs at the same time
+        const [{ data: past }, { data: profile }, platform] = await Promise.all([
             supabase.from('ai_chat_messages').select('role, content').eq('user_id', userId)
                 .order('created_at', { ascending: false }).limit(AI_HISTORY_LIMIT),
-            buildAiContext(userId)
+            supabase.from('profiles').select('full_name, category').eq('id', userId).maybeSingle(),
+            getPlatformData()
         ]);
 
+        const history = (past || []).reverse();
+
+        // For short follow-ups ("continue", "explain more") also use the previous question to find the topic
+        const lastUser = [...history].reverse().find(m => m.role === 'user');
+        const topicText = message + ' ' + (message.length < 40 && lastUser ? lastUser.content : '');
+
         const messages = [
-            { role: 'system', content: system },
-            ...(past || []).reverse(),
+            { role: 'system', content: buildSystemPrompt(profile, platform, topicText) },
+            ...history,
             { role: 'user', content: message }
         ];
 
-        const stream = await getNvidia().chat.completions.create({
+        stream = await getNvidia().chat.completions.create({
             model: AI_MODEL,
             messages,
             temperature: 0.3,
@@ -581,18 +661,35 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
             stream: true
         });
 
-        // The AI accepted the request, so start streaming the reply
+        // Stop paying for / waiting on the AI if the member closes the chat mid-answer
+        res.on('close', () => {
+            if (!res.writableEnded && stream && stream.controller) stream.controller.abort();
+        });
+
+        // The AI accepted the request, so start streaming the reply immediately
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
         res.setHeader('X-Accel-Buffering', 'no');
+        if (typeof res.flushHeaders === 'function') res.flushHeaders();
 
         let reply = '';
+        let finishReason = null;
+
         for await (const chunk of stream) {
-            const delta = chunk.choices?.[0]?.delta?.content;
+            const choice = chunk.choices?.[0];
+            const delta = choice?.delta?.content;
             if (delta) {
                 reply += delta;
                 res.write(delta);
             }
+            if (choice?.finish_reason) finishReason = choice.finish_reason;
+        }
+
+        // If the model ran out of room, say so instead of silently stopping
+        if (finishReason === 'length') {
+            const note = '\n\n(This answer was long. Send "continue" to get the rest.)';
+            reply += note;
+            res.write(note);
         }
         res.end();
 
@@ -605,6 +702,12 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
             if (saveError) console.warn('Could not save AI chat messages:', saveError.message);
         }
     } catch (err) {
+        // Member closed the chat: nothing to report
+        if (err && (err.name === 'AbortError' || /abort/i.test(err.message || ''))) {
+            if (!res.writableEnded) res.end();
+            return;
+        }
+
         console.error('AI chat error:', err.status || '', err.message, err.error ? JSON.stringify(err.error) : '');
 
         if (!res.headersSent && !res.writableEnded) {
@@ -614,7 +717,7 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
             });
         }
         if (!res.writableEnded) {
-            res.write('\n\n[Connection interrupted. Please try again.]');
+            res.write('\n\n(Connection interrupted. Please try again.)');
             res.end();
         }
     }
