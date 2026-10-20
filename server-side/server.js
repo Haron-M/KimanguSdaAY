@@ -4,14 +4,29 @@ const path = require('path');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const OpenAI = require('openai');
-const nvidia = new OpenAI({
-    baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: process.env.NVIDIA_API_KEY
-});
-const AI_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b';
-const AI_HISTORY_LIMIT = 12;   // past messages sent to the AI for context
 
 const app = express();
+
+// ===================== AI SETTINGS =====================
+const AI_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b';
+const AI_HISTORY_LIMIT = 12;      // past messages sent to the AI for context
+const AI_MAX_TOKENS = 2048;
+const AI_DEBUG = process.env.AI_DEBUG === 'true';   // set AI_DEBUG=true in Vercel to see real AI errors in the chat
+
+// Created on first use, so a missing key only breaks the chat, never the whole server
+let nvidiaClient = null;
+function getNvidia() {
+    if (!process.env.NVIDIA_API_KEY) {
+        throw new Error('NVIDIA_API_KEY is not set on the server');
+    }
+    if (!nvidiaClient) {
+        nvidiaClient = new OpenAI({
+            baseURL: 'https://integrate.api.nvidia.com/v1',
+            apiKey: process.env.NVIDIA_API_KEY
+        });
+    }
+    return nvidiaClient;
+}
 
 // Middleware
 // Set CORS_ORIGIN in .env (comma separated, e.g. https://yoursite.com) to lock this down in production.
@@ -358,7 +373,7 @@ app.get('/api/dashboard/stats', authenticateUser, async (req, res) => {
             netBalance: totalDeposits - totalExpenditures,
             myContribution: myTotalContribution,
             schedulesCount: schedError ? 0 : (schedulesCount || 0),
-            eventsCount: eventsError ? 0 : (eventsError || 0)
+            eventsCount: eventsError ? 0 : (eventsCount || 0)
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -436,7 +451,10 @@ app.get('/api/events', authenticateUser, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // ===================== AI CHAT =====================
+
+// Builds the system prompt: who the member is, plus current events and announcements
 async function buildAiContext(userId) {
     const today = new Date().toISOString().split('T')[0];
     const [{ data: profile }, { data: events }, { data: news }] = await Promise.all([
@@ -453,11 +471,14 @@ async function buildAiContext(userId) {
     return `You are "Ask AI", the friendly assistant inside the Kimangu AY (Seventh-day Adventist Youth) members dashboard.
 Member: ${profile?.full_name || 'Member'} (category: ${profile?.category || 'N/A'}).
 The dashboard has: Home, Media Center, Resources, My Schedules, Accounts, and a Treasury Desk (Payment, Transaction History, Report Analysis).
-Upcoming events:\n${eventLines}
-Latest announcements:\n${newsLines}
+Upcoming events:
+${eventLines}
+Latest announcements:
+${newsLines}
 Be warm, clear and concise. Answer Bible and church questions respectfully. If you don't know something specific to this church, say so instead of guessing. Never ask for passwords or share other members' details.`;
 }
 
+// Saved conversation for the logged-in member
 app.get('/api/ai/history', authenticateUser, async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -473,6 +494,7 @@ app.get('/api/ai/history', authenticateUser, async (req, res) => {
     }
 });
 
+// Clear the conversation
 app.delete('/api/ai/history', authenticateUser, async (req, res) => {
     try {
         const { error } = await supabase.from('ai_chat_messages').delete().eq('user_id', req.user.id);
@@ -483,6 +505,7 @@ app.delete('/api/ai/history', authenticateUser, async (req, res) => {
     }
 });
 
+// Send a message, stream the reply back, then save both messages
 app.post('/api/ai/chat', authenticateUser, async (req, res) => {
     const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
     if (!message || message.length > 2000) {
@@ -498,28 +521,28 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
             buildAiContext(userId)
         ]);
 
-        await supabase.from('ai_chat_messages').insert({ user_id: userId, role: 'user', content: message });
-
         const messages = [
             { role: 'system', content: system },
             ...(past || []).reverse(),
             { role: 'user', content: message }
         ];
 
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('X-Accel-Buffering', 'no');
-
-        const stream = await nvidia.chat.completions.create({
+        const stream = await getNvidia().chat.completions.create({
             model: AI_MODEL,
             messages,
             temperature: 0.7,
             top_p: 0.95,
-            max_tokens: 2048,
-            // Set to true for deeper reasoning (slower). Reasoning text is never sent to the browser.
-            extra_body: { chat_template_kwargs: { enable_thinking: false } },
+            max_tokens: AI_MAX_TOKENS,
+            // Node SDK: extra fields go at the top level (extra_body is Python only).
+            // Set enable_thinking to true for deeper (but slower) reasoning.
+            chat_template_kwargs: { enable_thinking: false },
             stream: true
         });
+
+        // The AI accepted the request, so start streaming the reply
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('X-Accel-Buffering', 'no');
 
         let reply = '';
         for await (const chunk of stream) {
@@ -531,14 +554,27 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
         }
         res.end();
 
+        // Save both messages only after a successful answer
         if (reply.trim()) {
-            await supabase.from('ai_chat_messages').insert({ user_id: userId, role: 'assistant', content: reply });
+            const { error: saveError } = await supabase.from('ai_chat_messages').insert([
+                { user_id: userId, role: 'user', content: message },
+                { user_id: userId, role: 'assistant', content: reply }
+            ]);
+            if (saveError) console.warn('Could not save AI chat messages:', saveError.message);
         }
     } catch (err) {
-        console.error('AI chat error:', err.message);
-        if (!res.headersSent) return res.status(500).json({ error: 'The assistant is unavailable right now.' });
-        res.write('\n\n[Connection interrupted. Please try again.]');
-        res.end();
+        console.error('AI chat error:', err.status || '', err.message, err.error ? JSON.stringify(err.error) : '');
+
+        if (!res.headersSent && !res.writableEnded) {
+            const friendly = 'The assistant is unavailable right now.';
+            return res.status(500).json({
+                error: AI_DEBUG ? `AI error ${err.status || ''}: ${err.message}` : friendly
+            });
+        }
+        if (!res.writableEnded) {
+            res.write('\n\n[Connection interrupted. Please try again.]');
+            res.end();
+        }
     }
 });
 
