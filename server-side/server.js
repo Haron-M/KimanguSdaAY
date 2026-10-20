@@ -657,6 +657,7 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
             temperature: 0.3,
             top_p: 0.9,
             max_tokens: AI_MAX_TOKENS,
+            chat_template_kwargs: { enable_thinking: false },
             stream: true
         });
         console.log('2 NVIDIA accepted ms:', Date.now() - t0);
