@@ -2199,9 +2199,9 @@
         function getPeriodKey(date = new Date()) {
             const h = date.getHours();
             if (h >= 5 && h < 12) return 'morning';
-            if (h >= 12 && h < 14) return 'noon';
-            if (h >= 14 && h < 17) return 'afternoon';
-            if (h >= 17 && h < 19) return 'evening';
+            if (h == 12) return 'noon';
+            if (h > 12 && h < 16) return 'afternoon';
+            if (h >= 16 && h < 19) return 'evening';
             return 'night';
         }
 
