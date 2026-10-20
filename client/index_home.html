@@ -1642,22 +1642,16 @@
 
             let totalMembers = 0;
             try {
-                // Query the 'profiles' table. Make sure your Supabase table has a public SELECT policy if users aren't logged in on the homepage.
-                const { count, error, data } = await supabasePublic
-                    .from('profiles')
-                    .select('*', { count: 'exact', head: true });
+                // Asks a small database function for ONLY the number of members.
+                // The profiles table itself stays private (see security_fixes.sql).
+                const { data: rpcCount, error: rpcError } = await supabasePublic.rpc('get_member_count');
 
-                console.log("Supabase member count debug:", { count, error, data });
-
-                if (!error && count !== null) {
-                    totalMembers = count; // Will use the exact database count (e.g., 8)
-                } else {
-                    console.warn('Supabase query error or RLS policy restriction:', error);
-                    // Fallback if query fails
-                    totalMembers = parseInt(localStorage.getItem('memberCount') || 8, 10);
+                if (rpcError || rpcCount === null || rpcCount === undefined) {
+                    throw rpcError || new Error('get_member_count returned nothing');
                 }
+                totalMembers = Number(rpcCount);
             } catch (err) {
-                console.error('Failed to fetch member count from Supabase:', err);
+                console.warn('Could not load member count, using fallback:', err);
                 totalMembers = parseInt(localStorage.getItem('memberCount') || 8, 10);
             }
 
