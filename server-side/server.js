@@ -625,6 +625,7 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
     }
 
     let stream = null;
+    const t0 = Date.now();
 
     try {
         const userId = req.user.id;
@@ -636,6 +637,7 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
             supabase.from('profiles').select('full_name, category').eq('id', userId).maybeSingle(),
             getPlatformData()
         ]);
+        console.log('1 database ms:', Date.now() - t0);
 
         const history = (past || []).reverse();
 
@@ -657,6 +659,7 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
             max_tokens: AI_MAX_TOKENS,
             stream: true
         });
+        console.log('2 NVIDIA accepted ms:', Date.now() - t0);
 
         // Stop paying for / waiting on the AI if the member closes the chat mid-answer
         res.on('close', () => {
@@ -673,6 +676,7 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
         let finishReason = null;
 
         for await (const chunk of stream) {
+            if (!globalThis.__first) { globalThis.__first = true; console.log('3 first chunk ms:', Date.now() - t0); }
             const choice = chunk.choices?.[0];
             const delta = choice?.delta?.content;
             if (delta) {
@@ -680,6 +684,8 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
                 res.write(delta);
             }
             if (choice?.finish_reason) finishReason = choice.finish_reason;
+            globalThis.__first = false;
+            console.log('4 finished ms:', Date.now() - t0);
         }
 
         // If the model ran out of room, say so instead of silently stopping
@@ -719,7 +725,19 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
         }
     }
 });
-
+app.get('/api/ai/ping', async (req, res) => {
+    const t0 = Date.now();
+    try {
+        await getNvidia().chat.completions.create({
+            model: AI_MODEL,
+            messages: [{ role: 'user', content: 'hello' }],
+            max_tokens: 20
+        });
+        res.json({ ms: Date.now() - t0, model: AI_MODEL });
+    } catch (e) {
+        res.status(500).json({ error: e.message, ms: Date.now() - t0 });
+    }
+});
 // Start Server Locally (Ignored on Vercel)
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {
