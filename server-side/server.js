@@ -655,9 +655,6 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
             temperature: 0.3,
             top_p: 0.9,
             max_tokens: AI_MAX_TOKENS,
-            // Node SDK: extra fields go at the top level (extra_body is Python only).
-            // Set enable_thinking to true for deeper (but slower) reasoning.
-            chat_template_kwargs: { enable_thinking: false },
             stream: true
         });
 
