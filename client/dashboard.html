@@ -1844,6 +1844,64 @@
             el.innerHTML = formatAiReply(text);
         }
 
+        // ---------- Smooth reveal ----------
+        // Text that arrives from the server is put in a queue and shown a few characters per
+        // screen frame. Even if the network (or the AI) delivers a big chunk at once, the
+        // answer still appears progressively instead of popping up in one go. When the
+        // network is slow, the text simply follows it as it arrives.
+        function aiCreateTypewriter(el) {
+            const MIN_PER_FRAME = 2;       // base speed: about 120 characters per second
+            const CATCH_UP_DIVISOR = 18;   // the bigger the backlog, the faster it catches up
+
+            let target = '';        // everything received from the server so far
+            let shown = 0;          // how many characters are on screen
+            let finished = false;   // the network stream has ended
+            let cancelled = false;
+            let rafId = 0;
+            let resolveDone;
+            const done = new Promise(resolve => { resolveDone = resolve; });
+
+            function visibleText() {
+                const part = target.slice(0, shown);
+                if (finished && shown >= target.length) return part;
+                // Hide a half-typed [[Bible reference]] until its closing brackets are shown
+                const open = part.lastIndexOf('[[');
+                return (open !== -1 && part.indexOf(']]', open) === -1) ? part.slice(0, open) : part;
+            }
+
+            function schedule() {
+                if (!rafId && !cancelled) rafId = requestAnimationFrame(tick);
+            }
+
+            function tick() {
+                rafId = 0;
+                if (cancelled) return;
+
+                const backlog = target.length - shown;
+                if (backlog > 0) {
+                    shown = Math.min(target.length, shown + Math.max(MIN_PER_FRAME, Math.ceil(backlog / CATCH_UP_DIVISOR)));
+                    aiRender(el, visibleText());
+                    aiMessages.scrollTop = aiMessages.scrollHeight;
+                }
+
+                if (shown < target.length) schedule();   // more to reveal
+                else if (finished) resolveDone();        // everything shown and the stream is over
+                // otherwise wait: push() restarts the loop when more text arrives
+            }
+
+            return {
+                push(text) { target += text; schedule(); },
+                finish() { finished = true; schedule(); },
+                cancel() {
+                    cancelled = true;
+                    if (rafId) cancelAnimationFrame(rafId);
+                    rafId = 0;
+                    resolveDone();
+                },
+                done
+            };
+        }
+
         function aiAddMessage(role, text, extraClass = '', rich = false) {
             const el = document.createElement('div');
             el.className = `ai-msg ${role} ${extraClass}`.trim();
@@ -1902,50 +1960,26 @@
             aiFab.classList.remove('hidden');
         }
 
-
-        // Streams the reply from the server
+        // Streams the reply from the server (api() only handles JSON, so this uses fetch directly)
         async function aiStreamReply(message, retry = true) {
-            const startedAt = performance.now();
-
             const res = await fetch(`${API_BASE}/api/ai/chat`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getToken()}`,
-                    'Accept': 'text/plain'
-                },
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
                 body: JSON.stringify({ message })
             });
 
-            console.log(
-                `[Ask AI] HTTP response headers received in ${Math.round(performance.now() - startedAt)
-                } ms`
-            );
-
             if (res.status === 401) {
-                if (retry && await refreshSession()) {
-                    return aiStreamReply(message, false);
-                }
-
+                if (retry && await refreshSession()) return aiStreamReply(message, false);
                 clearSession();
                 goToLogin();
                 throw new Error('Session expired');
             }
-
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                throw new Error(
-                    data.error || 'The assistant is unavailable right now.'
-                );
+                throw new Error(data.error || 'The assistant is unavailable right now.');
             }
-
-            if (!res.body) {
-                throw new Error('Streaming is not supported by this response.');
-            }
-
             return res;
         }
-
 
         async function aiSendMessage() {
             const text = aiInput.value.trim();
@@ -1961,63 +1995,39 @@
 
             aiAddMessage('user', text);
             const bot = aiAddMessage('bot', '', 'ai-typing ai-rich');
+            let writer = null;
 
             try {
                 const res = await aiStreamReply(text);
-
                 const reader = res.body.getReader();
                 const decoder = new TextDecoder();
-
+                writer = aiCreateTypewriter(bot);
                 let reply = '';
-                let firstChunk = true;
-                let firstChunkTimer = null;
-                let pending = false;
 
-                const draw = () => {
-                    pending = false;
-                    aiRender(bot, reply);
-                    aiMessages.scrollTop = aiMessages.scrollHeight;
-                };
-
+                // Hand every piece of text to the typewriter the moment it arrives
                 while (true) {
                     const { done, value } = await reader.read();
-
                     if (done) break;
-
-                    if (firstChunk) {
-                        firstChunk = false;
-
-                        console.log(
-                            `[Ask AI] First response chunk received ${Math.round(performance.now())
-                            } ms after page navigation timing origin`
-                        );
-
-                        bot.classList.remove('ai-typing');
-                    }
-
-                    reply += decoder.decode(value, { stream: true });
-
-                    if (!pending) {
-                        pending = true;
-                        requestAnimationFrame(draw);
-                    }
+                    const piece = decoder.decode(value, { stream: true });
+                    reply += piece;
+                    writer.push(piece);
+                }
+                const tail = decoder.decode();   // flush any last bytes
+                if (tail) {
+                    reply += tail;
+                    writer.push(tail);
                 }
 
-                reply += decoder.decode();
-
-                if (pending) {
-                    cancelAnimationFrame(firstChunkTimer);
-                }
-
-                aiRender(bot, reply);
+                writer.finish();
+                await writer.done;              // wait until the last character is on screen
                 aiMessages.scrollTop = aiMessages.scrollHeight;
-
 
                 if (!reply.trim()) {
                     bot.classList.remove('ai-rich');
                     bot.textContent = 'I could not come up with a reply. Please try again.';
                 }
             } catch (err) {
+                if (writer) writer.cancel();    // stop the reveal so it cannot overwrite the error
                 bot.classList.remove('ai-rich');
                 bot.textContent = err.message || 'Something went wrong. Please try again.';
                 bot.classList.add('error');

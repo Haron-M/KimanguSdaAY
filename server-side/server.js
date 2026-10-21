@@ -509,6 +509,98 @@ app.get('/api/events', authenticateUser, async (req, res) => {
     }
 });
 
+// ===================== INSTANT GREETING REPLIES =====================
+// A message that is ONLY a greeting ("hi", "habari", "good morning, how are you?") gets a
+// ready-made answer: no database reads and no AI call, so it appears immediately.
+// A message that also contains a question ("hello, what is the Sabbath?") is NOT treated
+// as a greeting and goes to the AI as normal.
+//
+// To support more greetings, add words to GREETING_PHRASES below (regex text, lowercase).
+const GREETING_PHRASES = [
+    // Order matters: longer / more specific phrases first, plain greetings last.
+    { re: 'u hali gani|hali yako|uko vipi|uko aje', lang: 'sw', kind: 'howareyou' },
+    { re: 'how (?:are|r) (?:you|u)(?: doing today| doing| today| now)?|how is it going|hows it going|how do you do|hows you|whats up|wassup|what up', kind: 'howareyou' },
+    { re: 'happy sabbath|blessed sabbath|good sabbath|sabbath greetings|sabbath blessings', kind: 'sabbath' },
+    { re: 'sabato njema', lang: 'sw', kind: 'sabbath' },
+    { re: 'praise the lord|praise god|praise jesus|hallelujah', kind: 'praise' },
+    { re: 'bwana asifiwe', lang: 'sw', kind: 'praise' },
+    { re: 'habari(?: yako| yenu| gani| za (?:asubuhi|mchana|jioni|leo|siku|usiku))?|hujambo|hamjambo|salamu|shikamoo|marahaba|niaje|mambo(?: vipi)?|vipi|sasa', lang: 'sw' },
+    { re: 'good (?:morning|afternoon|evening|day)|morning|afternoon|evening|hi+|hel+o+|hey+|hallo|hola|howdy|greetings|yo|sup|shalom|peace|god bless(?: you)?' }
+];
+
+const GREETING_PATTERNS = GREETING_PHRASES.map(p => ({
+    ...p,
+    rx: new RegExp(`\\b(?:${p.re})\\b`, 'g')
+}));
+
+// Harmless words that may follow a greeting ("hello there", "hi Ask AI", "good morning everyone")
+const GREETING_FILLERS = /\b(?:there|ai|ask|assistant|bot|friend|friends|everyone|all|team|dear|my|sir|madam|brother|sister|pastor|please|today|and)\b/g;
+
+const GREETING_REPLIES = {
+    en: {
+        general: [
+            "Hello! I'm Ask AI, your Bible and Adventist faith assistant. What would you like to learn about today?",
+            "Hi there! Welcome to Ask AI. Ask me anything about the Bible, Adventist beliefs, or how to use this platform.",
+            "Greetings! I'm here to help with your questions on the Bible, prayer, and Seventh-day Adventist faith. What is on your mind?"
+        ],
+        howareyou: [
+            "I'm doing well, thank you for asking! How can I help you with the Bible or Adventist faith today?"
+        ],
+        sabbath: [
+            "Happy Sabbath! May God bless your day. What would you like to explore from the Bible or Adventist faith?"
+        ],
+        praise: [
+            "Amen, praise the Lord! How can I help you with the Bible or Adventist faith today?"
+        ]
+    },
+    sw: {
+        general: [
+            "Habari! Mimi ni Ask AI, msaidizi wako wa Biblia na imani ya Waadventista. Ungependa kujifunza nini leo?",
+            "Karibu! Niulize swali lolote kuhusu Biblia, imani ya Waadventista, au jinsi ya kutumia jukwaa hili.",
+            "Hujambo! Niko hapa kukusaidia na maswali yako kuhusu Biblia, maombi na imani ya Waadventista Wasabato. Una swali gani?"
+        ],
+        howareyou: [
+            "Niko vizuri, asante kwa kuuliza! Nikusaidie vipi leo kuhusu Biblia au imani ya Waadventista?"
+        ],
+        sabbath: [
+            "Sabato njema! Mungu akubariki siku yako. Ungependa kujifunza nini kutoka Biblia au imani ya Waadventista?"
+        ],
+        praise: [
+            "Amina, Bwana asifiwe! Nikusaidie vipi leo kuhusu Biblia au imani ya Waadventista?"
+        ]
+    }
+};
+
+// Returns a predefined reply if the whole message is a greeting, otherwise null
+function getGreetingReply(message) {
+    let text = String(message || '')
+        .toLowerCase()
+        .replace(/['’`]/g, '')        // "what's" -> "whats"
+        .replace(/[^a-z\s]/g, ' ')    // drop punctuation, digits and emojis
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!text || text.length > 60) return null;
+
+    let swahili = false;
+    const kinds = new Set();
+
+    for (const p of GREETING_PATTERNS) {
+        text = text.replace(p.rx, () => {
+            kinds.add(p.kind || 'general');
+            if (p.lang === 'sw') swahili = true;
+            return ' ';
+        });
+    }
+
+    if (!kinds.size) return null;                              // no greeting words at all
+    if (text.replace(GREETING_FILLERS, ' ').trim()) return null; // something else was said too
+
+    const kind = ['sabbath', 'praise', 'howareyou', 'general'].find(k => kinds.has(k));
+    const options = GREETING_REPLIES[swahili ? 'sw' : 'en'][kind];
+    return options[Math.floor(Math.random() * options.length)];
+}
+
 // ===================== AI ASSISTANT =====================
 
 // Events, announcements and books are the same for everyone, so cache them for a minute
@@ -617,15 +709,47 @@ app.delete('/api/ai/history', authenticateUser, async (req, res) => {
     }
 });
 
-// Send a message, stream the reply back, then save both messages
+// Send a message. Greetings get an instant predefined reply; everything else is streamed
+// from the AI token by token. Both messages are saved afterwards.
 app.post('/api/ai/chat', authenticateUser, async (req, res) => {
     const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
     if (!message || message.length > 2000) {
         return res.status(400).json({ error: 'Message must be 1 to 2000 characters.' });
     }
 
-    let stream = null;
     const t0 = Date.now();
+
+    // ---------- FAST PATH: greeting -> predefined reply, no database reads, no AI call ----------
+    const instantReply = getGreetingReply(message);
+    if (instantReply) {
+        try {
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-cache, no-transform');
+            res.setHeader('X-Accel-Buffering', 'no');
+            res.setHeader('X-Ask-AI-Source', 'instant');
+            if (typeof res.flushHeaders === 'function') res.flushHeaders();
+
+            // The member sees the reply right now...
+            res.write(instantReply);
+
+            // ...and the conversation is saved before the response is closed
+            // (serverless hosts like Vercel can stop work after the response ends)
+            const { error: saveError } = await supabase.from('ai_chat_messages').insert([
+                { user_id: req.user.id, role: 'user', content: message },
+                { user_id: req.user.id, role: 'assistant', content: instantReply }
+            ]);
+            if (saveError) console.warn('Could not save greeting messages:', saveError.message);
+        } catch (err) {
+            console.warn('Instant greeting error:', err.message);
+        } finally {
+            if (!res.writableEnded) res.end();
+        }
+        console.log('[Ask AI] Instant greeting sent after', Date.now() - t0, 'ms');
+        return;
+    }
+
+    // ---------- NORMAL PATH: real question -> stream the AI answer as it is generated ----------
+    let stream = null;
 
     try {
         const userId = req.user.id;
@@ -667,16 +791,19 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
             if (!res.writableEnded && stream && stream.controller) stream.controller.abort();
         });
 
-        // The AI accepted the request, so start streaming the reply immediately
+        // The AI accepted the request, so start streaming the reply immediately.
+        // no-transform + X-Accel-Buffering stop proxies from holding the text back.
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache, no-transform');
         res.setHeader('X-Accel-Buffering', 'no');
+        res.setHeader('X-Ask-AI-Source', 'ai');
         if (typeof res.flushHeaders === 'function') res.flushHeaders();
 
         let reply = '';
         let finishReason = null;
         let firstTokenLogged = false;
 
+        // Every piece of text is written to the browser the moment the AI produces it
         for await (const chunk of stream) {
             const choice = chunk.choices?.[0];
             const delta = choice?.delta?.content;
