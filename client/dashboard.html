@@ -3138,263 +3138,263 @@
                 }
                 return 'Location is blocked for this site. Click the lock icon in the address bar, set Location to Allow, then press the button again.';
             }
+        }
+        function showGate() {
+            locGate.hidden = false;
+            locGateSkip.hidden = !(ALLOW_SKIP || gateSoftFailures >= 2);
+        }
 
-            function showGate() {
-                locGate.hidden = false;
-                locGateSkip.hidden = !(ALLOW_SKIP || gateSoftFailures >= 2);
-            }
+        function hideGate() { locGate.hidden = true; }
 
-            function hideGate() { locGate.hidden = true; }
+        function setGateHelp(msg) {
+            locGateHelp.textContent = msg || '';
+            locGateHelp.hidden = !msg;
+        }
 
-            function setGateHelp(msg) {
-                locGateHelp.textContent = msg || '';
-                locGateHelp.hidden = !msg;
-            }
+        async function finishLocation(text, source, ip) {
+            setLocationText(locationLabel(text, source), `${text}: saved to your profile. Click to refresh.`);
+            hideGate();
+            await persistLocation(text, source, ip);
+        }
 
-            async function finishLocation(text, source, ip) {
-                setLocationText(locationLabel(text, source), `${text}: saved to your profile. Click to refresh.`);
+        async function useApproximateLocation(ip) {
+            const info = await lookupByIP();
+            const text = info ? formatLocation(info) : '';
+            if (text) {
+                await finishLocation(text, 'ip', ip);
+            } else {
+                setLocationText('Location unavailable', 'Could not work out your location. Click to retry.');
                 hideGate();
-                await persistLocation(text, source, ip);
+            }
+        }
+
+        // Gets a fresh location. If the browser already allows location this happens silently;
+        // otherwise the full-screen gate opens and stays until the user turns location on.
+        async function acquireLocation(ip) {
+            gateIP = ip;
+
+            if (!('geolocation' in navigator)) {
+                await useApproximateLocation(ip);
+                return;
             }
 
-            async function useApproximateLocation(ip) {
-                const info = await lookupByIP();
-                const text = info ? formatLocation(info) : '';
-                if (text) {
-                    await finishLocation(text, 'ip', ip);
-                } else {
-                    setLocationText('Location unavailable', 'Could not work out your location. Click to retry.');
-                    hideGate();
+            if (await getGeoPermissionState() === 'granted') {
+                try {
+                    await finishLocation(await fetchExactLocation(), 'gps', ip);
+                    return;
+                } catch (err) {
+                    console.warn('Silent location refresh failed:', err && err.code, err && err.message);
+                    gateSoftFailures++;
                 }
             }
 
-            // Gets a fresh location. If the browser already allows location this happens silently;
-            // otherwise the full-screen gate opens and stays until the user turns location on.
-            async function acquireLocation(ip) {
-                gateIP = ip;
+            setLocationText('Location needed');
+            locGateBtn.textContent = 'Enable location';
+            showGate();
+        }
 
-                if (!('geolocation' in navigator)) {
-                    await useApproximateLocation(ip);
+        // Runs after login: compare the IP with the one saved in the database
+        async function initLocation() {
+            if (!locElement || !currentUserId || locating) return;
+            locating = true;
+            try {
+                setLocationText('Locating…');
+                const [currentIP, stored] = await Promise.all([getCurrentIP(), loadStoredLocation()]);
+                const hasSaved = !!(stored && stored.location_text);
+
+                // Same IP as last time (or IP unknown) and a saved location: show it from the database
+                if (hasSaved && (!currentIP || stored.last_ip === currentIP)) {
+                    setLocationText(
+                        locationLabel(stored.location_text, stored.location_source),
+                        `${countyOnly(stored.location_text)}: saved to your profile. Click to refresh.`
+                    );
                     return;
                 }
 
-                if (await getGeoPermissionState() === 'granted') {
-                    try {
-                        await finishLocation(await fetchExactLocation(), 'gps', ip);
-                        return;
-                    } catch (err) {
-                        console.warn('Silent location refresh failed:', err && err.code, err && err.message);
-                        gateSoftFailures++;
-                    }
-                }
-
-                setLocationText('Location needed');
-                locGateBtn.textContent = 'Enable location';
-                showGate();
+                // First login, or the IP address changed: location must be fetched again
+                await acquireLocation(currentIP);
+            } finally {
+                locating = false;
             }
+        }
 
-            // Runs after login: compare the IP with the one saved in the database
-            async function initLocation() {
-                if (!locElement || !currentUserId || locating) return;
+        // Gate button: this click is what makes the browser show its permission prompt
+        locGateBtn.addEventListener('click', async () => {
+            locGateBtn.disabled = true;
+            locGateBtn.textContent = 'Getting your location…';
+            setGateHelp('');
+            try {
+                const text = await fetchExactLocation();
+                gateSoftFailures = 0;
+                await finishLocation(text, 'gps', gateIP || await getCurrentIP());
+            } catch (err) {
+                console.warn('Location attempt failed:', err && err.code, err && err.message);
+                if (err && err.code === 1) {
+                    setGateHelp(getLocationHelpText());
+                } else {
+                    gateSoftFailures++;
+                    setGateHelp(
+                        err && err.code === 2 ? 'Your device could not find its position. Make sure Location is switched on in your device settings, then try again.'
+                            : err && err.code === 3 ? 'That took too long. Please try again.'
+                                : 'We could not work out your town. Please try again.'
+                    );
+                }
+                showGate();
+                locGateBtn.textContent = 'Try again';
+            } finally {
+                locGateBtn.disabled = false;
+            }
+        });
+
+        // Safety valve for devices that cannot locate at all (hidden unless needed)
+        locGateSkip.addEventListener('click', async () => {
+            locGateSkip.disabled = true;
+            await useApproximateLocation(gateIP || await getCurrentIP());
+            locGateSkip.disabled = false;
+        });
+
+        // Clicking the location text in the sidebar refreshes it
+        if (locElement) {
+            locElement.addEventListener('click', async () => {
+                if (locating || !currentUserId) return;
                 locating = true;
                 try {
                     setLocationText('Locating…');
-                    const [currentIP, stored] = await Promise.all([getCurrentIP(), loadStoredLocation()]);
-                    const hasSaved = !!(stored && stored.location_text);
-
-                    // Same IP as last time (or IP unknown) and a saved location: show it from the database
-                    if (hasSaved && (!currentIP || stored.last_ip === currentIP)) {
-                        setLocationText(
-                            locationLabel(stored.location_text, stored.location_source),
-                            `${countyOnly(stored.location_text)}: saved to your profile. Click to refresh.`
-                        );
-                        return;
-                    }
-
-                    // First login, or the IP address changed: location must be fetched again
-                    await acquireLocation(currentIP);
+                    await acquireLocation(await getCurrentIP());
                 } finally {
                     locating = false;
                 }
-            }
-
-            // Gate button: this click is what makes the browser show its permission prompt
-            locGateBtn.addEventListener('click', async () => {
-                locGateBtn.disabled = true;
-                locGateBtn.textContent = 'Getting your location…';
-                setGateHelp('');
-                try {
-                    const text = await fetchExactLocation();
-                    gateSoftFailures = 0;
-                    await finishLocation(text, 'gps', gateIP || await getCurrentIP());
-                } catch (err) {
-                    console.warn('Location attempt failed:', err && err.code, err && err.message);
-                    if (err && err.code === 1) {
-                        setGateHelp(getLocationHelpText());
-                    } else {
-                        gateSoftFailures++;
-                        setGateHelp(
-                            err && err.code === 2 ? 'Your device could not find its position. Make sure Location is switched on in your device settings, then try again.'
-                                : err && err.code === 3 ? 'That took too long. Please try again.'
-                                    : 'We could not work out your town. Please try again.'
-                        );
-                    }
-                    showGate();
-                    locGateBtn.textContent = 'Try again';
-                } finally {
-                    locGateBtn.disabled = false;
-                }
             });
+        }
 
-            // Safety valve for devices that cannot locate at all (hidden unless needed)
-            locGateSkip.addEventListener('click', async () => {
-                locGateSkip.disabled = true;
-                await useApproximateLocation(gateIP || await getCurrentIP());
-                locGateSkip.disabled = false;
+        // If the user switches location to Allow while the gate is open, continue automatically
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' })
+                .then((status) => {
+                    status.onchange = () => {
+                        if (status.state === 'granted' && !locGate.hidden && !locGateBtn.disabled) locGateBtn.click();
+                    };
+                })
+                .catch(() => { /* permissions API not supported */ });
+        }
+
+        // ===================== NOTIFICATIONS (schedules + payments) =====================
+        const SIX_HOURS_MS = 6 * 60 * 60 * 1000;     // a notification disappears 6 hours after the user saw it
+        const TOAST_MS = 15 * 1000;                  // login toast stays for 15 seconds
+        const MAX_LOGIN_TOASTS = 3;                  // more than this are summarised in one extra toast
+        const PAYMENT_POLL_MS = 30 * 1000;           // how often to ask the server for new deposits
+        const INCOME_TYPES = new Set(['deposit', 'income', 'revenue']);
+
+        let activePayments = [];
+        let notifSeenKeys = new Set();   // seen while the dropdown is open: keep the unread look until it closes
+        let notifLoadFailed = false;
+        let loginToastsShown = false;
+        let paymentPollTimer = null;
+
+        // ---- read / toast bookkeeping (stored per browser) ----
+        function getReadStorageKey(userId) { return `read_schedules_${userId}`; }
+
+        function getReadState(userId) {
+            if (!userId) return {};
+            try {
+                return JSON.parse(localStorage.getItem(getReadStorageKey(userId))) || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveReadState(userId, state) {
+            if (!userId) return;
+            localStorage.setItem(getReadStorageKey(userId), JSON.stringify(state));
+        }
+
+        function getToastedKey(userId) { return `toasted_payments_${userId}`; }
+
+        function getToastedState(userId) {
+            try {
+                return JSON.parse(localStorage.getItem(getToastedKey(userId))) || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function markToasted(userId, keys) {
+            const state = getToastedState(userId);
+            const now = Date.now();
+            keys.forEach(key => { state[key] = now; });
+            Object.keys(state).forEach(key => {
+                if (now - state[key] > 30 * 24 * 60 * 60 * 1000) delete state[key];
             });
+            try { localStorage.setItem(getToastedKey(userId), JSON.stringify(state)); } catch (e) { /* storage full */ }
+        }
 
-            // Clicking the location text in the sidebar refreshes it
-            if (locElement) {
-                locElement.addEventListener('click', async () => {
-                    if (locating || !currentUserId) return;
-                    locating = true;
-                    try {
-                        setLocationText('Locating…');
-                        await acquireLocation(await getCurrentIP());
-                    } finally {
-                        locating = false;
-                    }
-                });
+        // ---- payment message: identical to the Transaction Log on the My Account Report page ----
+        function getPaymentAmount(row) {
+            const amount = Number(row.amount);
+            return Number.isFinite(amount) ? Math.abs(amount) : 0;
+        }
+
+        function getPaymentDate(row) {
+            const candidates = [
+                row.date, row.transaction_date, row.transactionDate,
+                row.created_at, row.createdAt, row.timestamp
+            ];
+            for (const value of candidates) {
+                if (!value) continue;
+                const parsed = new Date(value);
+                if (!Number.isNaN(parsed.getTime())) return parsed;
             }
+            return null;
+        }
 
-            // If the user switches location to Allow while the gate is open, continue automatically
-            if (navigator.permissions && navigator.permissions.query) {
-                navigator.permissions.query({ name: 'geolocation' })
-                    .then((status) => {
-                        status.onchange = () => {
-                            if (status.state === 'granted' && !locGate.hidden && !locGateBtn.disabled) locGateBtn.click();
-                        };
-                    })
-                    .catch(() => { /* permissions API not supported */ });
-            }
+        function formatKSh(value) {
+            const number = Number(value) || 0;
+            return 'KSh ' + number.toLocaleString('en-KE', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
 
-            // ===================== NOTIFICATIONS (schedules + payments) =====================
-            const SIX_HOURS_MS = 6 * 60 * 60 * 1000;     // a notification disappears 6 hours after the user saw it
-            const TOAST_MS = 15 * 1000;                  // login toast stays for 15 seconds
-            const MAX_LOGIN_TOASTS = 3;                  // more than this are summarised in one extra toast
-            const PAYMENT_POLL_MS = 30 * 1000;           // how often to ask the server for new deposits
-            const INCOME_TYPES = new Set(['deposit', 'income', 'revenue']);
+        function formatDateLabel(date) {
+            return date
+                ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '—';
+        }
 
-            let activePayments = [];
-            let notifSeenKeys = new Set();   // seen while the dropdown is open: keep the unread look until it closes
-            let notifLoadFailed = false;
-            let loginToastsShown = false;
-            let paymentPollTimer = null;
+        function formatTimeLabel(date) {
+            return date
+                ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                : '—';
+        }
 
-            // ---- read / toast bookkeeping (stored per browser) ----
-            function getReadStorageKey(userId) { return `read_schedules_${userId}`; }
+        function getTransactionCode(row) {
+            const explicit = row.transaction_code || row.transaction_id || row.reference ||
+                row.ref_code || row.receipt_no || row.code;
+            if (explicit) return String(explicit).toUpperCase();
 
-            function getReadState(userId) {
-                if (!userId) return {};
-                try {
-                    return JSON.parse(localStorage.getItem(getReadStorageKey(userId))) || {};
-                } catch (e) {
-                    return {};
-                }
-            }
+            const raw = String(row.id ?? '').replace(/-/g, '').toUpperCase();
+            return raw ? raw.slice(0, 8) : '—';
+        }
 
-            function saveReadState(userId, state) {
-                if (!userId) return;
-                localStorage.setItem(getReadStorageKey(userId), JSON.stringify(state));
-            }
+        function isPaymentRow(row) {
+            return INCOME_TYPES.has(String(row.type ?? '').trim().toLowerCase());
+        }
 
-            function getToastedKey(userId) { return `toasted_payments_${userId}`; }
+        function buildPaymentMessage(row) {
+            const date = getPaymentDate(row);
+            const amount = formatKSh(getPaymentAmount(row));
+            const code = getTransactionCode(row);
+            return `Confirmed. Payment of ${amount} on ${formatDateLabel(date)} at ${formatTimeLabel(date)} has been successfully received. Transaction ID ${code}.`;
+        }
 
-            function getToastedState(userId) {
-                try {
-                    return JSON.parse(localStorage.getItem(getToastedKey(userId))) || {};
-                } catch (e) {
-                    return {};
-                }
-            }
+        // ---- toast (top right) ----
+        function showToastCard(title, message) {
+            const stack = document.getElementById('payToastStack');
+            if (!stack) return;
 
-            function markToasted(userId, keys) {
-                const state = getToastedState(userId);
-                const now = Date.now();
-                keys.forEach(key => { state[key] = now; });
-                Object.keys(state).forEach(key => {
-                    if (now - state[key] > 30 * 24 * 60 * 60 * 1000) delete state[key];
-                });
-                try { localStorage.setItem(getToastedKey(userId), JSON.stringify(state)); } catch (e) { /* storage full */ }
-            }
-
-            // ---- payment message: identical to the Transaction Log on the My Account Report page ----
-            function getPaymentAmount(row) {
-                const amount = Number(row.amount);
-                return Number.isFinite(amount) ? Math.abs(amount) : 0;
-            }
-
-            function getPaymentDate(row) {
-                const candidates = [
-                    row.date, row.transaction_date, row.transactionDate,
-                    row.created_at, row.createdAt, row.timestamp
-                ];
-                for (const value of candidates) {
-                    if (!value) continue;
-                    const parsed = new Date(value);
-                    if (!Number.isNaN(parsed.getTime())) return parsed;
-                }
-                return null;
-            }
-
-            function formatKSh(value) {
-                const number = Number(value) || 0;
-                return 'KSh ' + number.toLocaleString('en-KE', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 2
-                });
-            }
-
-            function formatDateLabel(date) {
-                return date
-                    ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                    : '—';
-            }
-
-            function formatTimeLabel(date) {
-                return date
-                    ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-                    : '—';
-            }
-
-            function getTransactionCode(row) {
-                const explicit = row.transaction_code || row.transaction_id || row.reference ||
-                    row.ref_code || row.receipt_no || row.code;
-                if (explicit) return String(explicit).toUpperCase();
-
-                const raw = String(row.id ?? '').replace(/-/g, '').toUpperCase();
-                return raw ? raw.slice(0, 8) : '—';
-            }
-
-            function isPaymentRow(row) {
-                return INCOME_TYPES.has(String(row.type ?? '').trim().toLowerCase());
-            }
-
-            function buildPaymentMessage(row) {
-                const date = getPaymentDate(row);
-                const amount = formatKSh(getPaymentAmount(row));
-                const code = getTransactionCode(row);
-                return `Confirmed. Payment of ${amount} on ${formatDateLabel(date)} at ${formatTimeLabel(date)} has been successfully received. Transaction ID ${code}.`;
-            }
-
-            // ---- toast (top right) ----
-            function showToastCard(title, message) {
-                const stack = document.getElementById('payToastStack');
-                if (!stack) return;
-
-                const toast = document.createElement('div');
-                toast.className = 'pay-toast';
-                toast.innerHTML = `
+            const toast = document.createElement('div');
+            toast.className = 'pay-toast';
+            toast.innerHTML = `
                 <div class="pay-toast-icon"><i class="fa-solid fa-arrow-down"></i></div>
                 <div class="pay-toast-body">
                     <strong>${escapeHtml(title)}</strong>
@@ -3403,122 +3403,122 @@
                 <button type="button" class="pay-toast-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
                 <span class="pay-toast-bar"></span>`;
 
-                const remove = () => {
-                    toast.classList.add('leaving');
-                    setTimeout(() => toast.remove(), 300);
-                };
-                toast.querySelector('.pay-toast-close').addEventListener('click', remove);
-                stack.appendChild(toast);
-                setTimeout(remove, TOAST_MS);
+            const remove = () => {
+                toast.classList.add('leaving');
+                setTimeout(() => toast.remove(), 300);
+            };
+            toast.querySelector('.pay-toast-close').addEventListener('click', remove);
+            stack.appendChild(toast);
+            setTimeout(remove, TOAST_MS);
+        }
+
+        // Toast a group of payments: the newest few one by one, the rest in a single summary
+        function toastPayments(rows) {
+            if (!currentUserId || !rows.length) return;
+
+            const sorted = rows.slice().sort((a, b) => (getPaymentDate(a) || 0) - (getPaymentDate(b) || 0)); // oldest first
+
+            sorted.slice(-MAX_LOGIN_TOASTS).forEach(row => showToastCard('Payment received', buildPaymentMessage(row)));
+
+            if (sorted.length > MAX_LOGIN_TOASTS) {
+                const extra = sorted.length - MAX_LOGIN_TOASTS;
+                showToastCard('More payments', `${extra} more payment notification${extra > 1 ? 's are' : ' is'} waiting in your notification bell.`);
             }
 
-            // Toast a group of payments: the newest few one by one, the rest in a single summary
-            function toastPayments(rows) {
-                if (!currentUserId || !rows.length) return;
+            markToasted(currentUserId, sorted.map(row => `pay_${row.id}`));
+        }
 
-                const sorted = rows.slice().sort((a, b) => (getPaymentDate(a) || 0) - (getPaymentDate(b) || 0)); // oldest first
+        // Payments the user has not seen and has not been toasted about yet (runs once after login)
+        function showNewPaymentToasts() {
+            if (!currentUserId) return;
+            const readState = getReadState(currentUserId);
+            const toasted = getToastedState(currentUserId);
 
-                sorted.slice(-MAX_LOGIN_TOASTS).forEach(row => showToastCard('Payment received', buildPaymentMessage(row)));
+            toastPayments(activePayments.filter(row =>
+                readState[`pay_${row.id}`] === undefined && toasted[`pay_${row.id}`] === undefined
+            ));
+        }
 
-                if (sorted.length > MAX_LOGIN_TOASTS) {
-                    const extra = sorted.length - MAX_LOGIN_TOASTS;
-                    showToastCard('More payments', `${extra} more payment notification${extra > 1 ? 's are' : ' is'} waiting in your notification bell.`);
+        // ---- fetching (through the server) ----
+        async function fetchAndRenderNotifications(userId) {
+            try {
+                const [schedulesResult, paymentsResult] = await Promise.allSettled([
+                    api('/api/notifications'),
+                    api('/api/payments/recent')
+                ]);
+
+                if (schedulesResult.status === 'rejected') console.warn('Could not load schedule notifications:', schedulesResult.reason && schedulesResult.reason.message);
+                if (paymentsResult.status === 'rejected') console.warn('Could not load payment notifications:', paymentsResult.reason && paymentsResult.reason.message);
+
+                activeSchedules = schedulesResult.status === 'fulfilled' && Array.isArray(schedulesResult.value) ? schedulesResult.value : [];
+                activePayments = paymentsResult.status === 'fulfilled' && Array.isArray(paymentsResult.value) ? paymentsResult.value : [];
+                notifLoadFailed = schedulesResult.status === 'rejected' && paymentsResult.status === 'rejected';
+
+                renderNotifications();
+
+                if (!loginToastsShown) {
+                    loginToastsShown = true;
+                    showNewPaymentToasts();
                 }
-
-                markToasted(currentUserId, sorted.map(row => `pay_${row.id}`));
+                startPaymentPolling();
+            } catch (err) {
+                console.error('Notification system exception:', err);
             }
+        }
 
-            // Payments the user has not seen and has not been toasted about yet (runs once after login)
-            function showNewPaymentToasts() {
-                if (!currentUserId) return;
-                const readState = getReadState(currentUserId);
+        // New deposits while the dashboard is open: ask the server every 30 seconds
+        async function pollPayments() {
+            if (!currentUserId || document.hidden) return;
+            try {
+                const rows = await api('/api/payments/recent');
+                if (!Array.isArray(rows)) return;
+
+                const known = new Set(activePayments.map(p => String(p.id)));
+                const added = rows.filter(row => !known.has(String(row.id)));
+
+                activePayments = rows;
+                if (!added.length) return;
+
+                renderNotifications();
+
                 const toasted = getToastedState(currentUserId);
-
-                toastPayments(activePayments.filter(row =>
-                    readState[`pay_${row.id}`] === undefined && toasted[`pay_${row.id}`] === undefined
-                ));
+                toastPayments(added.filter(row => toasted[`pay_${row.id}`] === undefined));
+            } catch (err) {
+                console.warn('Payment check failed:', err.message);
             }
+        }
 
-            // ---- fetching (through the server) ----
-            async function fetchAndRenderNotifications(userId) {
-                try {
-                    const [schedulesResult, paymentsResult] = await Promise.allSettled([
-                        api('/api/notifications'),
-                        api('/api/payments/recent')
-                    ]);
+        function startPaymentPolling() {
+            if (paymentPollTimer) return;
+            paymentPollTimer = setInterval(pollPayments, PAYMENT_POLL_MS);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) pollPayments(); // catch up when the user returns to the tab
+            });
+        }
 
-                    if (schedulesResult.status === 'rejected') console.warn('Could not load schedule notifications:', schedulesResult.reason && schedulesResult.reason.message);
-                    if (paymentsResult.status === 'rejected') console.warn('Could not load payment notifications:', paymentsResult.reason && paymentsResult.reason.message);
+        // ---- rendering ----
+        function getNotificationItems() {
+            const items = [];
 
-                    activeSchedules = schedulesResult.status === 'fulfilled' && Array.isArray(schedulesResult.value) ? schedulesResult.value : [];
-                    activePayments = paymentsResult.status === 'fulfilled' && Array.isArray(paymentsResult.value) ? paymentsResult.value : [];
-                    notifLoadFailed = schedulesResult.status === 'rejected' && paymentsResult.status === 'rejected';
+            activeSchedules.forEach(item => {
+                items.push({ key: String(item.id), kind: 'schedule', createdAt: item.created_at, data: item });
+            });
 
-                    renderNotifications();
+            activePayments.forEach(row => {
+                const date = getPaymentDate(row);
+                items.push({ key: `pay_${row.id}`, kind: 'payment', createdAt: date ? date.toISOString() : row.created_at, data: row });
+            });
 
-                    if (!loginToastsShown) {
-                        loginToastsShown = true;
-                        showNewPaymentToasts();
-                    }
-                    startPaymentPolling();
-                } catch (err) {
-                    console.error('Notification system exception:', err);
-                }
-            }
+            items.sort((a, b) => (new Date(b.createdAt).getTime() || 0) - (new Date(a.createdAt).getTime() || 0));
+            return items;
+        }
 
-            // New deposits while the dashboard is open: ask the server every 30 seconds
-            async function pollPayments() {
-                if (!currentUserId || document.hidden) return;
-                try {
-                    const rows = await api('/api/payments/recent');
-                    if (!Array.isArray(rows)) return;
+        function scheduleItemHtml(item, unread) {
+            const row = item.data;
+            const title = row.title || row.duty_name || row.event_title || 'New Schedule Assigned';
+            const description = row.description || row.location || (row.date ? `Date: ${row.date}` : 'Check your schedule for details.');
 
-                    const known = new Set(activePayments.map(p => String(p.id)));
-                    const added = rows.filter(row => !known.has(String(row.id)));
-
-                    activePayments = rows;
-                    if (!added.length) return;
-
-                    renderNotifications();
-
-                    const toasted = getToastedState(currentUserId);
-                    toastPayments(added.filter(row => toasted[`pay_${row.id}`] === undefined));
-                } catch (err) {
-                    console.warn('Payment check failed:', err.message);
-                }
-            }
-
-            function startPaymentPolling() {
-                if (paymentPollTimer) return;
-                paymentPollTimer = setInterval(pollPayments, PAYMENT_POLL_MS);
-                document.addEventListener('visibilitychange', () => {
-                    if (!document.hidden) pollPayments(); // catch up when the user returns to the tab
-                });
-            }
-
-            // ---- rendering ----
-            function getNotificationItems() {
-                const items = [];
-
-                activeSchedules.forEach(item => {
-                    items.push({ key: String(item.id), kind: 'schedule', createdAt: item.created_at, data: item });
-                });
-
-                activePayments.forEach(row => {
-                    const date = getPaymentDate(row);
-                    items.push({ key: `pay_${row.id}`, kind: 'payment', createdAt: date ? date.toISOString() : row.created_at, data: row });
-                });
-
-                items.sort((a, b) => (new Date(b.createdAt).getTime() || 0) - (new Date(a.createdAt).getTime() || 0));
-                return items;
-            }
-
-            function scheduleItemHtml(item, unread) {
-                const row = item.data;
-                const title = row.title || row.duty_name || row.event_title || 'New Schedule Assigned';
-                const description = row.description || row.location || (row.date ? `Date: ${row.date}` : 'Check your schedule for details.');
-
-                return `
+            return `
                 <div class="notif-item ${unread ? 'unread' : 'read'}">
                     <div class="notif-icon"><i class="fa-solid fa-calendar-day"></i></div>
                     <div class="notif-content">
@@ -3526,11 +3526,11 @@
                         <span>${formatTimeAgo(row.created_at)}</span>
                     </div>
                 </div>`;
-            }
+        }
 
-            function paymentItemHtml(item, unread) {
-                const row = item.data;
-                return `
+        function paymentItemHtml(item, unread) {
+            const row = item.data;
+            return `
                 <div class="notif-item ${unread ? 'unread' : 'read'}">
                     <div class="notif-icon pay-notif-icon"><i class="fa-solid fa-arrow-down"></i></div>
                     <div class="notif-content">
@@ -3538,236 +3538,236 @@
                         <span>${formatTimeAgo(item.createdAt)}</span>
                     </div>
                 </div>`;
-            }
+        }
 
-            function renderNotifications() {
-                const notifBadge = document.getElementById('notifBadge');
-                const notifList = document.getElementById('notifList');
-                if (!notifList || !notifBadge || !currentUserId) return;
+        function renderNotifications() {
+            const notifBadge = document.getElementById('notifBadge');
+            const notifList = document.getElementById('notifList');
+            if (!notifList || !notifBadge || !currentUserId) return;
 
-                const readState = getReadState(currentUserId);
-                const now = Date.now();
-                let unreadCount = 0;
-                let html = '';
+            const readState = getReadState(currentUserId);
+            const now = Date.now();
+            let unreadCount = 0;
+            let html = '';
 
-                getNotificationItems().forEach(item => {
-                    const readAt = readState[item.key];
-                    const isRead = readAt !== undefined;
+            getNotificationItems().forEach(item => {
+                const readAt = readState[item.key];
+                const isRead = readAt !== undefined;
 
-                    // Seen more than 6 hours ago: gone
-                    if (isRead && now - readAt >= SIX_HOURS_MS) return;
+                // Seen more than 6 hours ago: gone
+                if (isRead && now - readAt >= SIX_HOURS_MS) return;
 
-                    if (!isRead) unreadCount++;
+                if (!isRead) unreadCount++;
 
-                    const unreadLook = !isRead || notifSeenKeys.has(item.key);
-                    html += item.kind === 'payment' ? paymentItemHtml(item, unreadLook) : scheduleItemHtml(item, unreadLook);
-                });
-
-                if (unreadCount > 0) {
-                    notifBadge.textContent = unreadCount;
-                    notifBadge.style.display = 'inline-block';
-                } else {
-                    notifBadge.textContent = '0';
-                    notifBadge.style.display = 'none';
-                }
-
-                const emptyStyle = 'padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;';
-                notifList.innerHTML = html ||
-                    `<div style="${emptyStyle}">${notifLoadFailed ? 'Failed to load notifications.' : 'No new notifications'}</div>`;
-            }
-
-            // Opening the bell = the user has seen everything in it: start the 6 hour countdown
-            function onNotificationsOpened() {
-                if (!currentUserId) return;
-                const readState = getReadState(currentUserId);
-                const now = Date.now();
-
-                getNotificationItems().forEach(item => {
-                    if (readState[item.key] === undefined) {
-                        readState[item.key] = now;
-                        notifSeenKeys.add(item.key);
-                    }
-                });
-
-                saveReadState(currentUserId, readState);
-                renderNotifications(); // badge drops to 0, items keep the unread look while the list is open
-            }
-
-            function onNotificationsClosed() {
-                notifSeenKeys.clear();
-                renderNotifications();
-            }
-
-            function handleMarkAllAsRead() {
-                if (!currentUserId) return;
-                const readState = getReadState(currentUserId);
-                const now = Date.now();
-
-                getNotificationItems().forEach(item => {
-                    if (readState[item.key] === undefined) readState[item.key] = now;
-                });
-
-                saveReadState(currentUserId, readState);
-                notifSeenKeys.clear();
-                renderNotifications();
-            }
-
-            const markAllReadBtn = document.getElementById('markAllReadBtn');
-            if (markAllReadBtn) markAllReadBtn.addEventListener('click', handleMarkAllAsRead);
-
-            // ===================== AVATAR & PROFILE =====================
-            // Topbar + panel preview: uploaded image if it exists, otherwise initials.
-            // Sidebar avatar: always initials.
-            function paintAvatar(el, url, initials) {
-                if (!el) return;
-                if (url && url.trim() !== '') {
-                    el.innerHTML = `<img src="${escapeHtml(url)}" alt="Profile picture">`;
-                } else {
-                    el.textContent = initials;
-                }
-            }
-
-            function updateAvatarUI(avatarUrl, initials) {
-                const sidebarEl = document.getElementById('sidebarAvatar');
-                if (sidebarEl) sidebarEl.textContent = initials;
-                paintAvatar(document.getElementById('topbarAvatar'), avatarUrl, initials);
-                paintAvatar(document.getElementById('apPreview'), avatarUrl, initials);
-                if (apSave) apSave.textContent = avatarUrl ? 'Change' : 'Upload';
-            }
-
-            async function loadUserProfile() {
-                let profile;
-                try {
-                    profile = await api('/api/profile');
-                } catch (err) {
-                    console.error('Could not load your profile:', err);
-                    const failedNameEl = document.getElementById('sidebarFullName');
-                    if (failedNameEl && err.status !== 401) failedNameEl.textContent = "Can't reach server";
-                    return;
-                }
-
-                currentUserId = profile.id;
-
-                const fullName = profile.full_name || 'Member';
-                const phone = profile.phone && profile.phone !== 'N/A' ? profile.phone : '';
-                const avatarUrl = profile.avatar_url || null;
-
-                const firstName = fullName.trim().split(/\s+/)[0] || 'Member';
-                const initials = getInitials(fullName);
-
-                greetingName = firstName;
-                renderGreeting();
-
-                const sidebarNameEl = document.getElementById('sidebarFullName');
-                if (sidebarNameEl) sidebarNameEl.textContent = firstName;
-
-                updateAvatarUI(avatarUrl, initials);
-
-                document.getElementById('apName').textContent = fullName;
-                document.getElementById('apPhone').textContent = phone || 'Not added yet';
-
-                fetchAndRenderNotifications(currentUserId);
-            }
-
-            // ===================== AVATAR PANEL =====================
-            function setApStatus(msg, type = '') {
-                apStatus.textContent = msg;
-                apStatus.className = 'ap-status ' + type;
-            }
-
-            function closeAvatarPanel() {
-                avatarPanel.classList.remove('open');
-                avatarBox.classList.remove('open');
-            }
-
-            function compressImage(file, max = 250, quality = 0.85) {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const scale = Math.min(1, max / Math.max(img.width, img.height));
-                        const canvas = document.createElement('canvas');
-                        canvas.width = Math.round(img.width * scale);
-                        canvas.height = Math.round(img.height * scale);
-                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        URL.revokeObjectURL(img.src);
-                        resolve(canvas.toDataURL('image/jpeg', quality));
-                    };
-                    img.onerror = reject;
-                    img.src = URL.createObjectURL(file);
-                });
-            }
-
-            avatarBox.addEventListener('click', () => {
-                const open = avatarPanel.classList.toggle('open');
-                avatarBox.classList.toggle('open', open);
-                if (open && notifDropdown) notifDropdown.classList.remove('active');
+                const unreadLook = !isRead || notifSeenKeys.has(item.key);
+                html += item.kind === 'payment' ? paymentItemHtml(item, unreadLook) : scheduleItemHtml(item, unreadLook);
             });
 
-            document.addEventListener('click', (e) => {
-                if (!avatarWrap.contains(e.target)) closeAvatarPanel();
-            });
+            if (unreadCount > 0) {
+                notifBadge.textContent = unreadCount;
+                notifBadge.style.display = 'inline-block';
+            } else {
+                notifBadge.textContent = '0';
+                notifBadge.style.display = 'none';
+            }
 
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') closeAvatarPanel();
-            });
+            const emptyStyle = 'padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;';
+            notifList.innerHTML = html ||
+                `<div style="${emptyStyle}">${notifLoadFailed ? 'Failed to load notifications.' : 'No new notifications'}</div>`;
+        }
 
-            apInput.addEventListener('change', async () => {
-                const file = apInput.files[0];
-                if (!file) return;
-                if (!file.type.startsWith('image/')) {
-                    setApStatus('Choose an image file.', 'error');
-                    return;
-                }
-                try {
-                    pendingAvatar = await compressImage(file);
-                    paintAvatar(document.getElementById('apPreview'), pendingAvatar, '');
-                    apSave.disabled = false;
-                    setApStatus('');
-                } catch (err) {
-                    setApStatus('Could not read that image.', 'error');
+        // Opening the bell = the user has seen everything in it: start the 6 hour countdown
+        function onNotificationsOpened() {
+            if (!currentUserId) return;
+            const readState = getReadState(currentUserId);
+            const now = Date.now();
+
+            getNotificationItems().forEach(item => {
+                if (readState[item.key] === undefined) {
+                    readState[item.key] = now;
+                    notifSeenKeys.add(item.key);
                 }
             });
 
-            apSave.addEventListener('click', async () => {
-                if (!pendingAvatar || !currentUserId) return;
-                apSave.disabled = true;
-                setApStatus('Saving…');
+            saveReadState(currentUserId, readState);
+            renderNotifications(); // badge drops to 0, items keep the unread look while the list is open
+        }
 
-                try {
-                    await api('/api/profile/update', { method: 'POST', body: { avatar_url: pendingAvatar } });
-                } catch (err) {
-                    apSave.disabled = false;
-                    setApStatus(err.message || 'Not saved. Please try again.', 'error');
-                    return;
-                }
+        function onNotificationsClosed() {
+            notifSeenKeys.clear();
+            renderNotifications();
+        }
 
-                pendingAvatar = null;
-                apInput.value = '';
-                setApStatus('Photo saved.', 'success');
+        function handleMarkAllAsRead() {
+            if (!currentUserId) return;
+            const readState = getReadState(currentUserId);
+            const now = Date.now();
+
+            getNotificationItems().forEach(item => {
+                if (readState[item.key] === undefined) readState[item.key] = now;
+            });
+
+            saveReadState(currentUserId, readState);
+            notifSeenKeys.clear();
+            renderNotifications();
+        }
+
+        const markAllReadBtn = document.getElementById('markAllReadBtn');
+        if (markAllReadBtn) markAllReadBtn.addEventListener('click', handleMarkAllAsRead);
+
+        // ===================== AVATAR & PROFILE =====================
+        // Topbar + panel preview: uploaded image if it exists, otherwise initials.
+        // Sidebar avatar: always initials.
+        function paintAvatar(el, url, initials) {
+            if (!el) return;
+            if (url && url.trim() !== '') {
+                el.innerHTML = `<img src="${escapeHtml(url)}" alt="Profile picture">`;
+            } else {
+                el.textContent = initials;
+            }
+        }
+
+        function updateAvatarUI(avatarUrl, initials) {
+            const sidebarEl = document.getElementById('sidebarAvatar');
+            if (sidebarEl) sidebarEl.textContent = initials;
+            paintAvatar(document.getElementById('topbarAvatar'), avatarUrl, initials);
+            paintAvatar(document.getElementById('apPreview'), avatarUrl, initials);
+            if (apSave) apSave.textContent = avatarUrl ? 'Change' : 'Upload';
+        }
+
+        async function loadUserProfile() {
+            let profile;
+            try {
+                profile = await api('/api/profile');
+            } catch (err) {
+                console.error('Could not load your profile:', err);
+                const failedNameEl = document.getElementById('sidebarFullName');
+                if (failedNameEl && err.status !== 401) failedNameEl.textContent = "Can't reach server";
+                return;
+            }
+
+            currentUserId = profile.id;
+
+            const fullName = profile.full_name || 'Member';
+            const phone = profile.phone && profile.phone !== 'N/A' ? profile.phone : '';
+            const avatarUrl = profile.avatar_url || null;
+
+            const firstName = fullName.trim().split(/\s+/)[0] || 'Member';
+            const initials = getInitials(fullName);
+
+            greetingName = firstName;
+            renderGreeting();
+
+            const sidebarNameEl = document.getElementById('sidebarFullName');
+            if (sidebarNameEl) sidebarNameEl.textContent = firstName;
+
+            updateAvatarUI(avatarUrl, initials);
+
+            document.getElementById('apName').textContent = fullName;
+            document.getElementById('apPhone').textContent = phone || 'Not added yet';
+
+            fetchAndRenderNotifications(currentUserId);
+        }
+
+        // ===================== AVATAR PANEL =====================
+        function setApStatus(msg, type = '') {
+            apStatus.textContent = msg;
+            apStatus.className = 'ap-status ' + type;
+        }
+
+        function closeAvatarPanel() {
+            avatarPanel.classList.remove('open');
+            avatarBox.classList.remove('open');
+        }
+
+        function compressImage(file, max = 250, quality = 0.85) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, max / Math.max(img.width, img.height));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    URL.revokeObjectURL(img.src);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        avatarBox.addEventListener('click', () => {
+            const open = avatarPanel.classList.toggle('open');
+            avatarBox.classList.toggle('open', open);
+            if (open && notifDropdown) notifDropdown.classList.remove('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!avatarWrap.contains(e.target)) closeAvatarPanel();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeAvatarPanel();
+        });
+
+        apInput.addEventListener('change', async () => {
+            const file = apInput.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                setApStatus('Choose an image file.', 'error');
+                return;
+            }
+            try {
+                pendingAvatar = await compressImage(file);
+                paintAvatar(document.getElementById('apPreview'), pendingAvatar, '');
+                apSave.disabled = false;
+                setApStatus('');
+            } catch (err) {
+                setApStatus('Could not read that image.', 'error');
+            }
+        });
+
+        apSave.addEventListener('click', async () => {
+            if (!pendingAvatar || !currentUserId) return;
+            apSave.disabled = true;
+            setApStatus('Saving…');
+
+            try {
+                await api('/api/profile/update', { method: 'POST', body: { avatar_url: pendingAvatar } });
+            } catch (err) {
+                apSave.disabled = false;
+                setApStatus(err.message || 'Not saved. Please try again.', 'error');
+                return;
+            }
+
+            pendingAvatar = null;
+            apInput.value = '';
+            setApStatus('Photo saved.', 'success');
+            loadUserProfile();
+        });
+
+        // Global message listener for iframe postMessages
+        window.addEventListener('message', (event) => {
+            if (event.data === 'profileUpdated') {
                 loadUserProfile();
-            });
+            } else if (event.data && event.data.type === 'navigate') {
+                navigateToSidebarPage(event.data.page);
+            }
+        });
 
-            // Global message listener for iframe postMessages
-            window.addEventListener('message', (event) => {
-                if (event.data === 'profileUpdated') {
-                    loadUserProfile();
-                } else if (event.data && event.data.type === 'navigate') {
-                    navigateToSidebarPage(event.data.page);
-                }
-            });
-
-            // ===================== PERSISTENT SHELL NAVIGATION =====================
-            function applyIframeBottomPadding() {
-                try {
-                    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-                    if (iframeDoc && iframeDoc.head) {
-                        let styleTag = iframeDoc.getElementById('custom-iframe-padding');
-                        if (!styleTag) {
-                            styleTag = iframeDoc.createElement('style');
-                            styleTag.id = 'custom-iframe-padding';
-                            iframeDoc.head.appendChild(styleTag);
-                        }
-                        styleTag.textContent = `
+        // ===================== PERSISTENT SHELL NAVIGATION =====================
+        function applyIframeBottomPadding() {
+            try {
+                const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+                if (iframeDoc && iframeDoc.head) {
+                    let styleTag = iframeDoc.getElementById('custom-iframe-padding');
+                    if (!styleTag) {
+                        styleTag = iframeDoc.createElement('style');
+                        styleTag.id = 'custom-iframe-padding';
+                        iframeDoc.head.appendChild(styleTag);
+                    }
+                    styleTag.textContent = `
                     html { height: auto !important; min-height: 100% !important; }
                     body {
                         min-height: 100% !important;
@@ -3776,127 +3776,127 @@
                         overflow-y: auto !important;
                         -webkit-overflow-scrolling: touch !important;
                     }`;
-                    }
-                } catch (err) {
-                    console.warn('Iframe style injection notice:', err);
                 }
+            } catch (err) {
+                console.warn('Iframe style injection notice:', err);
             }
+        }
 
-            contentFrame.addEventListener('load', applyIframeBottomPadding);
+        contentFrame.addEventListener('load', applyIframeBottomPadding);
 
-            document.querySelectorAll('.sidebar-nav a.sidebar-link[data-page]').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    contentFrame.src = link.getAttribute('data-page');
-
-                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                    link.classList.add('active');
-
-                    sidebar.classList.remove('active');
-                    sidebarOverlay.classList.remove('active');
-                });
-            });
-
-            // Admin submenu toggle
-            if (adminToggle && adminSubmenu) {
-                adminToggle.addEventListener('click', () => {
-                    adminToggle.classList.toggle('open');
-                    adminSubmenu.classList.toggle('open');
-                });
-            }
-
-            // Notification dropdown toggle
-            if (notifBtn && notifDropdown) {
-                notifBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    closeAvatarPanel();
-                    notifDropdown.classList.toggle('active');
-                });
-
-                document.addEventListener('click', (e) => {
-                    if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
-                        notifDropdown.classList.remove('active');
-                    }
-                });
-
-                // Bell arrow follows the dropdown's "active" state; opening it marks everything as seen
-                let notifWasOpen = false;
-                new MutationObserver(() => {
-                    const isOpen = notifDropdown.classList.contains('active');
-                    notifBtn.classList.toggle('open', isOpen);
-                    if (isOpen && !notifWasOpen) onNotificationsOpened();
-                    if (!isOpen && notifWasOpen) onNotificationsClosed();
-                    notifWasOpen = isOpen;
-                }).observe(notifDropdown, { attributes: true, attributeFilter: ['class'] });
-            }
-
-            // Mobile sidebar toggle
-            if (sidebarToggle && sidebar && sidebarOverlay) {
-                sidebarToggle.addEventListener('click', () => {
-                    sidebar.classList.add('active');
-                    sidebarOverlay.classList.add('active');
-                });
-                sidebarOverlay.addEventListener('click', () => {
-                    sidebar.classList.remove('active');
-                    sidebarOverlay.classList.remove('active');
-                });
-            }
-
-            // Navigation handler (updates iframe and moves the active highlight)
-            function navigateToSidebarPage(targetPage) {
-                const frame = document.getElementById('contentFrame');
-                if (!frame) return;
-
-                frame.src = targetPage;
+        document.querySelectorAll('.sidebar-nav a.sidebar-link[data-page]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                contentFrame.src = link.getAttribute('data-page');
 
                 document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                document.querySelectorAll('.sidebar-dropdown').forEach(d => d.classList.remove('active'));
+                link.classList.add('active');
 
-                // 'pages/schedules.html' -> 'schedules.html'
-                const cleanTarget = targetPage.replace(/^pages\//, '').replace(/^\//, '');
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        });
 
-                const matchingLink = Array.from(document.querySelectorAll('.sidebar-link')).find(link => {
-                    const pageAttr = link.getAttribute('data-page') || link.getAttribute('href') || '';
-                    if (!pageAttr) return false;
-                    return cleanTarget === pageAttr.replace(/^pages\//, '').replace(/^\//, '');
-                });
+        // Admin submenu toggle
+        if (adminToggle && adminSubmenu) {
+            adminToggle.addEventListener('click', () => {
+                adminToggle.classList.toggle('open');
+                adminSubmenu.classList.toggle('open');
+            });
+        }
 
-                if (matchingLink) {
-                    matchingLink.classList.add('active');
+        // Notification dropdown toggle
+        if (notifBtn && notifDropdown) {
+            notifBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeAvatarPanel();
+                notifDropdown.classList.toggle('active');
+            });
 
-                    // Open the parent dropdown / submenu automatically
-                    const dropdownParent = matchingLink.closest('.sidebar-dropdown');
-                    if (dropdownParent) dropdownParent.classList.add('active');
+            document.addEventListener('click', (e) => {
+                if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+                    notifDropdown.classList.remove('active');
+                }
+            });
 
-                    const parentSubmenu = matchingLink.closest('.admin-submenu');
-                    if (parentSubmenu) {
-                        parentSubmenu.classList.add('open');
-                        if (adminToggle) adminToggle.classList.add('open');
-                    }
+            // Bell arrow follows the dropdown's "active" state; opening it marks everything as seen
+            let notifWasOpen = false;
+            new MutationObserver(() => {
+                const isOpen = notifDropdown.classList.contains('active');
+                notifBtn.classList.toggle('open', isOpen);
+                if (isOpen && !notifWasOpen) onNotificationsOpened();
+                if (!isOpen && notifWasOpen) onNotificationsClosed();
+                notifWasOpen = isOpen;
+            }).observe(notifDropdown, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        // Mobile sidebar toggle
+        if (sidebarToggle && sidebar && sidebarOverlay) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.add('active');
+                sidebarOverlay.classList.add('active');
+            });
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+
+        // Navigation handler (updates iframe and moves the active highlight)
+        function navigateToSidebarPage(targetPage) {
+            const frame = document.getElementById('contentFrame');
+            if (!frame) return;
+
+            frame.src = targetPage;
+
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            document.querySelectorAll('.sidebar-dropdown').forEach(d => d.classList.remove('active'));
+
+            // 'pages/schedules.html' -> 'schedules.html'
+            const cleanTarget = targetPage.replace(/^pages\//, '').replace(/^\//, '');
+
+            const matchingLink = Array.from(document.querySelectorAll('.sidebar-link')).find(link => {
+                const pageAttr = link.getAttribute('data-page') || link.getAttribute('href') || '';
+                if (!pageAttr) return false;
+                return cleanTarget === pageAttr.replace(/^pages\//, '').replace(/^\//, '');
+            });
+
+            if (matchingLink) {
+                matchingLink.classList.add('active');
+
+                // Open the parent dropdown / submenu automatically
+                const dropdownParent = matchingLink.closest('.sidebar-dropdown');
+                if (dropdownParent) dropdownParent.classList.add('active');
+
+                const parentSubmenu = matchingLink.closest('.admin-submenu');
+                if (parentSubmenu) {
+                    parentSubmenu.classList.add('open');
+                    if (adminToggle) adminToggle.classList.add('open');
                 }
             }
+        }
 
-            // Logout
-            const logoutLink = document.getElementById('logoutLink');
-            if (logoutLink) {
-                logoutLink.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    const token = getToken();
-                    if (token) {
-                        try {
-                            await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-                        } catch (err) { /* sign out locally anyway */ }
-                    }
-                    clearSession();
-                    window.location.href = 'index.html';
-                });
-            }
+        // Logout
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const token = getToken();
+                if (token) {
+                    try {
+                        await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                    } catch (err) { /* sign out locally anyway */ }
+                }
+                clearSession();
+                window.location.href = 'index.html';
+            });
+        }
 
-            // ===================== START =====================
-            renderGreeting();
-            setInterval(renderGreeting, 60 * 1000); // pick up period changes (e.g. morning -> noon)
-            setInterval(renderNotifications, 60 * 1000); // drops notifications 6 hours after they were seen
-            loadUserProfile().then(initLocation);
+        // ===================== START =====================
+        renderGreeting();
+        setInterval(renderGreeting, 60 * 1000); // pick up period changes (e.g. morning -> noon)
+        setInterval(renderNotifications, 60 * 1000); // drops notifications 6 hours after they were seen
+        loadUserProfile().then(initLocation);
     </script>
 </body>
 
