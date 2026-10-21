@@ -10,7 +10,7 @@ const app = express();
 
 // ===================== AI SETTINGS =====================
 // Tip: a smaller NVIDIA model (set AI_MODEL in .env / Vercel) is the biggest speed boost.
-const AI_MODEL = process.env.AI_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b';
+const AI_MODEL = process.env.AI_MODEL || 'nvidia/nemotron-3.5-lightning-30b-a3b';
 const AI_HISTORY_LIMIT = 8;       // fewer past messages = smaller prompt = faster
 const AI_MAX_TOKENS = 1400;       // room to FINISH the answer (the prompt asks for short answers anyway)
 const AI_DEBUG = process.env.AI_DEBUG === 'true';
@@ -541,7 +541,7 @@ function buildSystemPrompt(profile, platform, topicText) {
     const beliefs = pickRelevant(BELIEF_SECTIONS, words, 4, 2200) || BELIEFS_TEXT.slice(0, 2000) || 'Not available.';
     const sitePages = pickRelevant(SITE_SECTIONS, words, 2, 1800) || 'Not needed for this question.';
 
-    return `You are "Ask AI", the Bible and Adventist-faith assistant of the Kimangu AY (Seventh-day Adventist Youth) platform.
+    return `You are "Ask AI", the Bible and Adventist-faith assistant of the Kimangu AY (Seventh-day Adventist Youth) platform,you are developed by Haron Moenga who is a software developer.
 
 SCOPE
 - Answer ONLY religious questions: the Bible, Christian living, prayer, church life, and above all Seventh-day Adventist beliefs, history, lifestyle, Sabbath School, Adventist Youth and the Spirit of Prophecy.
