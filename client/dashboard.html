@@ -2212,6 +2212,70 @@
                 done
             };
         }
+        // ---------- Avatar ----------
+        const AI_AVATAR_SRC = 'images/chatbot.png';
+
+        function aiMakeAvatar() {
+            const img = document.createElement('img');
+            img.className = 'ai-avatar';
+            img.src = AI_AVATAR_SRC;
+            img.alt = 'AI assistant';
+            // if the image is missing, show the amber icon instead
+            img.addEventListener('error', () => {
+                const fb = document.createElement('div');
+                fb.className = 'ai-avatar ai-avatar-fallback';
+                fb.innerHTML = '<i class="fa-solid fa-comment-dots"></i>';
+                img.replaceWith(fb);
+            });
+            return img;
+        }
+
+        // ---------- Recent chats (stored in this browser) ----------
+        const AI_CHATS_KEY = 'kimangu_ai_chats_v1';
+        const AI_MAX_CHATS = 30;
+        let aiChats = [];          // [{ id, title, updated, messages: [{ role, content }] }]
+        let aiCurrentId = null;
+
+        function aiStoreRead() {
+            try {
+                const d = JSON.parse(localStorage.getItem(AI_CHATS_KEY) || 'null');
+                if (d && Array.isArray(d.chats)) { aiChats = d.chats; aiCurrentId = d.currentId || null; }
+            } catch (e) { /* ignore */ }
+        }
+
+        function aiStoreWrite() {
+            aiChats.sort((a, b) => b.updated - a.updated);
+            aiChats = aiChats.slice(0, AI_MAX_CHATS);
+            try { localStorage.setItem(AI_CHATS_KEY, JSON.stringify({ chats: aiChats, currentId: aiCurrentId })); } catch (e) { /* ignore */ }
+        }
+
+        function aiCurrentChat() {
+            return aiChats.find(c => c.id === aiCurrentId) || null;
+        }
+
+        function aiCreateChat() {
+            const c = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title: 'New chat', updated: Date.now(), messages: [] };
+            aiChats.unshift(c);
+            aiCurrentId = c.id;
+            return c;
+        }
+
+        function aiRecord(role, content) {
+            const c = aiCurrentChat() || aiCreateChat();
+            c.messages.push({ role, content });
+            if (role === 'user' && c.title === 'New chat') c.title = content.slice(0, 40);
+            c.updated = Date.now();
+            aiStoreWrite();
+        }
+
+        function aiRenderChat(chat) {
+            aiMessages.innerHTML = '';
+            if (!chat || !chat.messages.length) { aiShowWelcome(); return; }
+            chat.messages.forEach(m => {
+                if (m.role === 'user') aiAddMessage('user', m.content);
+                else aiAddMessage('bot', m.content, '', true);
+            });
+        }
 
         function aiAddMessage(role, text, extraClass = '', rich = false) {
             const el = document.createElement('div');
@@ -2222,9 +2286,18 @@
             } else {
                 el.textContent = text;
             }
-            aiMessages.appendChild(el);
+
+            if (role === 'bot') {
+                const row = document.createElement('div');
+                row.className = 'ai-row bot';
+                row.appendChild(aiMakeAvatar());
+                row.appendChild(el);
+                aiMessages.appendChild(row);
+            } else {
+                aiMessages.appendChild(el);
+            }
             aiMessages.scrollTop = aiMessages.scrollHeight;
-            return el;
+            return el;   // still returns the bubble, so the typewriter works unchanged
         }
 
         function aiShowWelcome() {
@@ -2245,18 +2318,24 @@
         async function aiLoadHistory() {
             if (aiLoaded) return;
             aiLoaded = true;
-            try {
-                const rows = await api('/api/ai/history');
-                if (Array.isArray(rows) && rows.length) {
-                    aiMessages.innerHTML = '';
-                    rows.forEach(r => {
-                        if (r.role === 'user') aiAddMessage('user', r.content);
-                        else aiAddMessage('bot', r.content, '', true);   // formatted
-                    });
-                    return;
-                }
-            } catch (err) { /* fall through to welcome */ }
-            aiShowWelcome();
+            aiStoreRead();
+
+            // first time on this device: import whatever the server already has as the first chat
+            if (!aiChats.length) {
+                try {
+                    const rows = await api('/api/ai/history');
+                    if (Array.isArray(rows) && rows.length) {
+                        const c = aiCreateChat();
+                        rows.forEach(r => c.messages.push({ role: r.role === 'user' ? 'user' : 'bot', content: r.content }));
+                        const firstUser = c.messages.find(m => m.role === 'user');
+                        if (firstUser) c.title = firstUser.content.slice(0, 40);
+                        aiStoreWrite();
+                    }
+                } catch (err) { /* fall through */ }
+            }
+
+            const cur = aiCurrentChat();
+            if (cur && cur.messages.length) aiRenderChat(cur); else aiShowWelcome();
         }
 
         function aiOpen() {
@@ -2267,6 +2346,7 @@
         }
 
         function aiClose() {
+            aiHistoryToggle(false);
             aiPanel.classList.remove('open');
             aiFab.classList.remove('hidden');
         }
@@ -2276,7 +2356,7 @@
             const res = await fetch(`${API_BASE}/api/ai/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ message, chatId: aiCurrentId })
             });
 
             if (res.status === 401) {
@@ -2305,6 +2385,7 @@
             if (suggest) suggest.remove();
 
             aiAddMessage('user', text);
+            aiRecord('user', text);
             const bot = aiAddMessage('bot', '', 'ai-typing ai-rich');
             let writer = null;
 
@@ -2330,7 +2411,8 @@
                 }
 
                 writer.finish();
-                await writer.done;              // wait until the last character is on screen
+                await writer.done;
+                if (reply.trim()) aiRecord('bot', reply);          // wait until the last character is on screen
                 aiMessages.scrollTop = aiMessages.scrollHeight;
 
                 if (!reply.trim()) {
@@ -2373,6 +2455,89 @@
             } catch (err) {
                 aiAddMessage('bot', 'Could not clear the chat. Please try again.', 'error');
             }
+        });
+        // ---------- Recent chats sidebar ----------
+        const aiBody = document.getElementById('aiBody');
+        const aiHistoryBtn = document.getElementById('aiHistoryBtn');
+        const aiHistoryEl = document.getElementById('aiHistory');
+        const aiHistoryList = document.getElementById('aiHistoryList');
+
+        function aiHistoryToggle(open) {
+            aiBody.classList.toggle('history-open', open);
+            aiHistoryBtn.setAttribute('aria-expanded', String(open));
+            aiHistoryEl.setAttribute('aria-hidden', String(!open));
+            if (open) aiRenderHistoryList();
+        }
+
+        function aiTimeLabel(ts) {
+            const d = new Date(ts);
+            const today = new Date();
+            return d.toDateString() === today.toDateString()
+                ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : d.toLocaleDateString([], { day: 'numeric', month: 'short' });
+        }
+
+        function aiRenderHistoryList() {
+            aiHistoryList.innerHTML = '';
+            const chats = aiChats.filter(c => c.messages.length);
+            if (!chats.length) {
+                const empty = document.createElement('div');
+                empty.className = 'ai-history-empty';
+                empty.textContent = 'No recent chats yet.';
+                aiHistoryList.appendChild(empty);
+                return;
+            }
+            chats.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'ai-history-item' + (c.id === aiCurrentId ? ' active' : '');
+
+                const open = document.createElement('button');
+                open.type = 'button';
+                open.className = 'ai-history-open';
+                const title = document.createElement('span');
+                title.className = 'ai-history-title';
+                title.textContent = c.title;
+                const time = document.createElement('span');
+                time.className = 'ai-history-time';
+                time.textContent = aiTimeLabel(c.updated);
+                open.append(title, time);
+                open.addEventListener('click', () => {
+                    if (aiBusy) return;
+                    aiCurrentId = c.id;
+                    aiStoreWrite();
+                    aiRenderChat(c);
+                    aiHistoryToggle(false);
+                });
+
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'ai-history-del';
+                del.setAttribute('aria-label', 'Delete chat');
+                del.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                del.addEventListener('click', () => {
+                    if (aiBusy || !confirm('Delete this chat?')) return;
+                    aiChats = aiChats.filter(x => x.id !== c.id);
+                    if (aiCurrentId === c.id) { aiCurrentId = null; aiShowWelcome(); }
+                    aiStoreWrite();
+                    aiRenderHistoryList();
+                });
+
+                item.append(open, del);
+                aiHistoryList.appendChild(item);
+            });
+        }
+
+        aiHistoryBtn.addEventListener('click', () => aiHistoryToggle(!aiBody.classList.contains('history-open')));
+        document.getElementById('aiHistoryBackdrop').addEventListener('click', () => aiHistoryToggle(false));
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') aiHistoryToggle(false); });
+
+        document.getElementById('aiNewChat').addEventListener('click', () => {
+            if (aiBusy) return;
+            aiCurrentId = null;          // the chat is created when the first message is sent
+            aiStoreWrite();
+            aiShowWelcome();
+            aiHistoryToggle(false);
+            api('/api/ai/history', { method: 'DELETE' }).catch(() => { });   // fresh context on the server
         });
 
         function readLegacySession() {
