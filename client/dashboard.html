@@ -1377,13 +1377,15 @@
             display: none;
         }
 
+        /* ---------- Panel (a little wider on large screens) ---------- */
         .ai-panel {
             position: fixed;
             right: 18px;
             bottom: calc(18px + env(safe-area-inset-bottom, 0px));
             z-index: 4001;
-            width: 380px;
-            height: min(580px, calc(100dvh - 40px));
+            width: 440px;
+            max-width: calc(100vw - 36px);
+            height: min(640px, calc(100dvh - 40px));
             background: #fff;
             border-radius: 18px;
             border: 1px solid #e2e8f0;
@@ -1397,13 +1399,38 @@
             display: flex;
         }
 
+        /* ---------- Header: three dots (left) ... close (right) ---------- */
         .ai-head {
             background: #0a192f;
             color: #fff;
-            padding: 0.9rem 1rem;
+            padding: 0.8rem 0.8rem 0.8rem 0.5rem;
             display: flex;
             align-items: center;
-            gap: 0.7rem;
+            gap: 0.6rem;
+            flex-shrink: 0;
+        }
+
+        .ai-head-btn,
+        .ai-head-actions button {
+            background: none;
+            border: none;
+            color: #cbd5e1;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ai-head-btn:hover,
+        .ai-head-btn[aria-expanded="true"],
+        .ai-head-actions button:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
         }
 
         .ai-head-icon {
@@ -1415,6 +1442,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ai-head-text {
+            min-width: 0;
         }
 
         .ai-head h4 {
@@ -1426,6 +1458,9 @@
             margin: 0;
             font-size: 0.72rem;
             color: #cbd5e1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .ai-head-actions {
@@ -1434,25 +1469,22 @@
             gap: 0.3rem;
         }
 
-        .ai-head-actions button {
-            background: none;
-            border: none;
-            color: #cbd5e1;
-            cursor: pointer;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-        }
-
-        .ai-head-actions button:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: #fff;
+        /* ---------- Body: messages on top, input always at the bottom ---------- */
+        .ai-body {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .ai-messages {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
             padding: 1rem;
             background: #f8fafc;
             display: flex;
@@ -1490,6 +1522,43 @@
             color: #b91c1c;
         }
 
+        /* ---------- Bot avatar beside every AI reply ---------- */
+        .ai-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            max-width: 95%;
+        }
+
+        .ai-row.bot {
+            align-self: flex-start;
+        }
+
+        .ai-row>.ai-msg {
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .ai-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+        }
+
+        .ai-avatar-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f59e0b;
+            border-color: #f59e0b;
+            color: #0a192f;
+            font-size: 0.9rem;
+        }
+
         .ai-typing::after {
             content: '▍';
             animation: aiBlink 1s steps(2) infinite;
@@ -1524,7 +1593,9 @@
         }
 
         .ai-input-row {
+            flex-shrink: 0;
             display: flex;
+            align-items: flex-end;
             gap: 0.5rem;
             padding: 0.7rem;
             border-top: 1px solid #e2e8f0;
@@ -1533,12 +1604,14 @@
 
         .ai-input-row textarea {
             flex: 1;
+            min-width: 0;
             resize: none;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
             padding: 0.6rem 0.8rem;
             font-family: inherit;
             font-size: 0.9rem;
+            line-height: 1.4;
             max-height: 96px;
             outline: none;
         }
@@ -1549,6 +1622,8 @@
 
         .ai-send {
             width: 42px;
+            height: 42px;
+            flex-shrink: 0;
             border: none;
             border-radius: 12px;
             background: #f59e0b;
@@ -1562,6 +1637,158 @@
             cursor: not-allowed;
         }
 
+        /* ---------- Recent chats drawer ---------- */
+        .ai-history-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 25, 47, 0.38);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 5;
+        }
+
+        .ai-body.history-open .ai-history-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .ai-history {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: min(320px, 86%);
+            background: #fff;
+            border-right: 1px solid #e2e8f0;
+            box-shadow: 8px 0 24px rgba(10, 25, 47, 0.15);
+            display: flex;
+            flex-direction: column;
+            transform: translateX(-104%);
+            visibility: hidden;
+            transition: transform 0.22s ease, visibility 0s linear 0.22s;
+            z-index: 6;
+        }
+
+        .ai-body.history-open .ai-history {
+            transform: none;
+            visibility: visible;
+            transition: transform 0.22s ease, visibility 0s;
+        }
+
+        .ai-history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.8rem 0.8rem 0.6rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        .ai-history-head h5 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #0a192f;
+        }
+
+        .ai-new-chat {
+            border: none;
+            background: #f59e0b;
+            color: #0a192f;
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .ai-new-chat:hover {
+            background: #d97706;
+        }
+
+        .ai-history-list {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            padding: 0.5rem;
+        }
+
+        .ai-history-empty {
+            padding: 1.2rem 0.8rem;
+            font-size: 0.82rem;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .ai-history-item {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            border-radius: 10px;
+        }
+
+        .ai-history-item:hover {
+            background: #f1f5f9;
+        }
+
+        .ai-history-item.active {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .ai-history-open {
+            flex: 1;
+            min-width: 0;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 0.6rem 0.6rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: #0a192f;
+            border-radius: 10px;
+        }
+
+        .ai-history-title {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ai-history-time {
+            display: block;
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .ai-history-del {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .ai-history-del:hover {
+            color: #b91c1c;
+            background: #fee2e2;
+        }
+
+        /* ---------- Mobile: full screen, input stays at the bottom ---------- */
         @media (max-width: 768px) {
             .ai-fab {
                 width: 70px;
@@ -1575,12 +1802,43 @@
             }
 
             .ai-panel {
+                top: 0;
                 right: 0;
                 left: 0;
-                bottom: 0;
+                bottom: auto;
                 width: 100%;
+                max-width: none;
+                height: 100vh;
                 height: 100dvh;
                 border-radius: 0;
+                border: none;
+            }
+
+            /* keep the header clear of a phone notch / status bar */
+            .ai-head {
+                padding-top: calc(0.8rem + env(safe-area-inset-top, 0px));
+            }
+
+            /* keep the input clear of the home indicator, but not when the keyboard is open */
+            .ai-input-row {
+                padding-bottom: calc(0.7rem + env(safe-area-inset-bottom, 0px));
+            }
+
+            .ai-panel.kb-open .ai-input-row {
+                padding-bottom: 0.7rem;
+            }
+
+            /* 16px stops iPhones from zooming the page when the input is tapped */
+            .ai-input-row textarea {
+                font-size: 16px;
+            }
+
+            .ai-row {
+                max-width: 98%;
+            }
+
+            .ai-history {
+                width: min(320px, 88%);
             }
         }
     </style>
@@ -1791,21 +2049,40 @@
 
     <section class="ai-panel" id="aiPanel" aria-label="Ask AI chat">
         <div class="ai-head">
+            <button type="button" class="ai-head-btn" id="aiHistoryBtn" title="Recent chats" aria-label="Recent chats"
+                aria-expanded="false" aria-controls="aiHistory">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
             <div class="ai-head-icon"><i class="fa-solid fa-comment-dots"></i></div>
-            <div>
+            <div class="ai-head-text">
                 <h4>Ask AI</h4>
                 <p>Kimangu AY assistant</p>
             </div>
             <div class="ai-head-actions">
-                <button type="button" id="aiClear" title="Clear chat"><i class="fa-solid fa-trash-can"></i></button>
-                <button type="button" id="aiClose" title="Close"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" id="aiClose" title="Close" aria-label="Close"><i
+                        class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
-        <div class="ai-messages" id="aiMessages"></div>
-        <div class="ai-input-row">
-            <textarea id="aiInput" rows="1" placeholder="Ask me anything…" maxlength="2000"></textarea>
-            <button type="button" class="ai-send" id="aiSend" aria-label="Send"><i
-                    class="fa-solid fa-paper-plane"></i></button>
+
+        <div class="ai-body" id="aiBody">
+            <div class="ai-messages" id="aiMessages"></div>
+
+            <div class="ai-input-row">
+                <textarea id="aiInput" rows="1" placeholder="Ask me anything…" maxlength="2000"></textarea>
+                <button type="button" class="ai-send" id="aiSend" aria-label="Send"><i
+                        class="fa-solid fa-paper-plane"></i></button>
+            </div>
+
+            <!-- Recent chats (slides in over the chat when the three dots are tapped) -->
+            <div class="ai-history-backdrop" id="aiHistoryBackdrop"></div>
+            <aside class="ai-history" id="aiHistory" aria-hidden="true" aria-label="Recent chats">
+                <div class="ai-history-head">
+                    <h5>Recent chats</h5>
+                    <button type="button" class="ai-new-chat" id="aiNewChat"><i class="fa-solid fa-plus"></i> New
+                        chat</button>
+                </div>
+                <div class="ai-history-list" id="aiHistoryList"></div>
+            </aside>
         </div>
     </section>
     <script src="ai-format.js"></script>
