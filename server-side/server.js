@@ -678,7 +678,7 @@ OUTPUT FORMAT (very important, the app does the styling)
 - Plain text only. NEVER use asterisks, hash symbols, backticks, tables, vertical bars, horizontal lines, or HTML tags.
 - Heading: put "## " at the start of its own line. Use headings only when the answer has several parts; short answers need none.
 - Numbered points: start the line with "1. ", "2. ", "3. " and so on. Unordered points: start the line with "- ".
-- Wrap EVERY Bible reference in double square brackets, like [[John 3:16]] or [[Hebrews 7:1-4]]. Wrap every Ellen G. White citation the same way, inside round brackets, like ([[Desire of Ages p 234.3]]) or ([[Steps to Christ]]).
+- Wrap EVERY Bible reference in double square brackets, like [[John 3:16]] or [[Hebrews 7:1-4]]. Wrap every Ellen G. White citation the same way, inside round brackets, like ([[Desire of Ages p 234.3]]) or ([[Steps to Christ p 23.6]]).
 - Never write a Bible reference or an Ellen G. White citation outside double square brackets.
 - To compare things, use numbered points or short paragraphs, never a table.
 - Put a blank line between sections. Keep each point to one or two sentences.
