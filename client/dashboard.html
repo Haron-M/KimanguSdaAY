@@ -2101,22 +2101,47 @@
         const TOKEN_KEYS = ['token', 'access_token', 'authToken', 'kimangu_token'];
         const REFRESH_KEY = 'refresh_token';
 
-        // Pages that still use the Supabase library keep a full session in an "sb-...-auth-token" entry.
-        // That entry is the shared copy: this page and those pages both read it and update it.
-        // Remove the legacy handling once every page talks to the server.
         // ===================== ASK AI CHAT =====================
         const aiFab = document.getElementById('aiFab');
         const aiPanel = document.getElementById('aiPanel');
         const aiMessages = document.getElementById('aiMessages');
         const aiInput = document.getElementById('aiInput');
         const aiSend = document.getElementById('aiSend');
+        const aiBody = document.getElementById('aiBody');
         let aiLoaded = false;
         let aiBusy = false;
 
+        const AI_AVATAR_SRC = 'images/chatbot.png';   // use '/images/chatbot.png' if the page loads from another folder
         const AI_SUGGESTIONS = ['What events are coming up?', 'Give me a Bible verse for today', 'How do I make a payment?'];
 
-        // Bot answers are drawn as formatted HTML (headings, numbering, italic references).
-        // Everything else (member messages, errors, welcome text) stays plain text.
+        // ---------- Speech-bubble tail pointing at the bot image ----------
+        (function aiInjectStyles() {
+            const css = `
+        .ai-row.bot { align-items: flex-start; }
+        .ai-row.bot > .ai-msg.bot {
+            position: relative;
+            margin-left: 6px;
+            border-top-left-radius: 14px;
+        }
+        .ai-row.bot > .ai-msg.bot::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 11px;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-left: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            transform: rotate(45deg);
+        }
+        .ai-row.bot > .ai-msg.bot.error::before { border-color: #fecaca; }
+    `;
+            const style = document.createElement('style');
+            style.textContent = css;
+            document.head.appendChild(style);
+        })();
+
         // ---------- Reference styling safety net ----------
         // The app colours anything the AI wraps in [[double brackets]]. The AI sometimes forgets
         // the brackets, so any Bible reference (John 3:16, 2 Peter 2:15, Numbers 25) or Ellen G. White
@@ -2146,15 +2171,15 @@
             }).join('');
         }
 
+        // Bot answers are drawn as formatted HTML (headings, numbering, italic references).
+        // Everything else (member messages, errors, welcome text) stays plain text.
         function aiRender(el, text) {
             el.innerHTML = formatAiReply(aiWrapReferences(text));
         }
 
         // ---------- Smooth reveal ----------
-        // Text that arrives from the server is put in a queue and shown a few characters per
-        // screen frame. Even if the network (or the AI) delivers a big chunk at once, the
-        // answer still appears progressively instead of popping up in one go. When the
-        // network is slow, the text simply follows it as it arrives.
+        // Text from the server is queued and shown a few characters per screen frame, so even a
+        // big chunk appears progressively. When the network is slow, the text follows it.
         function aiCreateTypewriter(el) {
             const MIN_PER_FRAME = 2;       // base speed: about 120 characters per second
             const CATCH_UP_DIVISOR = 18;   // the bigger the backlog, the faster it catches up
@@ -2193,7 +2218,7 @@
                 if (shown < target.length) {
                     schedule();                          // more to reveal
                 } else if (finished) {
-                    aiRender(el, target);                // final draw of the complete text, same as the old code
+                    aiRender(el, target);                // final draw of the complete text
                     aiMessages.scrollTop = aiMessages.scrollHeight;
                     resolveDone();                       // everything shown and the stream is over
                 }
@@ -2212,15 +2237,14 @@
                 done
             };
         }
-        // ---------- Avatar ----------
-        const AI_AVATAR_SRC = 'images/chatbot.png';
 
+        // ---------- Bot avatar ----------
         function aiMakeAvatar() {
             const img = document.createElement('img');
             img.className = 'ai-avatar';
             img.src = AI_AVATAR_SRC;
             img.alt = 'AI assistant';
-            // if the image is missing, show the amber icon instead
+            // if the image cannot load, show the amber icon instead
             img.addEventListener('error', () => {
                 const fb = document.createElement('div');
                 fb.className = 'ai-avatar ai-avatar-fallback';
@@ -2230,7 +2254,7 @@
             return img;
         }
 
-        // ---------- Recent chats (stored in this browser) ----------
+        // ---------- Recent chats (saved in this browser) ----------
         const AI_CHATS_KEY = 'kimangu_ai_chats_v1';
         const AI_MAX_CHATS = 30;
         let aiChats = [];          // [{ id, title, updated, messages: [{ role, content }] }]
@@ -2239,14 +2263,19 @@
         function aiStoreRead() {
             try {
                 const d = JSON.parse(localStorage.getItem(AI_CHATS_KEY) || 'null');
-                if (d && Array.isArray(d.chats)) { aiChats = d.chats; aiCurrentId = d.currentId || null; }
+                if (d && Array.isArray(d.chats)) {
+                    aiChats = d.chats;
+                    aiCurrentId = d.currentId || null;
+                }
             } catch (e) { /* ignore */ }
         }
 
         function aiStoreWrite() {
             aiChats.sort((a, b) => b.updated - a.updated);
             aiChats = aiChats.slice(0, AI_MAX_CHATS);
-            try { localStorage.setItem(AI_CHATS_KEY, JSON.stringify({ chats: aiChats, currentId: aiCurrentId })); } catch (e) { /* ignore */ }
+            try {
+                localStorage.setItem(AI_CHATS_KEY, JSON.stringify({ chats: aiChats, currentId: aiCurrentId }));
+            } catch (e) { /* ignore */ }
         }
 
         function aiCurrentChat() {
@@ -2254,7 +2283,12 @@
         }
 
         function aiCreateChat() {
-            const c = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title: 'New chat', updated: Date.now(), messages: [] };
+            const c = {
+                id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                title: 'New chat',
+                updated: Date.now(),
+                messages: []
+            };
             aiChats.unshift(c);
             aiCurrentId = c.id;
             return c;
@@ -2268,15 +2302,7 @@
             aiStoreWrite();
         }
 
-        function aiRenderChat(chat) {
-            aiMessages.innerHTML = '';
-            if (!chat || !chat.messages.length) { aiShowWelcome(); return; }
-            chat.messages.forEach(m => {
-                if (m.role === 'user') aiAddMessage('user', m.content);
-                else aiAddMessage('bot', m.content, '', true);
-            });
-        }
-
+        // ---------- Messages ----------
         function aiAddMessage(role, text, extraClass = '', rich = false) {
             const el = document.createElement('div');
             el.className = `ai-msg ${role} ${extraClass}`.trim();
@@ -2288,6 +2314,7 @@
             }
 
             if (role === 'bot') {
+                // avatar on the left, bubble (with its tail) pointing at it
                 const row = document.createElement('div');
                 row.className = 'ai-row bot';
                 row.appendChild(aiMakeAvatar());
@@ -2297,12 +2324,13 @@
                 aiMessages.appendChild(el);
             }
             aiMessages.scrollTop = aiMessages.scrollHeight;
-            return el;   // still returns the bubble, so the typewriter works unchanged
+            return el;   // returns the bubble, so the typewriter works on it directly
         }
 
         function aiShowWelcome() {
             aiMessages.innerHTML = '';
-            aiAddMessage('bot', `Hi${greetingName ? ' ' + greetingName : ''}! I'm your Kimangu AY assistant. How can I help?`);
+            const name = (typeof greetingName !== 'undefined' && greetingName) ? greetingName : 'there';
+            aiAddMessage('bot', `Hi ${name}! Welcome to Ask AI. Ask me anything about the Bible, Adventist beliefs, or how to use this platform.`);
             const wrap = document.createElement('div');
             wrap.className = 'ai-suggest';
             AI_SUGGESTIONS.forEach(q => {
@@ -2313,6 +2341,15 @@
                 wrap.appendChild(b);
             });
             aiMessages.appendChild(wrap);
+        }
+
+        function aiRenderChat(chat) {
+            aiMessages.innerHTML = '';
+            if (!chat || !chat.messages.length) { aiShowWelcome(); return; }
+            chat.messages.forEach(m => {
+                if (m.role === 'user') aiAddMessage('user', m.content);
+                else aiAddMessage('bot', m.content, '', true);   // formatted
+            });
         }
 
         async function aiLoadHistory() {
@@ -2331,162 +2368,51 @@
                         if (firstUser) c.title = firstUser.content.slice(0, 40);
                         aiStoreWrite();
                     }
-                } catch (err) { /* fall through */ }
+                } catch (err) { /* fall through to welcome */ }
             }
 
             const cur = aiCurrentChat();
-            if (cur && cur.messages.length) aiRenderChat(cur); else aiShowWelcome();
+            if (cur && cur.messages.length) aiRenderChat(cur);
+            else aiShowWelcome();
         }
 
-        function aiOpen() {
-            aiPanel.classList.add('open');
-            aiFab.classList.add('hidden');
-            aiLoadHistory();
-            setTimeout(() => aiInput.focus(), 50);
-        }
-
-        function aiClose() {
-            aiHistoryToggle(false);
-            aiPanel.classList.remove('open');
-            aiFab.classList.remove('hidden');
-        }
-
-        // Streams the reply from the server (api() only handles JSON, so this uses fetch directly)
-        async function aiStreamReply(message, retry = true) {
-            const res = await fetch(`${API_BASE}/api/ai/chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-                body: JSON.stringify({ message, chatId: aiCurrentId })
-            });
-
-            if (res.status === 401) {
-                if (retry && await refreshSession()) return aiStreamReply(message, false);
-                clearSession();
-                goToLogin();
-                throw new Error('Session expired');
-            }
-            if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || 'The assistant is unavailable right now.');
-            }
-            return res;
-        }
-
-        async function aiSendMessage() {
-            const text = aiInput.value.trim();
-            if (!text || aiBusy) return;
-
-            aiBusy = true;
-            aiSend.disabled = true;
-            aiInput.value = '';
-            aiInput.style.height = 'auto';
-
-            const suggest = aiMessages.querySelector('.ai-suggest');
-            if (suggest) suggest.remove();
-
-            aiAddMessage('user', text);
-            aiRecord('user', text);
-            const bot = aiAddMessage('bot', '', 'ai-typing ai-rich');
-            let writer = null;
-
-            try {
-                const res = await aiStreamReply(text);
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                writer = aiCreateTypewriter(bot);
-                let reply = '';
-
-                // Hand every piece of text to the typewriter the moment it arrives
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const piece = decoder.decode(value, { stream: true });
-                    reply += piece;
-                    writer.push(piece);
-                }
-                const tail = decoder.decode();   // flush any last bytes
-                if (tail) {
-                    reply += tail;
-                    writer.push(tail);
-                }
-
-                writer.finish();
-                await writer.done;
-                if (reply.trim()) aiRecord('bot', reply);          // wait until the last character is on screen
-                aiMessages.scrollTop = aiMessages.scrollHeight;
-
-                if (!reply.trim()) {
-                    bot.classList.remove('ai-rich');
-                    bot.textContent = 'I could not come up with a reply. Please try again.';
-                }
-            } catch (err) {
-                if (writer) writer.cancel();    // stop the reveal so it cannot overwrite the error
-                bot.classList.remove('ai-rich');
-                bot.textContent = err.message || 'Something went wrong. Please try again.';
-                bot.classList.add('error');
-            } finally {
-                bot.classList.remove('ai-typing');
-                aiBusy = false;
-                aiSend.disabled = false;
-                aiInput.focus();
-            }
-        }
-
-        aiFab.addEventListener('click', aiOpen);
-        document.getElementById('aiClose').addEventListener('click', aiClose);
-        aiSend.addEventListener('click', aiSendMessage);
-
-        aiInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                aiSendMessage();
-            }
-        });
-        aiInput.addEventListener('input', () => {
-            aiInput.style.height = 'auto';
-            aiInput.style.height = Math.min(aiInput.scrollHeight, 96) + 'px';
-        });
-
-        document.getElementById('aiClear').addEventListener('click', async () => {
-            if (aiBusy || !confirm('Clear your chat history?')) return;
-            try {
-                await api('/api/ai/history', { method: 'DELETE' });
-                aiShowWelcome();
-            } catch (err) {
-                aiAddMessage('bot', 'Could not clear the chat. Please try again.', 'error');
-            }
-        });
         // ---------- Recent chats sidebar ----------
-        const aiBody = document.getElementById('aiBody');
-        const aiHistoryBtn = document.getElementById('aiHistoryBtn');
-        const aiHistoryEl = document.getElementById('aiHistory');
-        const aiHistoryList = document.getElementById('aiHistoryList');
+        function aiHistoryIsOpen() {
+            return !!aiBody && aiBody.classList.contains('history-open');
+        }
 
         function aiHistoryToggle(open) {
+            if (!aiBody) return;
             aiBody.classList.toggle('history-open', open);
-            aiHistoryBtn.setAttribute('aria-expanded', String(open));
-            aiHistoryEl.setAttribute('aria-hidden', String(!open));
+            const btn = document.getElementById('aiHistoryBtn');
+            const side = document.getElementById('aiHistory');
+            if (btn) btn.setAttribute('aria-expanded', String(open));
+            if (side) side.setAttribute('aria-hidden', String(!open));
             if (open) aiRenderHistoryList();
         }
 
         function aiTimeLabel(ts) {
             const d = new Date(ts);
-            const today = new Date();
-            return d.toDateString() === today.toDateString()
+            return d.toDateString() === new Date().toDateString()
                 ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 : d.toLocaleDateString([], { day: 'numeric', month: 'short' });
         }
 
         function aiRenderHistoryList() {
-            aiHistoryList.innerHTML = '';
+            const list = document.getElementById('aiHistoryList');
+            if (!list) return;
+            aiStoreRead();                                   // pick up changes from other tabs
+            list.innerHTML = '';
+
             const chats = aiChats.filter(c => c.messages.length);
             if (!chats.length) {
                 const empty = document.createElement('div');
                 empty.className = 'ai-history-empty';
                 empty.textContent = 'No recent chats yet.';
-                aiHistoryList.appendChild(empty);
+                list.appendChild(empty);
                 return;
             }
+
             chats.forEach(c => {
                 const item = document.createElement('div');
                 item.className = 'ai-history-item' + (c.id === aiCurrentId ? ' active' : '');
@@ -2523,21 +2449,147 @@
                 });
 
                 item.append(open, del);
-                aiHistoryList.appendChild(item);
+                list.appendChild(item);
             });
         }
 
-        aiHistoryBtn.addEventListener('click', () => aiHistoryToggle(!aiBody.classList.contains('history-open')));
-        document.getElementById('aiHistoryBackdrop').addEventListener('click', () => aiHistoryToggle(false));
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') aiHistoryToggle(false); });
-
-        document.getElementById('aiNewChat').addEventListener('click', () => {
+        function aiStartNewChat() {
             if (aiBusy) return;
-            aiCurrentId = null;          // the chat is created when the first message is sent
+            aiCurrentId = null;                 // the chat is created when the first message is sent
             aiStoreWrite();
             aiShowWelcome();
             aiHistoryToggle(false);
             api('/api/ai/history', { method: 'DELETE' }).catch(() => { });   // fresh context on the server
+        }
+
+        // One delegated listener handles the three dots, the dark backdrop and "New chat".
+        // It works no matter when those elements were created.
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#aiHistoryBtn')) {
+                aiHistoryToggle(!aiHistoryIsOpen());
+            } else if (e.target.closest('#aiHistoryBackdrop')) {
+                aiHistoryToggle(false);
+            } else if (e.target.closest('#aiNewChat')) {
+                aiStartNewChat();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && aiHistoryIsOpen()) aiHistoryToggle(false);
+        });
+
+        // ---------- Open / close ----------
+        function aiOpen() {
+            aiPanel.classList.add('open');
+            aiFab.classList.add('hidden');
+            aiLoadHistory();
+            setTimeout(() => aiInput.focus(), 50);
+        }
+
+        function aiClose() {
+            aiHistoryToggle(false);
+            aiPanel.classList.remove('open');
+            aiFab.classList.remove('hidden');
+        }
+
+        // ---------- Sending ----------
+        // Streams the reply from the server (api() only handles JSON, so this uses fetch directly)
+        async function aiStreamReply(message, retry = true) {
+            const res = await fetch(`${API_BASE}/api/ai/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+                body: JSON.stringify({ message, chatId: aiCurrentId })
+            });
+
+            if (res.status === 401) {
+                if (retry && await refreshSession()) return aiStreamReply(message, false);
+                clearSession();
+                goToLogin();
+                throw new Error('Session expired');
+            }
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || 'The assistant is unavailable right now.');
+            }
+            return res;
+        }
+
+        async function aiSendMessage() {
+            const text = aiInput.value.trim();
+            if (!text || aiBusy) return;
+
+            aiBusy = true;
+            aiSend.disabled = true;
+            aiInput.value = '';
+            aiInput.style.height = 'auto';
+            aiHistoryToggle(false);
+
+            const suggest = aiMessages.querySelector('.ai-suggest');
+            if (suggest) suggest.remove();
+
+            aiAddMessage('user', text);
+            aiRecord('user', text);                          // saved to Recent chats
+            const bot = aiAddMessage('bot', '', 'ai-typing ai-rich');
+            let writer = null;
+
+            try {
+                const res = await aiStreamReply(text);
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                writer = aiCreateTypewriter(bot);
+                let reply = '';
+
+                // Hand every piece of text to the typewriter the moment it arrives
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const piece = decoder.decode(value, { stream: true });
+                    reply += piece;
+                    writer.push(piece);
+                }
+                const tail = decoder.decode();               // flush any last bytes
+                if (tail) {
+                    reply += tail;
+                    writer.push(tail);
+                }
+
+                writer.finish();
+                await writer.done;                           // wait until the last character is on screen
+                aiMessages.scrollTop = aiMessages.scrollHeight;
+
+                if (!reply.trim()) {
+                    bot.classList.remove('ai-rich');
+                    bot.textContent = 'I could not come up with a reply. Please try again.';
+                } else {
+                    aiRecord('bot', reply);                  // saved to Recent chats
+                }
+            } catch (err) {
+                if (writer) writer.cancel();                 // stop the reveal so it cannot overwrite the error
+                bot.classList.remove('ai-rich');
+                bot.textContent = err.message || 'Something went wrong. Please try again.';
+                bot.classList.add('error');
+            } finally {
+                bot.classList.remove('ai-typing');
+                aiBusy = false;
+                aiSend.disabled = false;
+                aiInput.focus();
+            }
+        }
+
+        // ---------- Events ----------
+        aiFab.addEventListener('click', aiOpen);
+        document.getElementById('aiClose').addEventListener('click', aiClose);
+        aiSend.addEventListener('click', aiSendMessage);
+
+        aiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                aiSendMessage();
+            }
+        });
+        aiInput.addEventListener('input', () => {
+            aiInput.style.height = 'auto';
+            aiInput.style.height = Math.min(aiInput.scrollHeight, 96) + 'px';
         });
 
         function readLegacySession() {
