@@ -707,7 +707,12 @@ ADVENTIST KNOWLEDGE (relevant parts)
 ${beliefs}
 
 VERIFIED ELLEN G. WHITE REFERENCES (format: Book | page.paragraph | topics | what it teaches)
-${egwRefs}`;
+${egwRefs}
+
+FINAL CHECK BEFORE YOU ANSWER (the app colours references only when they are wrapped)
+- EVERY Bible reference and EVERY Ellen G. White citation is wrapped in double square brackets, with no exceptions, also inside round brackets, lists and sentences: ([[Numbers 25:1-9]]), [[Jude 1:11]], ([[Desire of Ages p 234.3]]).
+- Never write a reference as plain text, for example (Numbers 25) or Jude 1:11 without brackets.
+- Plain text only: no asterisks, no bold, no markdown.`;
 }
 
 // Saved conversation for the logged-in member

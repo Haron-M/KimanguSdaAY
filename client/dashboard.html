@@ -1840,8 +1840,37 @@
 
         // Bot answers are drawn as formatted HTML (headings, numbering, italic references).
         // Everything else (member messages, errors, welcome text) stays plain text.
+        // ---------- Reference styling safety net ----------
+        // The app colours anything the AI wraps in [[double brackets]]. The AI sometimes forgets
+        // the brackets, so any Bible reference (John 3:16, 2 Peter 2:15, Numbers 25) or Ellen G. White
+        // citation (Desire of Ages p 234.3, The Adventist Home, p. 45) that is still unwrapped gets
+        // wrapped here before formatting. References the AI already wrapped are left untouched.
+        const AI_BIBLE_NUMBERED = '[1-3]\\s+(?:Samuel|Kings|Chronicles|Corinthians|Thessalonians|Timothy|Peter|John)';
+        const AI_BIBLE_BOOKS = 'Genesis|Exodus|Leviticus|Numbers|Deuteronomy|Joshua|Judges|Ruth|Ezra|Nehemiah|Esther|Job|Psalms?|Proverbs|Ecclesiastes|Song of Solomon|Song of Songs|Isaiah|Jeremiah|Lamentations|Ezekiel|Daniel|Hosea|Joel|Amos|Obadiah|Jonah|Micah|Nahum|Habakkuk|Zephaniah|Haggai|Zechariah|Malachi|Matthew|Mark|Luke|John|Acts|Romans|Galatians|Ephesians|Philippians|Colossians|Titus|Philemon|Hebrews|James|Jude|Revelation';
+        const AI_VERSES = '\\s+\\d{1,3}(?::\\d{1,3}(?:[-\u2013\u2014]\\d{1,3})?)?(?:,\\s*\\d{1,3}(?![\\d:])(?:[-\u2013\u2014]\\d{1,3})?)*(?!\\d)';
+        const AI_EGW_BARE_TITLES = "(?:The\\s+)?(?:Desire of Ages|Steps to Christ|Great Controversy|Patriarchs and Prophets|Prophets and Kings|Acts of the Apostles|Ministry of Healing|Christ['\u2019]s Object Lessons|Thoughts from the Mount of Blessing|Adventist Home|Messages to Young People|Child Guidance|Counsels on Health|Counsels on Diet and Foods|Early Writings|Selected Messages)";
+        const AI_EGW_ALL_TITLES = "(?:The\\s+)?(?:Desire of Ages|Steps to Christ|Great Controversy|Patriarchs and Prophets|Prophets and Kings|Acts of the Apostles|Ministry of Healing|Christ['\u2019]s Object Lessons|Thoughts from the Mount of Blessing|Adventist Home|Messages to Young People|Child Guidance|Counsels on Health|Counsels on Diet and Foods|Early Writings|Selected Messages|Testimonies for the Church|Counsels for the Church|Fundamentals of Christian Education|Gospel Workers|Last Day Events|Life Sketches|Education|Evangelism|Temperance)";
+        const AI_REFERENCE_RX = new RegExp(
+            // 1) Ellen G. White title followed by a page, e.g. "Desire of Ages p 234.3" or "The Adventist Home, p. 45"
+            AI_EGW_ALL_TITLES + ',?\\s+pp?\\.?\\s*\\d+(?:\\.\\d+)?(?:[-\u2013]\\d+(?:\\.\\d+)?)?' +
+            // 2) a bare Ellen G. White title in round brackets, e.g. "(Desire of Ages)"
+            '|\\(\\s*' + AI_EGW_BARE_TITLES + '\\s*\\)' +
+            // 3) a Bible reference, e.g. "John 3:16", "1 Thessalonians 4:3\u20135", "Numbers 25"
+            '|\\b(?:' + AI_BIBLE_NUMBERED + '|' + AI_BIBLE_BOOKS + ')' + AI_VERSES,
+            'g'
+        );
+
+        function aiWrapReferences(text) {
+            // Odd-numbered pieces are the AI's own [[wrapped]] references: leave them exactly as they are
+            return String(text).split(/(\[\[[\s\S]*?\]\])/).map((part, i) => {
+                if (i % 2 === 1) return part;
+                return part.replace(AI_REFERENCE_RX, (m) =>
+                    m.charAt(0) === '(' ? '([[' + m.slice(1, -1).trim() + ']])' : '[[' + m + ']]');
+            }).join('');
+        }
+
         function aiRender(el, text) {
-            el.innerHTML = formatAiReply(text);
+            el.innerHTML = formatAiReply(aiWrapReferences(text));
         }
 
         // ---------- Smooth reveal ----------
