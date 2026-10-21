@@ -1884,8 +1884,13 @@
                     aiMessages.scrollTop = aiMessages.scrollHeight;
                 }
 
-                if (shown < target.length) schedule();   // more to reveal
-                else if (finished) resolveDone();        // everything shown and the stream is over
+                if (shown < target.length) {
+                    schedule();                          // more to reveal
+                } else if (finished) {
+                    aiRender(el, target);                // final draw of the complete text, same as the old code
+                    aiMessages.scrollTop = aiMessages.scrollHeight;
+                    resolveDone();                       // everything shown and the stream is over
+                }
                 // otherwise wait: push() restarts the loop when more text arrives
             }
 
