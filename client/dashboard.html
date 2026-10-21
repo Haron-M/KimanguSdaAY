@@ -2494,11 +2494,12 @@
             aiPanel.style.height = '';
             aiFab.classList.remove('hidden');
             aiLockPage(false);
+        }
 
-            // ---------- Mobile keyboard: keep header fixed, input above the keyboard ----------
-            (function aiInjectKeyboardStyles() {
-                const style = document.createElement('style');
-                style.textContent = `
+        // ---------- Mobile keyboard: keep header fixed, input above the keyboard ----------
+        (function aiInjectKeyboardStyles() {
+            const style = document.createElement('style');
+            style.textContent = `
         @media (max-width: 768px) {
             html.ai-lock, html.ai-lock body {
                 overflow: hidden !important;
@@ -2508,332 +2509,332 @@
             .ai-panel { transition: none; }
         }
     `;
-                document.head.appendChild(style);
-            })();
+            document.head.appendChild(style);
+        })();
 
-            function aiIsMobile() {
-                return window.matchMedia('(max-width: 768px)').matches;
+        function aiIsMobile() {
+            return window.matchMedia('(max-width: 768px)').matches;
+        }
+
+        function aiFitToViewport() {
+            if (!aiPanel.classList.contains('open')) return;
+
+            // Desktop: remove anything we set for mobile
+            if (!aiIsMobile()) {
+                aiPanel.style.top = '';
+                aiPanel.style.height = '';
+                aiPanel.classList.remove('kb-open');
+                return;
             }
 
-            function aiFitToViewport() {
-                if (!aiPanel.classList.contains('open')) return;
+            const vv = window.visualViewport;
+            if (!vv) return;   // very old browsers: the CSS 100dvh fallback is used
 
-                // Desktop: remove anything we set for mobile
-                if (!aiIsMobile()) {
-                    aiPanel.style.top = '';
-                    aiPanel.style.height = '';
-                    aiPanel.classList.remove('kb-open');
-                    return;
-                }
+            // Make the panel exactly as big as the visible area (above the keyboard)
+            aiPanel.style.top = vv.offsetTop + 'px';
+            aiPanel.style.height = vv.height + 'px';
 
-                const vv = window.visualViewport;
-                if (!vv) return;   // very old browsers: the CSS 100dvh fallback is used
+            // Keyboard is open when the visible area is clearly shorter than the window
+            const keyboardOpen = (window.innerHeight - vv.height) > 120;
+            aiPanel.classList.toggle('kb-open', keyboardOpen);
 
-                // Make the panel exactly as big as the visible area (above the keyboard)
-                aiPanel.style.top = vv.offsetTop + 'px';
-                aiPanel.style.height = vv.height + 'px';
+            // Stop the page behind from sliding up
+            if (window.scrollY !== 0) window.scrollTo(0, 0);
 
-                // Keyboard is open when the visible area is clearly shorter than the window
-                const keyboardOpen = (window.innerHeight - vv.height) > 120;
-                aiPanel.classList.toggle('kb-open', keyboardOpen);
+            // Keep the latest message visible
+            aiMessages.scrollTop = aiMessages.scrollHeight;
+        }
 
-                // Stop the page behind from sliding up
-                if (window.scrollY !== 0) window.scrollTo(0, 0);
+        function aiLockPage(lock) {
+            document.documentElement.classList.toggle('ai-lock', lock && aiIsMobile());
+        }
 
-                // Keep the latest message visible
-                aiMessages.scrollTop = aiMessages.scrollHeight;
-            }
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', aiFitToViewport);
+            window.visualViewport.addEventListener('scroll', aiFitToViewport);
+        }
+        window.addEventListener('resize', aiFitToViewport);
+        window.addEventListener('orientationchange', () => setTimeout(aiFitToViewport, 300));
 
-            function aiLockPage(lock) {
-                document.documentElement.classList.toggle('ai-lock', lock && aiIsMobile());
-            }
+        // some phones report the new size a moment after the keyboard starts opening
+        aiInput.addEventListener('focus', () => {
+            setTimeout(aiFitToViewport, 100);
+            setTimeout(aiFitToViewport, 350);
+        });
+        aiInput.addEventListener('blur', () => setTimeout(aiFitToViewport, 150));
 
-            if (window.visualViewport) {
-                window.visualViewport.addEventListener('resize', aiFitToViewport);
-                window.visualViewport.addEventListener('scroll', aiFitToViewport);
-            }
-            window.addEventListener('resize', aiFitToViewport);
-            window.addEventListener('orientationchange', () => setTimeout(aiFitToViewport, 300));
-
-            // some phones report the new size a moment after the keyboard starts opening
-            aiInput.addEventListener('focus', () => {
-                setTimeout(aiFitToViewport, 100);
-                setTimeout(aiFitToViewport, 350);
-            });
-            aiInput.addEventListener('blur', () => setTimeout(aiFitToViewport, 150));
-
-            // ---------- Sending ----------
-            // Streams the reply from the server (api() only handles JSON, so this uses fetch directly)
-            async function aiStreamReply(message, retry = true) {
-                const res = await fetch(`${API_BASE}/api/ai/chat`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-                    body: JSON.stringify({ message, chatId: aiCurrentId })
-                });
-
-                if (res.status === 401) {
-                    if (retry && await refreshSession()) return aiStreamReply(message, false);
-                    clearSession();
-                    goToLogin();
-                    throw new Error('Session expired');
-                }
-                if (!res.ok) {
-                    const data = await res.json().catch(() => ({}));
-                    throw new Error(data.error || 'The assistant is unavailable right now.');
-                }
-                return res;
-            }
-
-            async function aiSendMessage() {
-                const text = aiInput.value.trim();
-                if (!text || aiBusy) return;
-
-                aiBusy = true;
-                aiSend.disabled = true;
-                aiInput.value = '';
-                aiInput.style.height = 'auto';
-                aiHistoryToggle(false);
-
-                const suggest = aiMessages.querySelector('.ai-suggest');
-                if (suggest) suggest.remove();
-
-                aiAddMessage('user', text);
-                aiRecord('user', text);                          // saved to Recent chats
-                const bot = aiAddMessage('bot', '', 'ai-typing ai-rich');
-                let writer = null;
-
-                try {
-                    const res = await aiStreamReply(text);
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder();
-                    writer = aiCreateTypewriter(bot);
-                    let reply = '';
-
-                    // Hand every piece of text to the typewriter the moment it arrives
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        const piece = decoder.decode(value, { stream: true });
-                        reply += piece;
-                        writer.push(piece);
-                    }
-                    const tail = decoder.decode();               // flush any last bytes
-                    if (tail) {
-                        reply += tail;
-                        writer.push(tail);
-                    }
-
-                    writer.finish();
-                    await writer.done;                           // wait until the last character is on screen
-                    aiMessages.scrollTop = aiMessages.scrollHeight;
-
-                    if (!reply.trim()) {
-                        bot.classList.remove('ai-rich');
-                        bot.textContent = 'I could not come up with a reply. Please try again.';
-                    } else {
-                        aiRecord('bot', reply);                  // saved to Recent chats
-                    }
-                } catch (err) {
-                    if (writer) writer.cancel();                 // stop the reveal so it cannot overwrite the error
-                    bot.classList.remove('ai-rich');
-                    bot.textContent = err.message || 'Something went wrong. Please try again.';
-                    bot.classList.add('error');
-                } finally {
-                    bot.classList.remove('ai-typing');
-                    aiBusy = false;
-                    aiSend.disabled = false;
-                    aiInput.focus({ preventScroll: true });
-                }
-            }
-
-            // ---------- Events ----------
-            aiFab.addEventListener('click', aiOpen);
-            document.getElementById('aiClose').addEventListener('click', aiClose);
-            aiSend.addEventListener('click', aiSendMessage);
-
-            aiInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    aiSendMessage();
-                }
-            });
-            aiInput.addEventListener('input', () => {
-                aiInput.style.height = 'auto';
-                aiInput.style.height = Math.min(aiInput.scrollHeight, 96) + 'px';
+        // ---------- Sending ----------
+        // Streams the reply from the server (api() only handles JSON, so this uses fetch directly)
+        async function aiStreamReply(message, retry = true) {
+            const res = await fetch(`${API_BASE}/api/ai/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+                body: JSON.stringify({ message, chatId: aiCurrentId })
             });
 
-            function readLegacySession() {
-                for (const key of Object.keys(localStorage)) {
-                    if (!/^sb-.+-auth-token$/.test(key)) continue;
-                    try {
-                        const session = JSON.parse(localStorage.getItem(key));
-                        if (session && session.access_token) return { key, session };
-                    } catch (err) { /* ignore */ }
-                }
-                return null;
+            if (res.status === 401) {
+                if (retry && await refreshSession()) return aiStreamReply(message, false);
+                clearSession();
+                goToLogin();
+                throw new Error('Session expired');
             }
-
-            function getToken() {
-                const legacy = readLegacySession();
-                if (legacy) return legacy.session.access_token;
-                for (const key of TOKEN_KEYS) {
-                    const value = localStorage.getItem(key);
-                    if (value) return value;
-                }
-                return null;
-            }
-
-            function getRefreshToken() {
-                const legacy = readLegacySession();
-                return (legacy && legacy.session.refresh_token) || localStorage.getItem(REFRESH_KEY);
-            }
-
-            function saveSession(token, refreshToken, expiresAt) {
-                const key = TOKEN_KEYS.find(k => localStorage.getItem(k)) || TOKEN_KEYS[0];
-                localStorage.setItem(key, token);
-                if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
-
-                const legacy = readLegacySession();
-                if (legacy) {
-                    legacy.session.access_token = token;
-                    if (refreshToken) legacy.session.refresh_token = refreshToken;
-                    if (expiresAt) {
-                        legacy.session.expires_at = expiresAt;
-                        legacy.session.expires_in = Math.max(0, expiresAt - Math.floor(Date.now() / 1000));
-                    }
-                    localStorage.setItem(legacy.key, JSON.stringify(legacy.session));
-                }
-            }
-
-            function clearSession() {
-                TOKEN_KEYS.forEach(key => localStorage.removeItem(key));
-                localStorage.removeItem(REFRESH_KEY);
-                Object.keys(localStorage)
-                    .filter(key => /^sb-.+-auth-token$/.test(key))
-                    .forEach(key => localStorage.removeItem(key));
-            }
-
-            function goToLogin() { window.location.href = 'auth.html'; }
-
-            class ApiError extends Error {
-                constructor(message, status) {
-                    super(message);
-                    this.status = status;
-                }
-            }
-
-            // One refresh at a time, even if several requests expire together
-            let refreshing = null;
-            function refreshSession() {
-                if (!refreshing) {
-                    refreshing = (async () => {
-                        const refreshToken = getRefreshToken();
-                        if (!refreshToken) return false;
-                        try {
-                            const res = await fetch(`${API_BASE}/api/auth/refresh`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ refreshToken })
-                            });
-                            if (!res.ok) return false;
-                            const data = await res.json();
-                            if (!data.token) return false;
-                            saveSession(data.token, data.refreshToken, data.expiresAt);
-                            return true;
-                        } catch (err) {
-                            return false;
-                        }
-                    })().finally(() => { refreshing = null; });
-                }
-                return refreshing;
-            }
-
-            // Calls your server with the saved token. A 401 triggers one silent refresh, then sends the user to login.
-            async function api(path, { method = 'GET', body, retry = true } = {}) {
-                const token = getToken();
-                if (!token) {
-                    console.warn('Sending you to the login page: no saved login was found in this browser.');
-                    goToLogin();
-                    throw new ApiError('Not signed in', 401);
-                }
-
-                const headers = { Authorization: `Bearer ${token}` };
-                if (body !== undefined) headers['Content-Type'] = 'application/json';
-
-                const res = await fetch(`${API_BASE}${path}`, {
-                    method,
-                    headers,
-                    body: body !== undefined ? JSON.stringify(body) : undefined
-                });
-
-                if (res.status === 401) {
-                    if (retry && await refreshSession()) return api(path, { method, body, retry: false });
-                    console.warn(`Sending you to the login page: the server answered 401 (not signed in) for ${path}.`);
-                    clearSession();
-                    goToLogin();
-                    throw new ApiError('Session expired', 401);
-                }
-
+            if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                if (!res.ok) throw new ApiError(data.error || `Request failed (${res.status})`, res.status);
-                return data;
+                throw new Error(data.error || 'The assistant is unavailable right now.');
+            }
+            return res;
+        }
+
+        async function aiSendMessage() {
+            const text = aiInput.value.trim();
+            if (!text || aiBusy) return;
+
+            aiBusy = true;
+            aiSend.disabled = true;
+            aiInput.value = '';
+            aiInput.style.height = 'auto';
+            aiHistoryToggle(false);
+
+            const suggest = aiMessages.querySelector('.ai-suggest');
+            if (suggest) suggest.remove();
+
+            aiAddMessage('user', text);
+            aiRecord('user', text);                          // saved to Recent chats
+            const bot = aiAddMessage('bot', '', 'ai-typing ai-rich');
+            let writer = null;
+
+            try {
+                const res = await aiStreamReply(text);
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                writer = aiCreateTypewriter(bot);
+                let reply = '';
+
+                // Hand every piece of text to the typewriter the moment it arrives
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const piece = decoder.decode(value, { stream: true });
+                    reply += piece;
+                    writer.push(piece);
+                }
+                const tail = decoder.decode();               // flush any last bytes
+                if (tail) {
+                    reply += tail;
+                    writer.push(tail);
+                }
+
+                writer.finish();
+                await writer.done;                           // wait until the last character is on screen
+                aiMessages.scrollTop = aiMessages.scrollHeight;
+
+                if (!reply.trim()) {
+                    bot.classList.remove('ai-rich');
+                    bot.textContent = 'I could not come up with a reply. Please try again.';
+                } else {
+                    aiRecord('bot', reply);                  // saved to Recent chats
+                }
+            } catch (err) {
+                if (writer) writer.cancel();                 // stop the reveal so it cannot overwrite the error
+                bot.classList.remove('ai-rich');
+                bot.textContent = err.message || 'Something went wrong. Please try again.';
+                bot.classList.add('error');
+            } finally {
+                bot.classList.remove('ai-typing');
+                aiBusy = false;
+                aiSend.disabled = false;
+                aiInput.focus({ preventScroll: true });
+            }
+        }
+
+        // ---------- Events ----------
+        aiFab.addEventListener('click', aiOpen);
+        document.getElementById('aiClose').addEventListener('click', aiClose);
+        aiSend.addEventListener('click', aiSendMessage);
+
+        aiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                aiSendMessage();
+            }
+        });
+        aiInput.addEventListener('input', () => {
+            aiInput.style.height = 'auto';
+            aiInput.style.height = Math.min(aiInput.scrollHeight, 96) + 'px';
+        });
+
+        function readLegacySession() {
+            for (const key of Object.keys(localStorage)) {
+                if (!/^sb-.+-auth-token$/.test(key)) continue;
+                try {
+                    const session = JSON.parse(localStorage.getItem(key));
+                    if (session && session.access_token) return { key, session };
+                } catch (err) { /* ignore */ }
+            }
+            return null;
+        }
+
+        function getToken() {
+            const legacy = readLegacySession();
+            if (legacy) return legacy.session.access_token;
+            for (const key of TOKEN_KEYS) {
+                const value = localStorage.getItem(key);
+                if (value) return value;
+            }
+            return null;
+        }
+
+        function getRefreshToken() {
+            const legacy = readLegacySession();
+            return (legacy && legacy.session.refresh_token) || localStorage.getItem(REFRESH_KEY);
+        }
+
+        function saveSession(token, refreshToken, expiresAt) {
+            const key = TOKEN_KEYS.find(k => localStorage.getItem(k)) || TOKEN_KEYS[0];
+            localStorage.setItem(key, token);
+            if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+
+            const legacy = readLegacySession();
+            if (legacy) {
+                legacy.session.access_token = token;
+                if (refreshToken) legacy.session.refresh_token = refreshToken;
+                if (expiresAt) {
+                    legacy.session.expires_at = expiresAt;
+                    legacy.session.expires_in = Math.max(0, expiresAt - Math.floor(Date.now() / 1000));
+                }
+                localStorage.setItem(legacy.key, JSON.stringify(legacy.session));
+            }
+        }
+
+        function clearSession() {
+            TOKEN_KEYS.forEach(key => localStorage.removeItem(key));
+            localStorage.removeItem(REFRESH_KEY);
+            Object.keys(localStorage)
+                .filter(key => /^sb-.+-auth-token$/.test(key))
+                .forEach(key => localStorage.removeItem(key));
+        }
+
+        function goToLogin() { window.location.href = 'auth.html'; }
+
+        class ApiError extends Error {
+            constructor(message, status) {
+                super(message);
+                this.status = status;
+            }
+        }
+
+        // One refresh at a time, even if several requests expire together
+        let refreshing = null;
+        function refreshSession() {
+            if (!refreshing) {
+                refreshing = (async () => {
+                    const refreshToken = getRefreshToken();
+                    if (!refreshToken) return false;
+                    try {
+                        const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ refreshToken })
+                        });
+                        if (!res.ok) return false;
+                        const data = await res.json();
+                        if (!data.token) return false;
+                        saveSession(data.token, data.refreshToken, data.expiresAt);
+                        return true;
+                    } catch (err) {
+                        return false;
+                    }
+                })().finally(() => { refreshing = null; });
+            }
+            return refreshing;
+        }
+
+        // Calls your server with the saved token. A 401 triggers one silent refresh, then sends the user to login.
+        async function api(path, { method = 'GET', body, retry = true } = {}) {
+            const token = getToken();
+            if (!token) {
+                console.warn('Sending you to the login page: no saved login was found in this browser.');
+                goToLogin();
+                throw new ApiError('Not signed in', 401);
             }
 
-            let homeWelcomeText = 'Good day';
-            let greetingName = '';
-            let currentUserId = null;
-            let activeSchedules = [];
-            let pendingAvatar = null;
+            const headers = { Authorization: `Bearer ${token}` };
+            if (body !== undefined) headers['Content-Type'] = 'application/json';
 
-            // ===================== DOM REFERENCES =====================
-            const contentFrame = document.getElementById('contentFrame');
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-            const notifBtn = document.getElementById('notifBtn');
-            const notifDropdown = document.getElementById('notifDropdown');
-            const avatarWrap = document.getElementById('avatarWrap');
-            const avatarPanel = document.getElementById('avatarPanel');
-            const avatarBox = document.getElementById('topbarAvatarContainer');
-            const apInput = document.getElementById('apInput');
-            const apSave = document.getElementById('apSave');
-            const apStatus = document.getElementById('apStatus');
-            const adminToggle = document.getElementById('adminToggle');
-            const adminSubmenu = document.getElementById('adminSubmenu');
+            const res = await fetch(`${API_BASE}${path}`, {
+                method,
+                headers,
+                body: body !== undefined ? JSON.stringify(body) : undefined
+            });
 
-            // ===================== HELPERS =====================
-            function getInitials(fullName) {
-                if (!fullName) return '--';
-                const parts = fullName.trim().split(/\s+/);
-                const first = parts[0] ? parts[0][0] : '';
-                const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-                return (first + last).toUpperCase();
+            if (res.status === 401) {
+                if (retry && await refreshSession()) return api(path, { method, body, retry: false });
+                console.warn(`Sending you to the login page: the server answered 401 (not signed in) for ${path}.`);
+                clearSession();
+                goToLogin();
+                throw new ApiError('Session expired', 401);
             }
 
-            function escapeHtml(str) {
-                if (!str) return '';
-                return String(str)
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;');
-            }
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new ApiError(data.error || `Request failed (${res.status})`, res.status);
+            return data;
+        }
 
-            function formatTimeAgo(dateString) {
-                if (!dateString) return 'Recently';
-                const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
-                if (seconds < 60) return 'Just now';
-                const minutes = Math.floor(seconds / 60);
-                if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-                const hours = Math.floor(minutes / 60);
-                if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-                const days = Math.floor(hours / 24);
-                return `${days} day${days > 1 ? 's' : ''} ago`;
-            }
+        let homeWelcomeText = 'Good day';
+        let greetingName = '';
+        let currentUserId = null;
+        let activeSchedules = [];
+        let pendingAvatar = null;
 
-            // ===================== TIME-OF-DAY GREETING =====================
-            // Edit the text below to change what each period says.
-            const ICON_SUNRISE = `
+        // ===================== DOM REFERENCES =====================
+        const contentFrame = document.getElementById('contentFrame');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const notifBtn = document.getElementById('notifBtn');
+        const notifDropdown = document.getElementById('notifDropdown');
+        const avatarWrap = document.getElementById('avatarWrap');
+        const avatarPanel = document.getElementById('avatarPanel');
+        const avatarBox = document.getElementById('topbarAvatarContainer');
+        const apInput = document.getElementById('apInput');
+        const apSave = document.getElementById('apSave');
+        const apStatus = document.getElementById('apStatus');
+        const adminToggle = document.getElementById('adminToggle');
+        const adminSubmenu = document.getElementById('adminSubmenu');
+
+        // ===================== HELPERS =====================
+        function getInitials(fullName) {
+            if (!fullName) return '--';
+            const parts = fullName.trim().split(/\s+/);
+            const first = parts[0] ? parts[0][0] : '';
+            const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+            return (first + last).toUpperCase();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatTimeAgo(dateString) {
+            if (!dateString) return 'Recently';
+            const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            const days = Math.floor(hours / 24);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+
+        // ===================== TIME-OF-DAY GREETING =====================
+        // Edit the text below to change what each period says.
+        const ICON_SUNRISE = `
             <svg viewBox="0 0 48 48">
                 <defs><clipPath id="clipSkyRise"><rect x="0" y="0" width="48" height="36"/></clipPath></defs>
                 <g clip-path="url(#clipSkyRise)">
@@ -2847,7 +2848,7 @@
                 <path d="M14 41h20" stroke="#92400e" stroke-opacity=".45" stroke-width="2.4" stroke-linecap="round"/>
             </svg>`;
 
-            const ICON_SUN = `
+        const ICON_SUN = `
             <svg viewBox="0 0 48 48">
                 <g class="sun-float">
                     <circle class="sun-halo" cx="24" cy="24" r="15" fill="#fde68a"/>
@@ -2856,7 +2857,7 @@
                 </g>
             </svg>`;
 
-            const ICON_SUNSET = `
+        const ICON_SUNSET = `
             <svg viewBox="0 0 48 48">
                 <defs><clipPath id="clipSkySet"><rect x="0" y="0" width="48" height="36"/></clipPath></defs>
                 <g clip-path="url(#clipSkySet)">
@@ -2869,7 +2870,7 @@
                 <path d="M14 41h20" stroke="#7c2d12" stroke-opacity=".45" stroke-width="2.4" stroke-linecap="round"/>
             </svg>`;
 
-            const ICON_MOON = `
+        const ICON_MOON = `
             <svg viewBox="0 0 24 24">
                 <circle class="moon-glow" cx="12" cy="12" r="10" fill="#fde68a"/>
                 <path class="moon-body" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#fde68a"/>
@@ -2878,267 +2879,267 @@
                 <circle class="star s3" cx="4.5" cy="5" r=".8" fill="#fff"/>
             </svg>`;
 
-            const GREETING_PERIODS = {
-                morning: { text: 'Good morning', icon: ICON_SUNRISE },  // 05:00 - 11:59  rising sun
-                noon: { text: 'Good noon', icon: ICON_SUN },      // 12:00 - 13:59  bright sun
-                afternoon: { text: 'Good afternoon', icon: ICON_SUN },      // 14:00 - 16:59  bright sun
-                evening: { text: 'Good evening', icon: ICON_SUNSET },   // 17:00 - 18:59  setting sun
-                night: { text: 'Good night', icon: ICON_MOON }      // 19:00 - 04:59  moon
-            };
+        const GREETING_PERIODS = {
+            morning: { text: 'Good morning', icon: ICON_SUNRISE },  // 05:00 - 11:59  rising sun
+            noon: { text: 'Good noon', icon: ICON_SUN },      // 12:00 - 13:59  bright sun
+            afternoon: { text: 'Good afternoon', icon: ICON_SUN },      // 14:00 - 16:59  bright sun
+            evening: { text: 'Good evening', icon: ICON_SUNSET },   // 17:00 - 18:59  setting sun
+            night: { text: 'Good night', icon: ICON_MOON }      // 19:00 - 04:59  moon
+        };
 
-            function getPeriodKey(date = new Date()) {
-                const h = date.getHours();
-                if (h >= 5 && h < 12) return 'morning';
-                if (h == 12) return 'noon';
-                if (h > 12 && h < 16) return 'afternoon';
-                if (h >= 16 && h < 19) return 'evening';
-                return 'night';
-            }
+        function getPeriodKey(date = new Date()) {
+            const h = date.getHours();
+            if (h >= 5 && h < 12) return 'morning';
+            if (h == 12) return 'noon';
+            if (h > 12 && h < 16) return 'afternoon';
+            if (h >= 16 && h < 19) return 'evening';
+            return 'night';
+        }
 
-            function renderGreeting() {
-                const key = getPeriodKey();
-                const period = GREETING_PERIODS[key];
+        function renderGreeting() {
+            const key = getPeriodKey();
+            const period = GREETING_PERIODS[key];
 
-                homeWelcomeText = greetingName ? `${period.text}, ${greetingName}` : period.text;
+            homeWelcomeText = greetingName ? `${period.text}, ${greetingName}` : period.text;
 
-                const welcomeNameEl = document.getElementById('welcomeName');
-                if (welcomeNameEl) welcomeNameEl.textContent = homeWelcomeText;
+            const welcomeNameEl = document.getElementById('welcomeName');
+            if (welcomeNameEl) welcomeNameEl.textContent = homeWelcomeText;
 
-                const iconEl = document.getElementById('greetingIcon');
-                if (iconEl && iconEl.dataset.period !== key) {
-                    iconEl.dataset.period = key;
-                    iconEl.className = `greeting-icon period-${key}`;
-                    iconEl.innerHTML = period.icon;
-                    iconEl.title = period.text;
-                }
-            }
-
-            // ===================== TREASURY DESK DROPDOWN =====================
-            function toggleSidebarDropdown(btn) {
-                const dropdown = btn.closest('.sidebar-dropdown');
-                if (dropdown) dropdown.classList.toggle('active');
-            }
-
-            const treasuryBtn = document.getElementById('treasuryBtn');
-            if (treasuryBtn) {
-                treasuryBtn.addEventListener('click', () => toggleSidebarDropdown(treasuryBtn));
-            }
-
-            // ===================== LOCATION (GPS first, IP fallback) =====================
-            // 1) Browser position (GPS / Wi-Fi) -> town + county.
-            // 2) If location is blocked, unsupported or fails -> look up the browser's IP address.
-            const locElement = document.getElementById('sidebarLocation');
-            const MARK_IP_LOCATION_AS_APPROX = true; // adds "≈" before an IP-based location; set false to hide it
-            let locating = false;
-
-            function setLocationText(text, tooltip) {
-                if (!locElement) return;
-                locElement.textContent = `${text} 📍`;
-                locElement.title = tooltip || text;
-            }
-
-            function withCounty(name, country) {
-                const n = (name || '').trim();
-                if (!n) return '';
-                if (/county/i.test(n)) return n;
-                return (country || '').toUpperCase() === 'KE' ? `${n} County` : n;
-            }
-
-            async function fetchJson(url, timeoutMs = 6000) {
-                const ctrl = new AbortController();
-                const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-                try {
-                    const res = await fetch(url, { signal: ctrl.signal });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return await res.json();
-                } finally {
-                    clearTimeout(timer);
-                }
-            }
-
-            // GPS coordinates -> { place, county, country }
-            async function reverseGeocode(lat, lon) {
-                try {
-                    const json = await fetchJson(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1&accept-language=en`);
-                    const a = json && json.address;
-                    if (a) {
-                        const place = a.village || a.town || a.city || a.suburb || a.hamlet || a.neighbourhood || a.municipality || '';
-                        const candidates = [a.county, a.state, a.state_district, a.region].filter(Boolean);
-                        const county = candidates.find(c => /county/i.test(c)) || candidates[0] || '';
-                        return { place, county, country: (a.country_code || '').toUpperCase() };
-                    }
-                } catch (err) {
-                    console.warn('Nominatim reverse geocode failed:', err);
-                }
-
-                try {
-                    const d = await fetchJson(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
-                    return { place: d.locality || d.city || '', county: d.principalSubdivision || '', country: d.countryCode || '' };
-                } catch (err) {
-                    console.warn('BigDataCloud reverse geocode failed:', err);
-                }
-                return null;
-            }
-
-            // Browser IP address -> { place, county, country }.
-            // Asks several free IP services at once and uses the answer most of them agree on.
-            async function lookupByIP() {
-                const providers = [
-                    async () => {
-                        const d = await fetchJson('https://ipapi.co/json/');
-                        if (d.error) throw new Error(d.reason || 'ipapi error');
-                        return { county: d.region || d.city, country: d.country_code };
-                    },
-                    async () => {
-                        const d = await fetchJson('https://ipwho.is/');
-                        if (!d.success) throw new Error(d.message || 'ipwho error');
-                        return { county: d.region || d.city, country: d.country_code };
-                    },
-                    async () => {
-                        const d = await fetchJson('https://get.geojs.io/v1/ip/geo.json');
-                        return { county: d.region || d.city, country: d.country_code };
-                    },
-                    async () => {
-                        // Without coordinates, BigDataCloud locates the caller by IP address
-                        const d = await fetchJson('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en');
-                        return { county: d.principalSubdivision || d.city, country: d.countryCode };
-                    }
-                ];
-
-                const settled = await Promise.allSettled(providers.map(fn => fn()));
-                const votes = new Map();
-
-                settled.forEach((result, order) => {
-                    if (result.status !== 'fulfilled' || !result.value || !result.value.county) return;
-                    const key = result.value.county.toLowerCase().replace(/\s*county$/i, '').trim();
-                    const entry = votes.get(key) || { count: 0, order, value: result.value };
-                    entry.count += 1;
-                    votes.set(key, entry);
-                });
-
-                if (!votes.size) return null;
-
-                const best = [...votes.values()].sort((a, b) => b.count - a.count || a.order - b.order)[0];
-                return { place: '', county: best.value.county, country: best.value.country || '' };
-            }
-
-            // County only (no ward or town): "Bungoma County, KE"
-            function formatLocation({ place, county, country }) {
-                const countyText = withCounty(county, country);
-                const parts = [];
-                if (countyText) {
-                    parts.push(countyText);
-                } else if (place) {
-                    parts.push(place.trim()); // no county available (e.g. outside Kenya): fall back to the town
-                }
-                if (country) parts.push(country);
-                return parts.join(', ');
-            }
-
-            // Older saved values may still include a ward ("Ward, Bungoma County, KE"): keep from the county onward
-            function countyOnly(text) {
-                const parts = (text || '').split(',').map(part => part.trim()).filter(Boolean);
-                const i = parts.findIndex(part => /county/i.test(part));
-                return (i > 0 ? parts.slice(i) : parts).join(', ');
-            }
-
-            // ---- Saved location + IP check (the server stores it in the `profiles` table) ----
-            const ALLOW_SKIP = false;   // true = always offer "Continue with approximate location" on the gate
-            let gateIP = null;          // IP address seen when the gate was opened
-            let gateSoftFailures = 0;   // device could not locate (not a permission problem); 2 in a row unlock the skip button
-
-            const locGate = document.getElementById('locGate');
-            const locGateBtn = document.getElementById('locGateBtn');
-            const locGateHelp = document.getElementById('locGateHelp');
-            const locGateSkip = document.getElementById('locGateSkip');
-
-            function getPosition(options) {
-                return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, options));
-            }
-
-            // Quick network/Wi-Fi fix first (most reliable on laptops), then a high-accuracy GPS fix.
-            async function getBestPosition() {
-                try {
-                    return await getPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
-                } catch (err) {
-                    if (err.code === 1) throw err; // permission denied: retrying will not help
-                    return await getPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-                }
-            }
-
-            async function getGeoPermissionState() {
-                try {
-                    if (navigator.permissions && navigator.permissions.query) {
-                        return (await navigator.permissions.query({ name: 'geolocation' })).state; // granted | prompt | denied
-                    }
-                } catch (err) { /* not supported */ }
-                return 'prompt';
-            }
-
-            // The browser's current public IP address
-            async function getCurrentIP() {
-                const sources = [
-                    async () => (await fetchJson('https://api.ipify.org?format=json')).ip,
-                    async () => (await fetchJson('https://ipwho.is/')).ip,
-                    async () => (await fetchJson('https://ipapi.co/json/')).ip
-                ];
-                for (const get of sources) {
-                    try {
-                        const ip = await get();
-                        if (ip) return ip;
-                    } catch (err) {
-                        console.warn('IP address lookup failed:', err);
-                    }
-                }
-                return null;
-            }
-
-            async function loadStoredLocation() {
-                try {
-                    return await api('/api/profile/location');
-                } catch (err) {
-                    console.warn('Could not read the saved location:', err.message);
-                    return null;
-                }
-            }
-
-            async function persistLocation(text, source, ip) {
-                if (!currentUserId) return;
-                try {
-                    await api('/api/profile/location', { method: 'PUT', body: { text, source, ip: ip || null } });
-                } catch (err) {
-                    console.warn('Could not save the location:', err.message);
-                }
-            }
-
-            // Exact position from the browser -> "Town, County, KE". Throws if it cannot.
-            async function fetchExactLocation() {
-                const position = await getBestPosition();
-                const info = await reverseGeocode(position.coords.latitude, position.coords.longitude);
-                const text = info ? formatLocation(info) : '';
-                if (!text) throw new Error('Could not look up the town');
-                return text;
-            }
-
-            function locationLabel(text, source) {
-                return (source === 'ip' && MARK_IP_LOCATION_AS_APPROX ? '≈ ' : '') + countyOnly(text);
-            }
-
-            // "How to turn location on" depends on the device: mobile browsers have no address-bar shortcut
-            function getLocationHelpText() {
-                const ua = navigator.userAgent || '';
-                const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-                const isAndroid = /Android/i.test(ua);
-
-                if (isIOS) {
-                    return 'Location is blocked. Open your phone Settings, go to Privacy & Security, then Location Services, turn it on and allow your browser to use it. Come back here and press the button again.';
-                }
-                if (isAndroid) {
-                    return 'Location is blocked. Swipe down and turn on Location, then open your browser menu, go to Settings, then Site settings, then Location, and allow this site. Come back here and press the button again.';
-                }
-                return 'Location is blocked for this site. Click the lock icon in the address bar, set Location to Allow, then press the button again.';
+            const iconEl = document.getElementById('greetingIcon');
+            if (iconEl && iconEl.dataset.period !== key) {
+                iconEl.dataset.period = key;
+                iconEl.className = `greeting-icon period-${key}`;
+                iconEl.innerHTML = period.icon;
+                iconEl.title = period.text;
             }
         }
+
+        // ===================== TREASURY DESK DROPDOWN =====================
+        function toggleSidebarDropdown(btn) {
+            const dropdown = btn.closest('.sidebar-dropdown');
+            if (dropdown) dropdown.classList.toggle('active');
+        }
+
+        const treasuryBtn = document.getElementById('treasuryBtn');
+        if (treasuryBtn) {
+            treasuryBtn.addEventListener('click', () => toggleSidebarDropdown(treasuryBtn));
+        }
+
+        // ===================== LOCATION (GPS first, IP fallback) =====================
+        // 1) Browser position (GPS / Wi-Fi) -> town + county.
+        // 2) If location is blocked, unsupported or fails -> look up the browser's IP address.
+        const locElement = document.getElementById('sidebarLocation');
+        const MARK_IP_LOCATION_AS_APPROX = true; // adds "≈" before an IP-based location; set false to hide it
+        let locating = false;
+
+        function setLocationText(text, tooltip) {
+            if (!locElement) return;
+            locElement.textContent = `${text} 📍`;
+            locElement.title = tooltip || text;
+        }
+
+        function withCounty(name, country) {
+            const n = (name || '').trim();
+            if (!n) return '';
+            if (/county/i.test(n)) return n;
+            return (country || '').toUpperCase() === 'KE' ? `${n} County` : n;
+        }
+
+        async function fetchJson(url, timeoutMs = 6000) {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+            try {
+                const res = await fetch(url, { signal: ctrl.signal });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        // GPS coordinates -> { place, county, country }
+        async function reverseGeocode(lat, lon) {
+            try {
+                const json = await fetchJson(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1&accept-language=en`);
+                const a = json && json.address;
+                if (a) {
+                    const place = a.village || a.town || a.city || a.suburb || a.hamlet || a.neighbourhood || a.municipality || '';
+                    const candidates = [a.county, a.state, a.state_district, a.region].filter(Boolean);
+                    const county = candidates.find(c => /county/i.test(c)) || candidates[0] || '';
+                    return { place, county, country: (a.country_code || '').toUpperCase() };
+                }
+            } catch (err) {
+                console.warn('Nominatim reverse geocode failed:', err);
+            }
+
+            try {
+                const d = await fetchJson(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+                return { place: d.locality || d.city || '', county: d.principalSubdivision || '', country: d.countryCode || '' };
+            } catch (err) {
+                console.warn('BigDataCloud reverse geocode failed:', err);
+            }
+            return null;
+        }
+
+        // Browser IP address -> { place, county, country }.
+        // Asks several free IP services at once and uses the answer most of them agree on.
+        async function lookupByIP() {
+            const providers = [
+                async () => {
+                    const d = await fetchJson('https://ipapi.co/json/');
+                    if (d.error) throw new Error(d.reason || 'ipapi error');
+                    return { county: d.region || d.city, country: d.country_code };
+                },
+                async () => {
+                    const d = await fetchJson('https://ipwho.is/');
+                    if (!d.success) throw new Error(d.message || 'ipwho error');
+                    return { county: d.region || d.city, country: d.country_code };
+                },
+                async () => {
+                    const d = await fetchJson('https://get.geojs.io/v1/ip/geo.json');
+                    return { county: d.region || d.city, country: d.country_code };
+                },
+                async () => {
+                    // Without coordinates, BigDataCloud locates the caller by IP address
+                    const d = await fetchJson('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en');
+                    return { county: d.principalSubdivision || d.city, country: d.countryCode };
+                }
+            ];
+
+            const settled = await Promise.allSettled(providers.map(fn => fn()));
+            const votes = new Map();
+
+            settled.forEach((result, order) => {
+                if (result.status !== 'fulfilled' || !result.value || !result.value.county) return;
+                const key = result.value.county.toLowerCase().replace(/\s*county$/i, '').trim();
+                const entry = votes.get(key) || { count: 0, order, value: result.value };
+                entry.count += 1;
+                votes.set(key, entry);
+            });
+
+            if (!votes.size) return null;
+
+            const best = [...votes.values()].sort((a, b) => b.count - a.count || a.order - b.order)[0];
+            return { place: '', county: best.value.county, country: best.value.country || '' };
+        }
+
+        // County only (no ward or town): "Bungoma County, KE"
+        function formatLocation({ place, county, country }) {
+            const countyText = withCounty(county, country);
+            const parts = [];
+            if (countyText) {
+                parts.push(countyText);
+            } else if (place) {
+                parts.push(place.trim()); // no county available (e.g. outside Kenya): fall back to the town
+            }
+            if (country) parts.push(country);
+            return parts.join(', ');
+        }
+
+        // Older saved values may still include a ward ("Ward, Bungoma County, KE"): keep from the county onward
+        function countyOnly(text) {
+            const parts = (text || '').split(',').map(part => part.trim()).filter(Boolean);
+            const i = parts.findIndex(part => /county/i.test(part));
+            return (i > 0 ? parts.slice(i) : parts).join(', ');
+        }
+
+        // ---- Saved location + IP check (the server stores it in the `profiles` table) ----
+        const ALLOW_SKIP = false;   // true = always offer "Continue with approximate location" on the gate
+        let gateIP = null;          // IP address seen when the gate was opened
+        let gateSoftFailures = 0;   // device could not locate (not a permission problem); 2 in a row unlock the skip button
+
+        const locGate = document.getElementById('locGate');
+        const locGateBtn = document.getElementById('locGateBtn');
+        const locGateHelp = document.getElementById('locGateHelp');
+        const locGateSkip = document.getElementById('locGateSkip');
+
+        function getPosition(options) {
+            return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, options));
+        }
+
+        // Quick network/Wi-Fi fix first (most reliable on laptops), then a high-accuracy GPS fix.
+        async function getBestPosition() {
+            try {
+                return await getPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+            } catch (err) {
+                if (err.code === 1) throw err; // permission denied: retrying will not help
+                return await getPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+            }
+        }
+
+        async function getGeoPermissionState() {
+            try {
+                if (navigator.permissions && navigator.permissions.query) {
+                    return (await navigator.permissions.query({ name: 'geolocation' })).state; // granted | prompt | denied
+                }
+            } catch (err) { /* not supported */ }
+            return 'prompt';
+        }
+
+        // The browser's current public IP address
+        async function getCurrentIP() {
+            const sources = [
+                async () => (await fetchJson('https://api.ipify.org?format=json')).ip,
+                async () => (await fetchJson('https://ipwho.is/')).ip,
+                async () => (await fetchJson('https://ipapi.co/json/')).ip
+            ];
+            for (const get of sources) {
+                try {
+                    const ip = await get();
+                    if (ip) return ip;
+                } catch (err) {
+                    console.warn('IP address lookup failed:', err);
+                }
+            }
+            return null;
+        }
+
+        async function loadStoredLocation() {
+            try {
+                return await api('/api/profile/location');
+            } catch (err) {
+                console.warn('Could not read the saved location:', err.message);
+                return null;
+            }
+        }
+
+        async function persistLocation(text, source, ip) {
+            if (!currentUserId) return;
+            try {
+                await api('/api/profile/location', { method: 'PUT', body: { text, source, ip: ip || null } });
+            } catch (err) {
+                console.warn('Could not save the location:', err.message);
+            }
+        }
+
+        // Exact position from the browser -> "Town, County, KE". Throws if it cannot.
+        async function fetchExactLocation() {
+            const position = await getBestPosition();
+            const info = await reverseGeocode(position.coords.latitude, position.coords.longitude);
+            const text = info ? formatLocation(info) : '';
+            if (!text) throw new Error('Could not look up the town');
+            return text;
+        }
+
+        function locationLabel(text, source) {
+            return (source === 'ip' && MARK_IP_LOCATION_AS_APPROX ? '≈ ' : '') + countyOnly(text);
+        }
+
+        // "How to turn location on" depends on the device: mobile browsers have no address-bar shortcut
+        function getLocationHelpText() {
+            const ua = navigator.userAgent || '';
+            const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isAndroid = /Android/i.test(ua);
+
+            if (isIOS) {
+                return 'Location is blocked. Open your phone Settings, go to Privacy & Security, then Location Services, turn it on and allow your browser to use it. Come back here and press the button again.';
+            }
+            if (isAndroid) {
+                return 'Location is blocked. Swipe down and turn on Location, then open your browser menu, go to Settings, then Site settings, then Location, and allow this site. Come back here and press the button again.';
+            }
+            return 'Location is blocked for this site. Click the lock icon in the address bar, set Location to Allow, then press the button again.';
+        }
+
         function showGate() {
             locGate.hidden = false;
             locGateSkip.hidden = !(ALLOW_SKIP || gateSoftFailures >= 2);
