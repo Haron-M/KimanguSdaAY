@@ -1,11 +1,14 @@
 # Verified Ellen G. White references for Ask AI
-# Save this file as knowledge/egw-references.md (next to adventist-beliefs.md and site-content.txt).
+# Save as knowledge/egw-references.md
 #
-# One reference per line, in this exact shape:
-#   Book Title | PAGE.PARAGRAPH | keyword, keyword, keyword | one sentence on what it teaches
+# Format:
+# Book Title | PAGE.PARAGRAPH | keyword, keyword, keyword | one sentence on what it teaches
 #
 # Rules:
-# - Book Title in full, without "The" (Desire of Ages, Steps to Christ, Great Controversy).
-# - PAGE.PARAGRAPH copied from the EGW Writings site or app (the reference code of the paragraph, e.g. DA 234.3 becomes 234.3).
-# - Keywords are what members might ask about (salvation, sabbath, prayer, second coming, health...). The more topics you cover, the more answers get an exact page and paragraph.
-# - Lines starting with # are ignored. Add your lines below this block.
+# - Use the full book title, without "The" at the beginning.
+# - Copy PAGE.PARAGRAPH from the official EGW Writings site or app.
+# - Use practical keywords members may ask about.
+# - Add only references you have checked against the original source.
+# - Lines beginning with # are ignored by the application.
+#
+# Add verified references below.
