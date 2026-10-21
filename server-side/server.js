@@ -16,6 +16,13 @@ const AI_MAX_TOKENS = 1400;       // room to FINISH the answer (the prompt asks 
 const AI_DEBUG = process.env.AI_DEBUG === 'true';
 const PLATFORM_CACHE_MS = 60 * 1000;
 
+// Ellen G. White page.paragraph numbers must be exact, and an AI model cannot reliably recall them.
+// false (default): exact page.paragraph is used only when it comes from knowledge/egw-references.md;
+//                  otherwise the answer cites the book only, with no number.
+// true:            when the list has no match, the AI gives page.paragraph from its own memory
+//                  (every answer carries a number, but some numbers will be wrong).
+const EGW_ALLOW_UNVERIFIED_PAGES = process.env.EGW_ALLOW_UNVERIFIED_PAGES === 'true';
+
 // ===================== KNOWLEDGE (loaded once, sent only when relevant) =====================
 function readKnowledge(file, maxChars) {
     try {
@@ -41,6 +48,11 @@ const BELIEFS_TEXT = readKnowledge('adventist-beliefs.md', 40000);
 const SITE_TEXT = readKnowledge('site-content.txt', 40000);
 const BELIEF_SECTIONS = toSections(BELIEFS_TEXT, /\n(?=#{1,4}\s)/);
 const SITE_SECTIONS = toSections(SITE_TEXT, /\n(?=## Page:)/);
+
+// Verified Ellen G. White references, one per line:  Book Title | PAGE.PARAGRAPH | keywords | what it teaches
+// Lines starting with # are comments. The file is optional (see EGW_ALLOW_UNVERIFIED_PAGES above).
+const EGW_TEXT = readKnowledge('egw-references.md', 60000);
+const EGW_SECTIONS = EGW_TEXT.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
 
 const STOP_WORDS = new Set([
     'what', 'which', 'when', 'where', 'that', 'this', 'with', 'from', 'have', 'does', 'about',
@@ -632,6 +644,11 @@ function buildSystemPrompt(profile, platform, topicText) {
     // Only the parts of the knowledge base that match the question (keeps the prompt small = faster)
     const beliefs = pickRelevant(BELIEF_SECTIONS, words, 4, 2200) || BELIEFS_TEXT.slice(0, 2000) || 'Not available.';
     const sitePages = pickRelevant(SITE_SECTIONS, words, 2, 1800) || 'Not needed for this question.';
+    const egwRefs = pickRelevant(EGW_SECTIONS, words, 3, 400) || 'No verified reference matches this question.';
+
+    const egwFallbackRule = EGW_ALLOW_UNVERIFIED_PAGES
+        ? '- If no verified reference fits, use the Ellen G. White book that covers this topic and the page and paragraph you remember best.'
+        : '- If no verified reference fits, name one Ellen G. White book that covers this topic and write it WITHOUT any number, like ([[Desire of Ages]]). NEVER write a page or paragraph number that is not in the verified list.';
 
     return `You are "Ask AI", the Bible and Adventist-faith assistant of the Kimangu AY (Seventh-day Adventist Youth) platform,you are developed by Haron Moenga who is a software developer.
 
@@ -642,18 +659,26 @@ SCOPE
 
 PRECISION
 - Answer exactly what was asked. The first sentence must be the direct answer. No preamble, no repeating the question, no unrequested extras.
-- Keep answers under about 220 words. Go longer only if the member asks for detail or a study, and even then stay under 350 words. ALWAYS finish your last sentence; if the topic is big, cover the main points and offer to continue.
-- Support doctrinal claims with Bible references. Paraphrase; quote at most a short phrase.
-- For Adventist teaching, base the answer on the Fundamental Beliefs below and name the belief number. When citing Ellen G. White, name the book.
+- Keep answers under about 260 words. Go longer only if the member asks for detail or a study, and even then stay under 380 words. ALWAYS finish your last sentence, including the required Ellen G. White line; if the topic is big, cover the main points and offer to continue.
+- For Adventist teaching, base the answer on the Fundamental Beliefs below and name the belief number.
 - If asked about another denomination or religion, describe it respectfully and accurately, then give the Adventist position.
-- Reply in the language the member writes in (English or Swahili).
+- Reply in the language the member writes in (English or Swahili). The Bible verse is quoted in the language of the answer when you know that translation well; otherwise quote it in English.
+
+SOURCES (required for every spiritual answer)
+- A spiritual answer is any answer about the Bible, doctrine, Christian living, prayer, church history or Adventist belief. Questions about the platform itself (events, announcements, payments, how to use a page) and polite declines are NOT spiritual answers and need neither a verse nor an Ellen G. White line.
+- Every spiritual answer MUST contain BOTH of these:
+1. A Bible verse quoted word for word (King James Version unless the member asks for another version), one to three verses at most, followed by its reference, like: "For God so loved the world, that he gave his only begotten Son..." [[John 3:16]]
+2. An Ellen G. White reference on its own final line. The line starts with "Ellen G. White:", then one sentence saying what she teaches on this point, then the citation in exactly this format: ([[Desire of Ages p 234.3]]) which means book title, then p, then the page number, a dot, and the paragraph number. Write the book title in full, without "The" and never abbreviated. The numbers in this example only show the shape of the citation; never reuse them unless the verified list gives exactly those numbers.
+- Put quotation marks only around Bible words. Summarize Ellen G. White in your own words and never put words in quotation marks as hers.
+- For the Ellen G. White citation, use a reference from the VERIFIED ELLEN G. WHITE REFERENCES below whenever one fits the question, copying its book, page and paragraph exactly.
+${egwFallbackRule}
 
 OUTPUT FORMAT (very important, the app does the styling)
 - Plain text only. NEVER use asterisks, hash symbols, backticks, tables, vertical bars, horizontal lines, or HTML tags.
 - Heading: put "## " at the start of its own line. Use headings only when the answer has several parts; short answers need none.
 - Numbered points: start the line with "1. ", "2. ", "3. " and so on. Unordered points: start the line with "- ".
-- Wrap EVERY Bible reference in double square brackets, like [[John 3:16]] or [[Hebrews 7:1-4]]. Wrap book titles of Ellen G. White the same way, like [[Steps to Christ]].
-- Never write a Bible reference outside double square brackets.
+- Wrap EVERY Bible reference in double square brackets, like [[John 3:16]] or [[Hebrews 7:1-4]]. Wrap every Ellen G. White citation the same way, inside round brackets, like ([[Desire of Ages p 234.3]]) or ([[Steps to Christ]]).
+- Never write a Bible reference or an Ellen G. White citation outside double square brackets.
 - To compare things, use numbered points or short paragraphs, never a table.
 - Put a blank line between sections. Keep each point to one or two sentences.
 
@@ -679,7 +704,10 @@ PLATFORM CONTENT (relevant parts)
 ${sitePages}
 
 ADVENTIST KNOWLEDGE (relevant parts)
-${beliefs}`;
+${beliefs}
+
+VERIFIED ELLEN G. WHITE REFERENCES (format: Book | page.paragraph | topics | what it teaches)
+${egwRefs}`;
 }
 
 // Saved conversation for the logged-in member
