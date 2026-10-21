@@ -675,19 +675,32 @@ app.post('/api/ai/chat', authenticateUser, async (req, res) => {
 
         let reply = '';
         let finishReason = null;
+        let firstTokenLogged = false;
 
         for await (const chunk of stream) {
-            if (!globalThis.__first) { globalThis.__first = true; console.log('3 first chunk ms:', Date.now() - t0); }
             const choice = chunk.choices?.[0];
             const delta = choice?.delta?.content;
+
             if (delta) {
+                if (!firstTokenLogged) {
+                    firstTokenLogged = true;
+                    console.log(
+                        '[Ask AI] First token after request:',
+                        Date.now() - t0,
+                        'ms'
+                    );
+                }
+
                 reply += delta;
                 res.write(delta);
             }
-            if (choice?.finish_reason) finishReason = choice.finish_reason;
-            globalThis.__first = false;
-            console.log('4 finished ms:', Date.now() - t0);
+
+            if (choice?.finish_reason) {
+                finishReason = choice.finish_reason;
+            }
         }
+
+        console.log('[Ask AI] Total generation time:', Date.now() - t0, 'ms');
 
         // If the model ran out of room, say so instead of silently stopping
         if (finishReason === 'length') {

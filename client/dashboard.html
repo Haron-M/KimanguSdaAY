@@ -1902,26 +1902,50 @@
             aiFab.classList.remove('hidden');
         }
 
-        // Streams the reply from the server (api() only handles JSON, so this uses fetch directly)
+
+        // Streams the reply from the server
         async function aiStreamReply(message, retry = true) {
+            const startedAt = performance.now();
+
             const res = await fetch(`${API_BASE}/api/ai/chat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Accept': 'text/plain'
+                },
                 body: JSON.stringify({ message })
             });
 
+            console.log(
+                `[Ask AI] HTTP response headers received in ${Math.round(performance.now() - startedAt)
+                } ms`
+            );
+
             if (res.status === 401) {
-                if (retry && await refreshSession()) return aiStreamReply(message, false);
+                if (retry && await refreshSession()) {
+                    return aiStreamReply(message, false);
+                }
+
                 clearSession();
                 goToLogin();
                 throw new Error('Session expired');
             }
+
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || 'The assistant is unavailable right now.');
+                throw new Error(
+                    data.error || 'The assistant is unavailable right now.'
+                );
             }
+
+            if (!res.body) {
+                throw new Error('Streaming is not supported by this response.');
+            }
+
             return res;
         }
+
 
         async function aiSendMessage() {
             const text = aiInput.value.trim();
@@ -1940,12 +1964,15 @@
 
             try {
                 const res = await aiStreamReply(text);
+
                 const reader = res.body.getReader();
                 const decoder = new TextDecoder();
+
                 let reply = '';
+                let firstChunk = true;
+                let firstChunkTimer = null;
                 let pending = false;
 
-                // Draw at most once per screen frame so long answers stay smooth
                 const draw = () => {
                     pending = false;
                     aiRender(bot, reply);
@@ -1954,16 +1981,37 @@
 
                 while (true) {
                     const { done, value } = await reader.read();
+
                     if (done) break;
+
+                    if (firstChunk) {
+                        firstChunk = false;
+
+                        console.log(
+                            `[Ask AI] First response chunk received ${Math.round(performance.now())
+                            } ms after page navigation timing origin`
+                        );
+
+                        bot.classList.remove('ai-typing');
+                    }
+
                     reply += decoder.decode(value, { stream: true });
+
                     if (!pending) {
                         pending = true;
                         requestAnimationFrame(draw);
                     }
                 }
-                reply += decoder.decode();   // flush any last bytes
+
+                reply += decoder.decode();
+
+                if (pending) {
+                    cancelAnimationFrame(firstChunkTimer);
+                }
+
                 aiRender(bot, reply);
                 aiMessages.scrollTop = aiMessages.scrollHeight;
+
 
                 if (!reply.trim()) {
                     bot.classList.remove('ai-rich');
