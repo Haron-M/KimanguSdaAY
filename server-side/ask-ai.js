@@ -176,6 +176,12 @@ function isSpiritualQuestion(text) {
     );
 }
 
+function isAboutAssistant(text) {
+    return /\b(who (?:made|created|developed|built|programmed) you|are you (?:an? )?(?:ai|human|bot|robot|real)|what can you do|what are you|your name|how many .{0,40}\b(?:books?|verses?|writings?)\b.{0,30}\byou\b|do you (?:understand|know|read|remember)|how (?:much|many) do you know)\b/i.test(
+        String(text || '')
+    );
+}
+
 function isPlatformQuestion(text) {
     return /\b(upcoming events?|my schedules?|announcements?|treasury|transaction history|report analysis|media center|resources page|how (?:do|can) i (?:use|log ?in|sign ?up|pay|make a payment)|how to (?:use|log ?in|pay)|this platform|this app|this website|my account|my contributions?)\b/i.test(
         String(text || '')
@@ -491,11 +497,50 @@ function dedupeBibleRefs(line, state) {
 
 // ===================== STREAM PROCESSOR =====================
 // Works line by line so the answer still streams, but every finished line is
-// cleaned before the member sees it.
+// cleaned and laid out before the member sees it. The chat window only breaks
+// paragraphs on blank lines, so spacing is rebuilt here no matter how the
+// model wrote it:
+//   - every paragraph, heading and label sits in its own block
+//   - numbered / bullet items stay together as one clean list block
+//   - "Supporting Scriptures:" and "Ellen G. White:" labels are bold
+
+const SCRIPTURE_LABEL = '(?:Supporting Scriptures|Maandiko ya kuunga mkono)';
+
+// Splits text the model ran together on one line:
+// "... service. Supporting Scriptures: 1. [[John 3:16]] ... 2. [[...]] ... Ellen G. White: ..."
+function splitInline(rawLine) {
+    return rawLine
+        .replace(new RegExp('\\s+(?=\\**' + SCRIPTURE_LABEL + ':)', 'g'), '\n')
+        .replace(new RegExp('(' + SCRIPTURE_LABEL + ':\\**)[ \\t]+(?=\\S)', 'g'), '$1\n')
+        .replace(/\s+(?=\d+\.\s+\[\[)/g, '\n')
+        .replace(/\s+(?=\**Ellen G\. White:)/g, '\n')
+        .split('\n');
+}
+
+function lineKind(line) {
+    if (/^\s*(?:\d+|[ivx]{1,5})[.)]\s+\S/i.test(line)) {
+        return 'ol';
+    }
+
+    if (/^\s*(?:[-•]|\*(?!\*))\s*\S/.test(line) && /^\s*(?:[-•*])\s+\S/.test(line)) {
+        return 'ul';
+    }
+
+    return 'text';
+}
+
+function boldLabels(line) {
+    return line
+        .replace(
+            /^\s*(?:\*\*)?(Supporting Scriptures:|Maandiko ya kuunga mkono:)(?:\*\*)?/,
+            '**$1**'
+        )
+        .replace(/^\s*(?:\*\*)?(Ellen G\. White:)(?:\*\*)?/, '**$1**');
+}
 
 function createReplyProcessor() {
     let buffer = '';
-    const state = { seen: new Set(), lastBlank: true };
+    const state = { seen: new Set(), prevKind: 'none' };
 
     function processLine(rawLine) {
         let line = rawLine.replace(/\s+$/, '');
@@ -503,13 +548,9 @@ function createReplyProcessor() {
         // The model sometimes uses "> " blockquotes. Not allowed.
         line = line.replace(/^\s*>\s?/, '');
 
+        // Blank lines from the model are ignored; spacing is rebuilt below.
         if (!line.trim()) {
-            if (state.lastBlank) {
-                return null;
-            }
-
-            state.lastBlank = true;
-            return '';
+            return null;
         }
 
         line = fixUnwrappedEgw(line);
@@ -520,9 +561,38 @@ function createReplyProcessor() {
         }
 
         line = verifyEgwCitations(line);
-        state.lastBlank = false;
+        line = boldLabels(line);
 
-        return line;
+        const indented = /^\s{2,}\S/.test(line);
+        const continuation =
+            indented &&
+            (state.prevKind === 'ol' || state.prevKind === 'ul') &&
+            lineKind(line) === 'text';
+
+        const kind = continuation ? state.prevKind : lineKind(line);
+
+        const sameList =
+            state.prevKind === kind && (kind === 'ol' || kind === 'ul');
+
+        const gap = state.prevKind !== 'none' && !sameList ? '\n' : '';
+
+        state.prevKind = kind;
+
+        return gap + line.trim();
+    }
+
+    function handleRaw(raw) {
+        let out = '';
+
+        for (const part of splitInline(raw)) {
+            const processed = processLine(part);
+
+            if (processed !== null) {
+                out += processed + '\n';
+            }
+        }
+
+        return out;
     }
 
     return {
@@ -534,12 +604,7 @@ function createReplyProcessor() {
             while ((index = buffer.indexOf('\n')) >= 0) {
                 const line = buffer.slice(0, index);
                 buffer = buffer.slice(index + 1);
-
-                const processed = processLine(line);
-
-                if (processed !== null) {
-                    out += processed + '\n';
-                }
+                out += handleRaw(line);
             }
 
             return out;
@@ -548,13 +613,7 @@ function createReplyProcessor() {
         flush() {
             const line = buffer;
             buffer = '';
-
-            if (!line) {
-                return '';
-            }
-
-            const processed = processLine(line);
-            return processed === null ? '' : processed;
+            return line ? handleRaw(line) : '';
         }
     };
 }
@@ -944,13 +1003,31 @@ PRECISION
 - Reply in the language the member uses (English or Swahili).
 
 ANSWER STRUCTURE FOR SPIRITUAL QUESTIONS (follow this order exactly)
-1. Direct answer: 2 to 4 sentences in your own words answering the exact question. If the question has several parts, use "## " headings or 2 to 4 short numbered points.
-2. A line "Supporting Scriptures:" followed by at least 2 and at most 4 DIFFERENT texts, as numbered points. Each point is the reference in double square brackets, then the verse quoted word for word (King James Version unless the member asks for another translation).
-   Example:
-   Supporting Scriptures:
-   1. [[Philippians 4:6]] "Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God."
-   2. [[Matthew 7:7]] "Ask, and it shall be given you; seek, and ye shall find; knock, and it shall be opened unto you."
-3. One final line that starts with "Ellen G. White:" (see the rules below).
+1. Direct answer: 2 to 4 short sentences in your own words answering the exact question.
+2. Explanation only if needed, as short paragraphs or a numbered list (see FORMATTING).
+3. A line "Supporting Scriptures:" on its own, then at least 2 and at most 4 DIFFERENT texts as a numbered list. Each item is the reference in double square brackets, then the verse quoted word for word (King James Version unless the member asks for another translation).
+4. One final line that starts with "Ellen G. White:" (see the rules below).
+
+Example (blocks are separated by a blank line; list items sit directly under each other):
+
+**Prayer** is talking with God as with a friend. It is how we share our needs, give thanks, and listen for His guidance.
+
+Supporting Scriptures:
+
+1. [[Philippians 4:6]] "Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God."
+2. [[Matthew 7:7]] "Ask, and it shall be given you; seek, and ye shall find; knock, and it shall be opened unto you."
+
+Ellen G. White: (her teaching and citation, following the rules below)
+
+FORMATTING (the app displays light markdown)
+- Make the 3 to 6 most important words or phrases bold with **double asterisks** (key terms, names, the core of the answer). Never bold whole sentences.
+- Keep every paragraph to 1 to 3 short sentences. Never write one long block or a run-on sentence; split it into short paragraphs.
+- Whenever you give 3 or more parallel items (reasons, steps, types, names, examples, books), or the member asks for a list, use a numbered list "1. ", "2. ", "3. ", each item with a bold lead-in followed by one sentence. Use roman numerals ("I.", "II.") only if the member asks for them.
+- Use "- " bullets only for short unordered notes.
+- Put a blank line between paragraphs, headings, and lists. List items sit on consecutive lines with no blank line between them.
+- Use "## " headings only when an answer has several distinct parts.
+- No tables, vertical bars, horizontal lines, or HTML.
+- Swahili answers use the labels "Maandiko ya kuunga mkono:" and "Ellen G. White:".
 
 BIBLE REFERENCE RULES
 - Write each Bible reference ONCE in the whole answer, only in the Supporting Scriptures list, wrapped like [[John 3:16]].
@@ -966,14 +1043,9 @@ ELLEN G. WHITE RULES
 - Online search results are only hints. A search result does not prove a page or paragraph number.
 - If you cannot identify a suitable book with confidence, write: Ellen G. White: I could not verify a suitable reference for this question.
 
-OUTPUT FORMAT
-- Plain text. No tables, vertical bars, horizontal lines, or HTML.
-- Numbered points start with "1. ", "2. ". Unordered points start with "- ". Put a blank line between sections.
-- Keep each point to one or two sentences.
-- Swahili answers use the labels "Maandiko ya kuunga mkono:" and "Ellen G. White:".
-
 NO VERSES WHEN NOT NEEDED
-Questions about platform events, announcements, payments, page navigation, and polite refusals of unrelated questions get a short plain answer with NO Bible verse and NO Ellen G. White line.
+Questions about platform events, announcements, payments, page navigation, about you yourself (who made you, what you know or can do, how many books you understand), and polite refusals of unrelated questions get a short plain answer with NO Bible verse, NO Supporting Scriptures list, and NO Ellen G. White line.
+About yourself, be honest: you are an AI assistant, you have not read every Ellen G. White book, and you rely on general knowledge plus a limited list of verified references. Never claim to have studied a set number of books.
 
 HONESTY AND PRIVACY
 - If information is missing or uncertain, say so.
@@ -1013,7 +1085,7 @@ FINAL CHECK BEFORE YOU ANSWER
 - Is the first sentence a direct answer to the LATEST question, not an old one?
 - Spiritual answer: explanation, then Supporting Scriptures with at least 2 different verses (each reference written once, verse text included), then the Ellen G. White line.
 - No paragraph number unless it came from a verified entry above.
-- Plain text only.
+- Short paragraphs, key words in **bold**, a blank line between blocks.
 `;
 }
 
@@ -1050,7 +1122,7 @@ function compactHistoryItem(item) {
 const REPLY_REMINDER =
     '\n\n(Instruction, not part of the question: answer only the question above, in the same language. ' +
     'If it is a spiritual question: direct explanation first, then "Supporting Scriptures:" with at least 2 different verses each written once with its text, ' +
-    'then one final "Ellen G. White:" line. Use a paragraph number only if it is in the verified entries. Do not repeat any earlier answer.)';
+    'then one final "Ellen G. White:" line. Use a paragraph number only if it is in the verified entries. Use short paragraphs, bold the key words, and put a blank line between blocks. Do not repeat any earlier answer.)';
 
 // ===================== ROUTES =====================
 
@@ -1271,10 +1343,15 @@ module.exports = function registerAskAI(app, { supabase, authenticateUser }) {
 
             const spiritual = isSpiritualQuestion(topicText);
 
-            const questionHint =
-                !spiritual && isPlatformQuestion(topicText)
-                    ? '\nQUESTION TYPE\nThis is a platform question. Answer it from the platform information below only. Do NOT include Bible verses, a Supporting Scriptures list, or an Ellen G. White line.\n'
-                    : '';
+            let questionHint = '';
+
+            if (isAboutAssistant(message)) {
+                questionHint =
+                    '\nQUESTION TYPE\nThis question is about you or your abilities. Answer honestly in 1 to 3 short sentences. Do NOT include Bible verses, a Supporting Scriptures list, or an Ellen G. White line.\n';
+            } else if (!spiritual && isPlatformQuestion(topicText)) {
+                questionHint =
+                    '\nQUESTION TYPE\nThis is a platform question. Answer it from the platform information below only. Do NOT include Bible verses, a Supporting Scriptures list, or an Ellen G. White line.\n';
+            }
 
             const onlineEGWResults = await searchEGWOnline(topicText);
 
@@ -1421,6 +1498,7 @@ module.exports._test = {
     getDateReply,
     getGreetingReply,
     isFollowUp,
+    isAboutAssistant,
     keywords,
     findRelevantEGWEntries,
     EGW_ENTRIES
