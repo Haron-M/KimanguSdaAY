@@ -47,7 +47,9 @@ function authClient() {
 
 const ACCESS_CODES = {
     '412367': 'admin',
-    '432467': 'regular'
+    '432467': 'regular',
+    '432566': 'tresury',
+    '432664': 'superuser'
 };
 
 const INCOME_TYPES = ['deposit', 'income', 'revenue'];

@@ -445,6 +445,10 @@
             overflow: hidden;
         }
 
+        .sidebar [hidden] {
+            display: none !important;
+        }
+
         .sidebar-nav {
             flex: 1;
             overflow-y: auto;
@@ -1883,7 +1887,7 @@
                     <i class="fa-solid fa-user"></i> Accounts
                 </a>
 
-                <p class="nav-group-label">Management</p>
+                <p class="nav-group-label" id="managementLabel" hidden>Management</p>
                 <div class="admin-block" id="adminNavGroup">
                     <button type="button" class="sidebar-link admin-toggle" id="adminToggle">
                         <i class="fa-solid fa-shield-halved"></i> Admin Panel
@@ -1903,14 +1907,12 @@
                         <a href="admin/resources.html" class="sidebar-link sub-link"
                             data-page="pages/admin/resources.html" data-title="Resources"
                             data-desc="Upload lessons, guides and documents for members.">Upload Resources</a>
-                        <a href="admin/admin_materials.html" class="sidebar-link sub-link"
-                            data-page="pages/admin/admin_materials.html" data-title="Admin Materials"
-                            data-desc="Manage administrative materials and resources.">Admin Materials</a>
+
                     </div>
                 </div>
 
                 <!-- Treasury Desk accordion dropdown -->
-                <div class="sidebar-dropdown" id="treasuryDropdown">
+                <div class="sidebar-dropdown" id="treasuryDropdown" hidden>
                     <button type="button" class="sidebar-dropdown-btn" id="treasuryBtn">
                         <div class="dropdown-title">
                             <i class="fa-solid fa-coins"></i>
@@ -1933,6 +1935,11 @@
                             data-desc="Review treasury reports and analysis.">Report Analysis</a>
                     </div>
                 </div>
+                <a href="admin_material.html" class="sidebar-link" id="adminMaterialLink"
+                    data-page="pages/admin_material.html" data-title="Admin Material"
+                    data-desc="Admin materials and tools." hidden>
+                    <i class="fa-solid fa-folder-open"></i> Admin Material
+                </a>
 
                 <p class="nav-group-label">Session</p>
                 <a href="#" class="sidebar-link logout-link" id="logoutLink">
@@ -3635,6 +3642,44 @@
             paintAvatar(document.getElementById('apPreview'), avatarUrl, initials);
             if (apSave) apSave.textContent = avatarUrl ? 'Change' : 'Upload';
         }
+        // ===================== ROLE-BASED MENU =====================
+        let currentRole = 'regular';
+
+        function normalizeRole(value) {
+            const r = String(value || 'regular').toLowerCase().replace(/[\s_-]/g, '');
+            if (r === 'superuser') return 'superuser';
+            if (r === 'admin') return 'admin';
+            if (r === 'treasury') return 'treasury';
+            return 'regular';
+        }
+
+        function roleCan(role) {
+            return {
+                admin: role === 'admin' || role === 'superuser',
+                treasury: role === 'treasury' || role === 'superuser',
+                material: role === 'superuser'
+            };
+        }
+
+        function applyRoleMenu(accountType) {
+            currentRole = normalizeRole(accountType);
+            const can = roleCan(currentRole);
+
+            document.getElementById('adminNavGroup').hidden = !can.admin;
+            document.getElementById('treasuryDropdown').hidden = !can.treasury;
+            document.getElementById('adminMaterialLink').hidden = !can.material;
+            document.getElementById('managementLabel').hidden = !(can.admin || can.treasury || can.material);
+        }
+
+        // Blocks a page the current role should not open
+        function canOpenPage(page) {
+            const p = String(page || '').replace(/^\//, '').replace(/^pages\//, '');
+            const can = roleCan(currentRole);
+            if (p.startsWith('admin_material')) return can.material;
+            if (p.startsWith('admin/')) return can.admin;
+            if (['treasury.html', 'transactions.html', 'report-analysis.html'].includes(p)) return can.treasury;
+            return true;
+        }
 
         async function loadUserProfile() {
             let profile;
@@ -3648,6 +3693,7 @@
             }
 
             currentUserId = profile.id;
+            applyRoleMenu(profile.account_type);
 
             const fullName = profile.full_name || 'Member';
             const phone = profile.phone && profile.phone !== 'N/A' ? profile.phone : '';
@@ -3788,6 +3834,7 @@
         document.querySelectorAll('.sidebar-nav a.sidebar-link[data-page]').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
+                if (!canOpenPage(link.getAttribute('data-page'))) return;
                 contentFrame.src = link.getAttribute('data-page');
 
                 document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
@@ -3845,6 +3892,7 @@
 
         // Navigation handler (updates iframe and moves the active highlight)
         function navigateToSidebarPage(targetPage) {
+            if (!canOpenPage(targetPage)) return;
             const frame = document.getElementById('contentFrame');
             if (!frame) return;
 
