@@ -288,7 +288,7 @@ app.get('/api/profile', authenticateUser, async (req, res) => {
     try {
         const { data: profile, error } = await supabase
             .from('profiles')
-            .select('full_name, phone, category, avatar_url')
+            .select('full_name, phone, category, avatar_url,account_type')
             .eq('id', req.user.id)
             .maybeSingle();
 
@@ -303,7 +303,8 @@ app.get('/api/profile', authenticateUser, async (req, res) => {
                 (req.user.email || '').split('@')[0],
             phone: profile?.phone || 'N/A',
             category: profile?.category || 'N/A',
-            avatar_url: profile?.avatar_url || null
+            avatar_url: profile?.avatar_url || null,
+            account_type: profile.account_type
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
