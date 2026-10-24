@@ -174,6 +174,7 @@ app.post('/api/auth/signup', async (req, res) => {
             : null;
 
         if (userId) {
+            console.log('account_type being inserted:', JSON.stringify(accountType));
             const { error: profileError } = await supabase
                 .from('profiles')
                 .insert({
