@@ -200,7 +200,37 @@ app.post('/api/auth/signup', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+app.post('/api/admin/reset-password', requireAuth, async (req, res) => {
+    try {
+        // who is asking?
+        const { data: me } = await supabaseAdmin
+            .from('profiles').select('account_type').eq('id', req.user.id).single();
+        if (!me || !['admin', 'superuser'].includes(me.account_type)) {
+            return res.status(403).json({ error: 'Not allowed.' });
+        }
 
+        const phone = String(req.body.phone || '').trim();
+        const newPassword = String(req.body.newPassword || '');
+        if (!/^\d{10}$/.test(phone)) return res.status(400).json({ error: 'Phone must be 10 digits.' });
+        if (newPassword.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+
+        const { data: target } = await supabaseAdmin
+            .from('profiles').select('id, account_type').eq('phone', phone).single();
+        if (!target) return res.status(404).json({ error: 'No member with that phone number.' });
+
+        // only a superuser may reset an admin, treasury or superuser account
+        if (target.account_type !== 'regular' && me.account_type !== 'superuser') {
+            return res.status(403).json({ error: 'Only a superuser can reset this account.' });
+        }
+
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(target.id, { password: newPassword });
+        if (error) return res.status(400).json({ error: error.message });
+
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Could not reset the password.' });
+    }
+});
 // 3. User login
 app.post('/api/auth/login', async (req, res) => {
     try {

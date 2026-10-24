@@ -1940,6 +1940,11 @@
                     data-desc="Admin materials and tools." hidden>
                     <i class="fa-solid fa-folder-open"></i> Admin Material
                 </a>
+                <a href="reset_password.html" class="sidebar-link" id="resetPasswordLink"
+                    data-page="pages/reset_password.html" data-title="Reset Password"
+                    data-desc="Reset a member's forgotten password." hidden>
+                    <i class="fa-solid fa-key"></i> Reset Password
+                </a>
 
                 <p class="nav-group-label">Session</p>
                 <a href="#" class="sidebar-link logout-link" id="logoutLink">
@@ -3664,7 +3669,7 @@
         function applyRoleMenu(accountType) {
             currentRole = normalizeRole(accountType);
             const can = roleCan(currentRole);
-
+            document.getElementById('resetPasswordLink').hidden = !can.material;
             document.getElementById('adminNavGroup').hidden = !can.admin;
             document.getElementById('treasuryDropdown').hidden = !can.treasury;
             document.getElementById('adminMaterialLink').hidden = !can.material;
@@ -3676,6 +3681,7 @@
             const p = String(page || '').replace(/^\//, '').replace(/^pages\//, '');
             const can = roleCan(currentRole);
             if (p.startsWith('admin_material')) return can.material;
+            if (p.startsWith('reset_password')) return can.material;
             if (p.startsWith('admin/')) return can.admin;
             if (['treasury.html', 'transactions.html', 'report-analysis.html'].includes(p)) return can.treasury;
             return true;
