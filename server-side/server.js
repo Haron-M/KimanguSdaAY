@@ -48,7 +48,7 @@ function authClient() {
 const ACCESS_CODES = {
     '412367': 'admin',
     '432467': 'regular',
-    '432566': 'tresury',
+    '432566': 'treasury',
     '432664': 'superuser'
 };
 
