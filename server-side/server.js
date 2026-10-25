@@ -146,6 +146,36 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         res.status(500).json({ error: 'Could not send your request. Please try again.' });
     }
 });
+// Superuser: all website visitors and feedback
+app.get('/api/admin/guest-feedback', authenticateUser, requireSuperuser, async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('profiles').select('visitor, feedback');
+        if (error) throw error;
+
+        // each column holds a list; merge the lists and drop duplicates
+        const collect = (column) => {
+            const seen = new Set();
+            const out = [];
+            (data || []).forEach((row) => {
+                let list = row[column];
+                if (typeof list === 'string') {
+                    try { list = JSON.parse(list); } catch (e) { list = []; }
+                }
+                (Array.isArray(list) ? list : []).forEach((item) => {
+                    const key = item && item.id ? String(item.id) : JSON.stringify(item);
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    out.push(item);
+                });
+            });
+            return out;
+        };
+
+        res.json({ visitors: collect('visitor'), feedback: collect('feedback') });
+    } catch (err) {
+        res.status(500).json({ error: 'Could not load visitors and feedback.' });
+    }
+});
 // ===================== AUTHENTICATION ENDPOINTS =====================
 
 // 1. Verify access code

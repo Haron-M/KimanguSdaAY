@@ -1946,6 +1946,11 @@
                     data-desc="Reset a member's forgotten password." hidden>
                     <i class="fa-solid fa-key"></i> Reset Password
                 </a>
+                <a href="feedback_guest.html" class="sidebar-link" id="guestFeedbackLink"
+                    data-page="pages/feedback_guest.html" data-title="Guest Feedback"
+                    data-desc="Visitor messages and website feedback." hidden>
+                    <i class="fa-solid fa-comments"></i> Guest Feedback
+                </a>
 
                 <p class="nav-group-label">Session</p>
                 <a href="#" class="sidebar-link logout-link" id="logoutLink">
@@ -3671,6 +3676,7 @@
         function applyRoleMenu(accountType) {
             currentRole = normalizeRole(accountType);
             const can = roleCan(currentRole);
+            document.getElementById('guestFeedbackLink').hidden = !can.material;
             document.getElementById('resetPasswordLink').hidden = !can.material;
             document.getElementById('adminNavGroup').hidden = !can.admin;
             document.getElementById('treasuryDropdown').hidden = !can.treasury;
@@ -3682,6 +3688,7 @@
         function canOpenPage(page) {
             const p = String(page || '').replace(/^\//, '').replace(/^pages\//, '');
             const can = roleCan(currentRole);
+            if (p.startsWith('feedback_guest')) return can.material;
             if (p.startsWith('admin_material')) return can.material;
             if (p.startsWith('reset_password')) return can.material;
             if (p.startsWith('admin/')) return can.admin;

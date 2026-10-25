@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Guest Feedback | Kimangu AY</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --navy: #0a192f;
+            --gold: #f59e0b;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --gray: #64748b;
+            --line: #e2e8f0;
+            --danger: #dc2626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--navy);
+            background: var(--off-white);
+            line-height: 1.5;
+            padding: 1rem 1.5rem;
+        }
+
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .lead {
+            color: var(--gray);
+            font-size: 0.88rem;
+            max-width: 62ch;
+        }
+
+        .icon-btn {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--line);
+            background: var(--white);
+            color: var(--gray);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .icon-btn:hover {
+            color: var(--navy);
+            border-color: var(--gold);
+        }
+
+        .icon-btn:focus-visible,
+        .tab:focus-visible,
+        .more:focus-visible,
+        summary:focus-visible {
+            outline: 3px solid rgba(245, 158, 11, 0.5);
+            outline-offset: 2px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .tabs {
+            display: inline-flex;
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .tab {
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--gray);
+            padding: 0.5rem 0.9rem;
+            border-radius: 9px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab[aria-selected="true"] {
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .count {
+            background: rgba(245, 158, 11, 0.2);
+            color: inherit;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 0.05rem 0.55rem;
+        }
+
+        .tab[aria-selected="true"] .count {
+            background: var(--gold);
+            color: var(--navy);
+        }
+
+        .search {
+            position: relative;
+            flex: 1 1 240px;
+            max-width: 340px;
+        }
+
+        .search i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+
+        .search input {
+            width: 100%;
+            padding: 0.6rem 0.9rem 0.6rem 2.2rem;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--white);
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--navy);
+        }
+
+        .search input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .status {
+            color: var(--gray);
+            font-size: 0.9rem;
+            padding: 1.5rem 0;
+            text-align: center;
+        }
+
+        .status.error {
+            color: var(--danger);
+        }
+
+        .entries {
+            list-style: none;
+            display: grid;
+            gap: 0.8rem;
+        }
+
+        .entry {
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 1rem 1.1rem;
+            box-shadow: 0 4px 15px rgba(10, 25, 47, 0.05);
+        }
+
+        .entry-top {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: var(--navy);
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .who {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .who strong {
+            display: block;
+            font-size: 0.95rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .who span {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--gray);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .when {
+            font-size: 0.78rem;
+            color: var(--gray);
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .chip {
+            display: inline-block;
+            margin-top: 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #b45309;
+            border: 1px solid #fcd34d;
+            background: #fffbeb;
+            border-radius: 999px;
+            padding: 0.15rem 0.7rem;
+        }
+
+        .msg {
+            margin-top: 0.7rem;
+            font-size: 0.92rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .msg.empty {
+            color: var(--gray);
+            font-style: italic;
+        }
+
+        details {
+            margin-top: 0.8rem;
+            font-size: 0.82rem;
+        }
+
+        summary {
+            cursor: pointer;
+            color: var(--gray);
+            font-weight: 600;
+            width: fit-content;
+        }
+
+        summary:hover {
+            color: var(--navy);
+        }
+
+        dl {
+            display: grid;
+            grid-template-columns: minmax(90px, auto) 1fr;
+            gap: 0.3rem 1rem;
+            margin-top: 0.6rem;
+            padding: 0.7rem 0.9rem;
+            background: var(--off-white);
+            border-radius: 10px;
+        }
+
+        dt {
+            color: var(--gray);
+        }
+
+        dd {
+            word-break: break-word;
+        }
+
+        .more {
+            display: block;
+            margin: 1.2rem auto 0;
+            border: 1.5px solid var(--navy);
+            background: var(--white);
+            color: var(--navy);
+            border-radius: 10px;
+            padding: 0.6rem 1.2rem;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .more:hover {
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .denied {
+            display: none;
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--gray);
+        }
+
+        .denied i {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 0.8rem;
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 1rem;
+            }
+
+            .when {
+                display: none;
+            }
+
+            .search {
+                max-width: none;
+            }
+
+            .search input {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page" id="page">
+        <header class="head">
+            <div>
+                <h1>Guest feedback</h1>
+                <p class="lead">Messages from website visitors and feedback left in the chat box.</p>
+            </div>
+            <button type="button" class="icon-btn" id="refreshBtn" aria-label="Refresh" title="Refresh">
+                <i class="fa-solid fa-rotate"></i>
+            </button>
+        </header>
+
+        <div class="toolbar">
+            <div class="tabs" role="tablist">
+                <button type="button" class="tab" role="tab" id="tabVisitors" aria-selected="true">
+                    Visitors <span class="count" id="cntVisitors">0</span>
+                </button>
+                <button type="button" class="tab" role="tab" id="tabFeedback" aria-selected="false">
+                    Feedback <span class="count" id="cntFeedback">0</span>
+                </button>
+            </div>
+            <label class="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search" id="search" placeholder="Search name, email or message" autocomplete="off">
+            </label>
+        </div>
+
+        <p class="status" id="status">Loading...</p>
+        <ul class="entries" id="entries"></ul>
+        <button type="button" class="more" id="moreBtn" hidden>Show more</button>
+    </main>
+
+    <div class="denied" id="denied">
+        <i class="fa-solid fa-lock"></i>
+        <p>Only a superuser can open this page.</p>
+    </div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+        const PAGE_SIZE = 25;
+        const $ = (id) => document.getElementById(id);
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        window.scrollTo(0, 0);
+
+        // Field names the contact form and the feedback chat might use. Anything else
+        // still shows up under "All details".
+        const NAME_KEYS = ['full_name', 'fullName', 'name', 'visitor_name', 'username'];
+        const EMAIL_KEYS = ['email', 'email_address', 'emailAddress'];
+        const MESSAGE_KEYS = ['message', 'prayer_request', 'request', 'feedback', 'comment', 'comments', 'text', 'content', 'review', 'suggestion', 'details'];
+        const TYPE_KEYS = ['type', 'category', 'kind', 'topic', 'feedback_type'];
+        const DATE_KEYS = ['created_at', 'createdAt', 'date', 'timestamp', 'submitted_at', 'time'];
+
+        let data = { visitors: [], feedback: [] };
+        let tab = 'visitors';
+        let shown = PAGE_SIZE;
+        let blocked = false;
+
+        // ---------- Access check (the server still enforces it) ----------
+        try {
+            const role = window.parent !== window ? window.parent.eval('currentRole') : null;
+            if (role && role !== 'superuser') {
+                blocked = true;
+                $('page').style.display = 'none';
+                $('denied').style.display = 'block';
+            }
+        } catch (e) { /* opened on its own: the server decides */ }
+
+        // ---------- Server call (reuses the dashboard's api() inside the iframe) ----------
+        async function getFromServer(path) {
+            const parentApi = window.parent !== window && window.parent.api;
+            if (typeof parentApi === 'function') return parentApi(path, { method: 'GET' });
+
+            const res = await fetch(API_BASE + path, {
+                headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+            });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(body.error || 'Request failed (' + res.status + ')');
+            return body;
+        }
+
+        // ---------- Helpers ----------
+        function pick(obj, keys) {
+            for (const key of keys) {
+                const value = obj[key];
+                if (value !== undefined && value !== null && String(value).trim() !== '') return { key, value };
+            }
+            return null;
+        }
+
+        function toObject(item) {
+            if (item && typeof item === 'object' && !Array.isArray(item)) return item;
+            return { message: String(item ?? '') };
+        }
+
+        function entryDate(obj) {
+            const found = pick(obj, DATE_KEYS);
+            if (!found) return null;
+            const d = new Date(found.value);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function formatDate(d) {
+            return d ? d.toLocaleString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+        }
+
+        function initials(text) {
+            const parts = String(text || '?').trim().split(/\s+/);
+            return ((parts[0][0] || '?') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+        }
+
+        function prepare(list) {
+            const rows = (Array.isArray(list) ? list : []).map(toObject);
+            const dated = rows.some((r) => entryDate(r));
+            if (dated) {
+                return rows.slice().sort((a, b) => (entryDate(b) || 0) - (entryDate(a) || 0));
+            }
+            return rows.slice().reverse();   // no dates: assume the newest was saved last
+        }
+
+        // ---------- Rendering ----------
+        function currentRows() {
+            const q = $('search').value.trim().toLowerCase();
+            const rows = data[tab];
+            if (!q) return rows;
+            return rows.filter((r) => JSON.stringify(r).toLowerCase().includes(q));
+        }
+
+        function buildEntry(obj) {
+            const name = pick(obj, NAME_KEYS);
+            const email = pick(obj, EMAIL_KEYS);
+            const message = pick(obj, MESSAGE_KEYS);
+            const type = pick(obj, TYPE_KEYS);
+            const date = entryDate(obj);
+            const used = new Set([name, email, message, type].filter(Boolean).map((f) => f.key));
+            const dateField = pick(obj, DATE_KEYS);
+            if (dateField) used.add(dateField.key);
+
+            const li = document.createElement('li');
+            li.className = 'entry';
+
+            const top = document.createElement('div');
+            top.className = 'entry-top';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = initials(name ? name.value : (email ? email.value : '?'));
+
+            const who = document.createElement('div');
+            who.className = 'who';
+            const strong = document.createElement('strong');
+            strong.textContent = name ? name.value : (email ? email.value : (tab === 'visitors' ? 'Visitor' : 'Guest'));
+            who.appendChild(strong);
+            if (name && email) {
+                const sub = document.createElement('span');
+                sub.textContent = email.value;
+                who.appendChild(sub);
+            }
+
+            const when = document.createElement('div');
+            when.className = 'when';
+            when.textContent = formatDate(date);
+
+            top.append(avatar, who, when);
+            li.appendChild(top);
+
+            if (type) {
+                const chip = document.createElement('span');
+                chip.className = 'chip';
+                chip.textContent = type.value;
+                li.appendChild(chip);
+            }
+
+            const msg = document.createElement('p');
+            msg.className = 'msg' + (message ? '' : ' empty');
+            msg.textContent = message ? message.value : 'No message';
+            li.appendChild(msg);
+
+            const rest = Object.keys(obj).filter((k) => !used.has(k));
+            if (rest.length) {
+                const details = document.createElement('details');
+                const summary = document.createElement('summary');
+                summary.textContent = 'All details';
+                const dl = document.createElement('dl');
+                rest.forEach((k) => {
+                    const dt = document.createElement('dt');
+                    dt.textContent = k;
+                    const dd = document.createElement('dd');
+                    const v = obj[k];
+                    dd.textContent = (v !== null && typeof v === 'object') ? JSON.stringify(v) : String(v ?? '');
+                    dl.append(dt, dd);
+                });
+                details.append(summary, dl);
+                li.appendChild(details);
+            }
+
+            return li;
+        }
+
+        function render() {
+            const rows = currentRows();
+            const list = $('entries');
+            list.innerHTML = '';
+
+            $('cntVisitors').textContent = data.visitors.length;
+            $('cntFeedback').textContent = data.feedback.length;
+
+            const status = $('status');
+            status.className = 'status';
+            if (!rows.length) {
+                status.style.display = 'block';
+                status.textContent = $('search').value.trim()
+                    ? 'Nothing matches your search.'
+                    : (tab === 'visitors' ? 'No visitor messages yet.' : 'No feedback yet.');
+            } else {
+                status.style.display = 'none';
+            }
+
+            rows.slice(0, shown).forEach((r) => list.appendChild(buildEntry(r)));
+            $('moreBtn').hidden = rows.length <= shown;
+        }
+
+        function setTab(next) {
+            tab = next;
+            shown = PAGE_SIZE;
+            $('tabVisitors').setAttribute('aria-selected', String(next === 'visitors'));
+            $('tabFeedback').setAttribute('aria-selected', String(next === 'feedback'));
+            render();
+        }
+
+        async function load() {
+            const status = $('status');
+            status.className = 'status';
+            status.style.display = 'block';
+            status.textContent = 'Loading...';
+            $('entries').innerHTML = '';
+            $('moreBtn').hidden = true;
+
+            try {
+                const result = await getFromServer('/api/admin/guest-feedback');
+                data = { visitors: prepare(result.visitors), feedback: prepare(result.feedback) };
+                shown = PAGE_SIZE;
+                render();
+            } catch (err) {
+                status.className = 'status error';
+                status.textContent = err.message || 'Could not load the visitors and feedback.';
+            }
+        }
+
+        // ---------- Events ----------
+        $('tabVisitors').addEventListener('click', () => setTab('visitors'));
+        $('tabFeedback').addEventListener('click', () => setTab('feedback'));
+        $('refreshBtn').addEventListener('click', load);
+        $('moreBtn').addEventListener('click', () => { shown += PAGE_SIZE; render(); });
+        $('search').addEventListener('input', () => { shown = PAGE_SIZE; render(); });
+
+        if (!blocked) load();
+    </script>
+</body>
+
+</html>
