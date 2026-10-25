@@ -2975,7 +2975,7 @@
                 const json = await fetchJson(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1&accept-language=en`);
                 const a = json && json.address;
                 if (a) {
-                    const place = a.village || a.town || a.city || a.suburb || a.hamlet || a.neighbourhood || a.municipality || '';
+                    const place = a.suburb || a.neighbourhood || a.village || a.hamlet || a.town || a.city || a.municipality || '';
                     const candidates = [a.county, a.state, a.state_district, a.region].filter(Boolean);
                     const county = candidates.find(c => /county/i.test(c)) || candidates[0] || '';
                     return { place, county, country: (a.country_code || '').toUpperCase() };
@@ -3036,14 +3036,14 @@
         }
 
         // County only (no ward or town): "Bungoma County, KE"
+        // Saved text: "Area, County, KE"   Shown text: "County, KE" (see countyOnly)
         function formatLocation({ place, county, country }) {
             const countyText = withCounty(county, country);
+            const area = (place || '').trim();
             const parts = [];
-            if (countyText) {
-                parts.push(countyText);
-            } else if (place) {
-                parts.push(place.trim()); // no county available (e.g. outside Kenya): fall back to the town
-            }
+
+            if (area && area.toLowerCase() !== countyText.toLowerCase()) parts.push(area);
+            if (countyText) parts.push(countyText);
             if (country) parts.push(country);
             return parts.join(', ');
         }
@@ -3052,7 +3052,9 @@
         function countyOnly(text) {
             const parts = (text || '').split(',').map(part => part.trim()).filter(Boolean);
             const i = parts.findIndex(part => /county/i.test(part));
-            return (i > 0 ? parts.slice(i) : parts).join(', ');
+            if (i > 0) return parts.slice(i).join(', ');
+            if (i === -1 && parts.length >= 3) return parts.slice(1).join(', ');   // drop the area
+            return parts.join(', ');
         }
 
         // ---- Saved location + IP check (the server stores it in the `profiles` table) ----
@@ -3165,7 +3167,7 @@
         }
 
         async function finishLocation(text, source, ip) {
-            setLocationText(locationLabel(text, source), `${text}: saved to your profile. Click to refresh.`);
+            setLocationText(locationLabel(text, source), `${countyOnly(text)}: saved to your profile. Click to refresh.`);
             hideGate();
             await persistLocation(text, source, ip);
         }
