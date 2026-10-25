@@ -114,7 +114,38 @@ async function authenticateUser(req, res, next) {
         });
     }
 }
+async function requireSuperuser(req, res, next) {
+    try {
+        const { data: me } = await supabase
+            .from('profiles')
+            .select('account_type')
+            .eq('id', req.user.id)
+            .maybeSingle();
 
+        if (!me || me.account_type !== 'superuser') {
+            return res.status(403).json({ error: 'Only a superuser can do this.' });
+        }
+        next();
+    } catch (err) {
+        res.status(500).json({ error: 'Could not check your role.' });
+    }
+}
+'// A member says they forgot their password: flag the account for the superuser
+app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+        const phone = String(req.body.phone || '').replace(/\D/g, '');
+        if (!/^\d{10}$/.test(phone)) {
+            return res.status(400).json({ error: 'Enter a valid 10-digit phone number.' });
+        }
+
+        // Same reply whether or not the number exists, so nobody can test who is a member
+        await supabase.from('profiles').update({ reset_password: true }).eq('phone', phone);
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Could not send your request. Please try again.' });
+    }
+}); '
 // ===================== AUTHENTICATION ENDPOINTS =====================
 
 // 1. Verify access code
@@ -364,19 +395,25 @@ app.post('/api/profile/update', authenticateUser, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-// Superuser: reset a member's password
-app.post('/api/admin/reset-password', authenticateUser, async (req, res) => {
+// Superuser: members waiting for a password reset
+app.get('/api/admin/reset-requests', authenticateUser, requireSuperuser, async (req, res) => {
     try {
-        const { data: me } = await supabase
+        const { data, error } = await supabase
             .from('profiles')
-            .select('account_type')
-            .eq('id', req.user.id)
-            .maybeSingle();
+            .select('full_name, phone')
+            .eq('reset_password', true)
+            .order('full_name', { ascending: true });
 
-        if (!me || me.account_type !== 'superuser') {
-            return res.status(403).json({ error: 'Only a superuser can reset passwords.' });
-        }
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        res.status(500).json({ error: 'Could not load the requests.' });
+    }
+});
 
+// Superuser: reset a member's password
+app.post('/api/admin/reset-password', authenticateUser, requireSuperuser, async (req, res) => {
+    try {
         const phone = String(req.body.phone || '').trim();
         const newPassword = String(req.body.newPassword || '');
 
@@ -397,13 +434,11 @@ app.post('/api/admin/reset-password', authenticateUser, async (req, res) => {
             return res.status(404).json({ error: 'No member with that phone number.' });
         }
 
-        const { error } = await supabase.auth.admin.updateUserById(target.id, {
-            password: newPassword
-        });
+        const { error } = await supabase.auth.admin.updateUserById(target.id, { password: newPassword });
+        if (error) return res.status(400).json({ error: error.message });
 
-        if (error) {
-            return res.status(400).json({ error: error.message });
-        }
+        // request handled: take them off the list
+        await supabase.from('profiles').update({ reset_password: false }).eq('id', target.id);
 
         res.json({ ok: true, full_name: target.full_name });
     } catch (err) {
