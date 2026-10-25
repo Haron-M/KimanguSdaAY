@@ -1846,6 +1846,213 @@
                 width: min(320px, 88%);
             }
         }
+
+        /* ===== Change password ===== */
+        .ap-changepw {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1.5px solid #0a192f;
+            background: #fff;
+            color: #0a192f;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.78rem;
+            border-radius: 8px;
+            padding: 0.45rem 0.7rem;
+            cursor: pointer;
+        }
+
+        .ap-changepw:hover {
+            background: #0a192f;
+            color: #fff;
+        }
+
+        .pw-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 4500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.2rem;
+            background: rgba(10, 25, 47, 0.6);
+            backdrop-filter: blur(3px);
+        }
+
+        .pw-overlay.show {
+            display: flex;
+        }
+
+        .pw-card {
+            position: relative;
+            width: min(400px, 100%);
+            max-height: calc(100dvh - 2.4rem);
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 18px;
+            padding: 1.6rem 1.4rem 1.4rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        .pw-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: #0a192f;
+        }
+
+        .pw-sub {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin: 0.2rem 0 1.1rem;
+        }
+
+        .pw-x {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: none;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .pw-x:hover {
+            background: #f1f5f9;
+            color: #0a192f;
+        }
+
+        .pw-error {
+            display: none;
+            background: rgba(220, 38, 38, 0.08);
+            color: #dc2626;
+            font-size: 0.82rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 0.9rem;
+        }
+
+        .pw-error.show {
+            display: block;
+        }
+
+        .pw-field {
+            margin-bottom: 0.9rem;
+        }
+
+        .pw-field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #0a192f;
+            margin-bottom: 0.3rem;
+        }
+
+        .pw-input {
+            position: relative;
+        }
+
+        .pw-input input {
+            width: 100%;
+            padding: 0.6rem 2.6rem 0.6rem 0.2rem;
+            border: 0;
+            border-bottom: 1.5px solid #e2e8f0;
+            background: transparent;
+            font-family: inherit;
+            font-size: 16px;
+            color: #0a192f;
+        }
+
+        .pw-input input:focus {
+            outline: none;
+            border-bottom-color: #f59e0b;
+        }
+
+        .pw-input input:disabled {
+            opacity: 0.5;
+        }
+
+        .pw-eye {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: none;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .pw-hint {
+            font-size: 0.76rem;
+            color: #64748b;
+            margin: -0.2rem 0 1rem;
+        }
+
+        .pw-submit {
+            width: 100%;
+            min-height: 46px;
+            border: none;
+            border-radius: 12px;
+            background: #0a192f;
+            color: #fff;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+        }
+
+        .pw-submit:hover:not(:disabled) {
+            background: #f59e0b;
+            color: #0a192f;
+        }
+
+        .pw-submit:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .pw-result {
+            margin-top: 1rem;
+            padding: 0.9rem 1rem;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            color: #0a192f;
+        }
+
+        .pw-result[hidden] {
+            display: none;
+        }
+
+        .pw-result strong {
+            word-break: break-all;
+        }
+
+        .pw-copy {
+            margin-left: 0.4rem;
+            border: 1px solid #0a192f;
+            background: #fff;
+            color: #0a192f;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            cursor: pointer;
+        }
+
+        .pw-note {
+            margin-top: 0.6rem;
+            font-size: 0.8rem;
+            color: #b45309;
+        }
     </style>
 </head>
 
@@ -2029,6 +2236,8 @@
                                 <p id="apName">--</p>
                                 <label>Phone</label>
                                 <p id="apPhone">--</p>
+                                <button type="button" class="ap-changepw" id="apChangePw"><i
+                                        class="fa-solid fa-key"></i> Change password</button>
                             </div>
                             <div class="ap-status" id="apStatus"></div>
                         </div>
@@ -2039,6 +2248,55 @@
             <!-- PAGE BODY -->
             <div class="iframe-content-wrap">
                 <iframe id="contentFrame" src="pages/home.html" title="Page content"></iframe>
+            </div>
+        </div>
+    </div>
+    <div class="pw-overlay" id="pwModal" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+        <div class="pw-card">
+            <button type="button" class="pw-x" id="pwClose" aria-label="Close"><i
+                    class="fa-solid fa-xmark"></i></button>
+            <h3 id="pwTitle">Change password</h3>
+            <p class="pw-sub">Enter your current password, then choose a new one.</p>
+
+            <form id="pwForm" novalidate>
+                <div class="pw-error" id="pwError" role="alert"></div>
+
+                <div class="pw-field">
+                    <label for="pwCurrent">Current password</label>
+                    <div class="pw-input">
+                        <input type="password" id="pwCurrent" autocomplete="current-password">
+                        <button type="button" class="pw-eye" data-target="pwCurrent" aria-label="Show password"><i
+                                class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+                <div class="pw-field">
+                    <label for="pwNewInput">New password</label>
+                    <div class="pw-input">
+                        <input type="password" id="pwNewInput" autocomplete="new-password">
+                        <button type="button" class="pw-eye" data-target="pwNewInput" aria-label="Show password"><i
+                                class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+                <div class="pw-field">
+                    <label for="pwConfirm">Confirm password</label>
+                    <div class="pw-input">
+                        <input type="password" id="pwConfirm" autocomplete="new-password">
+                        <button type="button" class="pw-eye" data-target="pwConfirm" aria-label="Show password"><i
+                                class="fa-regular fa-eye"></i></button>
+                    </div>
+                </div>
+                <p class="pw-hint">At least 6 characters with a lowercase letter, an uppercase letter, a digit and a
+                    special character.</p>
+
+                <button type="submit" class="pw-submit" id="pwSubmit">Change</button>
+            </form>
+
+            <div class="pw-result" id="pwResult" hidden aria-live="polite">
+                <p>This is your new password: <strong id="pwNew"></strong>
+                    <button type="button" class="pw-copy" id="pwCopy">Copy</button>
+                </p>
+                <p class="pw-note">Note: please remember this password because when you close this page you won't see it
+                    again.</p>
             </div>
         </div>
     </div>
@@ -3654,6 +3912,110 @@
             paintAvatar(document.getElementById('apPreview'), avatarUrl, initials);
             if (apSave) apSave.textContent = avatarUrl ? 'Change' : 'Upload';
         }
+        // ===================== CHANGE PASSWORD =====================
+        const pwModal = document.getElementById('pwModal');
+        const pwForm = document.getElementById('pwForm');
+        const pwCurrent = document.getElementById('pwCurrent');
+        const pwNewInput = document.getElementById('pwNewInput');
+        const pwConfirm = document.getElementById('pwConfirm');
+        const pwSubmit = document.getElementById('pwSubmit');
+        const pwError = document.getElementById('pwError');
+        const pwResult = document.getElementById('pwResult');
+        let pwDone = false;
+
+        function setPwError(msg) {
+            pwError.textContent = msg || '';
+            pwError.classList.toggle('show', !!msg);
+        }
+
+        function resetPwModal() {
+            pwDone = false;
+            pwForm.reset();
+            [pwCurrent, pwNewInput, pwConfirm].forEach((input) => { input.disabled = false; input.type = 'password'; });
+            pwModal.querySelectorAll('.pw-eye').forEach((b) => { b.innerHTML = '<i class="fa-regular fa-eye"></i>'; });
+            document.getElementById('pwNew').textContent = '';   // the new password is not kept on the page
+            pwResult.hidden = true;
+            pwSubmit.disabled = false;
+            pwSubmit.textContent = 'Change';
+            setPwError('');
+        }
+
+        function openPwModal() {
+            closeAvatarPanel();
+            resetPwModal();
+            pwModal.classList.add('show');
+            setTimeout(() => pwCurrent.focus(), 50);
+        }
+
+        function closePwModal() {
+            pwModal.classList.remove('show');
+            resetPwModal();
+        }
+
+        function passwordIsStrong(p) {
+            return p.length >= 6 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p) && /[^A-Za-z0-9]/.test(p);
+        }
+
+        document.getElementById('apChangePw').addEventListener('click', openPwModal);
+        document.getElementById('pwClose').addEventListener('click', closePwModal);
+        pwModal.addEventListener('click', (e) => { if (e.target === pwModal) closePwModal(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && pwModal.classList.contains('show')) closePwModal();
+        });
+
+        pwModal.querySelectorAll('.pw-eye').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const input = document.getElementById(btn.dataset.target);
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.innerHTML = show ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+            });
+        });
+
+        document.getElementById('pwCopy').addEventListener('click', async (e) => {
+            try {
+                await navigator.clipboard.writeText(document.getElementById('pwNew').textContent);
+                e.currentTarget.textContent = 'Copied';
+            } catch (err) {
+                e.currentTarget.textContent = 'Copy failed';
+            }
+            setTimeout(() => { document.getElementById('pwCopy').textContent = 'Copy'; }, 1800);
+        });
+
+        pwForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (pwDone) { closePwModal(); return; }   // after success the button reads "Close"
+            setPwError('');
+
+            const current = pwCurrent.value;
+            const next = pwNewInput.value;
+            const confirmValue = pwConfirm.value;
+
+            if (!current) return setPwError('Enter your current password.');
+            if (!passwordIsStrong(next)) return setPwError('The new password needs 6+ characters with a lowercase letter, an uppercase letter, a digit and a special character.');
+            if (next !== confirmValue) return setPwError('The new passwords do not match.');
+            if (next === current) return setPwError('The new password must be different from the current one.');
+
+            pwSubmit.disabled = true;
+            pwSubmit.textContent = 'Changing...';
+
+            try {
+                await api('/api/profile/change-password', { method: 'POST', body: { currentPassword: current, newPassword: next } });
+
+                document.getElementById('pwNew').textContent = next;
+                pwResult.hidden = false;
+                [pwCurrent, pwNewInput, pwConfirm].forEach((input) => { input.value = ''; input.disabled = true; });
+                pwDone = true;
+                pwSubmit.textContent = 'Close';
+            } catch (err) {
+                if (err.status === 401) return;   // api() is already sending them to the sign-in page
+                setPwError(err.message || 'Could not change the password. Please try again.');
+                pwSubmit.textContent = 'Change';
+            } finally {
+                pwSubmit.disabled = false;
+            }
+        });
+
         // ===================== ROLE-BASED MENU =====================
         let currentRole = 'regular';
 

@@ -372,7 +372,45 @@ app.get('/api/profile', authenticateUser, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// Member changes their own password
+app.post('/api/profile/change-password', authenticateUser, async (req, res) => {
+    try {
+        const currentPassword = String(req.body.currentPassword || '');
+        const newPassword = String(req.body.newPassword || '');
 
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Enter your current password and a new one.' });
+        }
+
+        const strongEnough = newPassword.length >= 6 &&
+            /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword) &&
+            /\d/.test(newPassword) && /[^A-Za-z0-9]/.test(newPassword);
+        if (!strongEnough) {
+            return res.status(400).json({
+                error: 'New password needs 6+ characters with a lowercase letter, an uppercase letter, a digit and a special character.'
+            });
+        }
+        if (newPassword === currentPassword) {
+            return res.status(400).json({ error: 'The new password must be different from the current one.' });
+        }
+
+        // prove they know the current password
+        const { data, error: signInError } = await authClient().auth.signInWithPassword({
+            email: req.user.email,
+            password: currentPassword
+        });
+        if (signInError || !data.session) {
+            return res.status(400).json({ error: 'Your current password is incorrect.' });
+        }
+
+        const { error } = await supabase.auth.admin.updateUserById(req.user.id, { password: newPassword });
+        if (error) return res.status(400).json({ error: error.message });
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Could not change the password. Please try again.' });
+    }
+});
 // 5. Update profile and avatar
 app.post('/api/profile/update', authenticateUser, async (req, res) => {
     try {
