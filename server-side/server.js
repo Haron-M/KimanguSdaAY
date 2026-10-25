@@ -130,7 +130,7 @@ async function requireSuperuser(req, res, next) {
         res.status(500).json({ error: 'Could not check your role.' });
     }
 }
-'// A member says they forgot their password: flag the account for the superuser
+// A member says they forgot their password: flag the account for the superuser
 app.post('/api/auth/forgot-password', async (req, res) => {
     try {
         const phone = String(req.body.phone || '').replace(/\D/g, '');
@@ -145,7 +145,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: 'Could not send your request. Please try again.' });
     }
-}); '
+});
 // ===================== AUTHENTICATION ENDPOINTS =====================
 
 // 1. Verify access code
