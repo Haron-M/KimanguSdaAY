@@ -16,7 +16,19 @@
     font-size: 14px;
 }
 
+html,
 body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+body {
+    position: fixed;
+    inset: 0;
+    width: 100%;
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: var(--primary-dark);
     background: var(--off-white);
