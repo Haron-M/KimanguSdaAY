@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Dashboard | Kimangu AY</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
@@ -2267,14 +2268,16 @@
         }
 
         // ---------- Recent chats (saved in this browser) ----------
-        const AI_CHATS_KEY = 'kimangu_ai_chats_v1';
+        function aiChatsKey() { return `kimangu_ai_chats_v2_${currentUserId}`; }
         const AI_MAX_CHATS = 30;
         let aiChats = [];          // [{ id, title, updated, messages: [{ role, content }] }]
         let aiCurrentId = null;
-
         function aiStoreRead() {
+            aiChats = [];
+            aiCurrentId = null;                 // never keep another user's chats in memory
+            if (!currentUserId) return;
             try {
-                const d = JSON.parse(localStorage.getItem(AI_CHATS_KEY) || 'null');
+                const d = JSON.parse(localStorage.getItem(aiChatsKey()) || 'null');
                 if (d && Array.isArray(d.chats)) {
                     aiChats = d.chats;
                     aiCurrentId = d.currentId || null;
@@ -2283,10 +2286,11 @@
         }
 
         function aiStoreWrite() {
+            if (!currentUserId) return;
             aiChats.sort((a, b) => b.updated - a.updated);
             aiChats = aiChats.slice(0, AI_MAX_CHATS);
             try {
-                localStorage.setItem(AI_CHATS_KEY, JSON.stringify({ chats: aiChats, currentId: aiCurrentId }));
+                localStorage.setItem(aiChatsKey(), JSON.stringify({ chats: aiChats, currentId: aiCurrentId }));
             } catch (e) { /* ignore */ }
         }
 
@@ -2365,6 +2369,7 @@
         }
 
         async function aiLoadHistory() {
+            if (!currentUserId) { aiShowWelcome(); return; }   // profile not loaded yet: try again on the next open
             if (aiLoaded) return;
             aiLoaded = true;
             aiStoreRead();
@@ -2504,6 +2509,7 @@
             aiPanel.classList.remove('open', 'kb-open');
             aiPanel.style.top = '';
             aiPanel.style.height = '';
+            aiPanel.style.transform = '';
             aiFab.classList.remove('hidden');
             aiLockPage(false);
         }
@@ -2527,33 +2533,28 @@
         function aiIsMobile() {
             return window.matchMedia('(max-width: 768px)').matches;
         }
-
         function aiFitToViewport() {
             if (!aiPanel.classList.contains('open')) return;
 
-            // Desktop: remove anything we set for mobile
             if (!aiIsMobile()) {
                 aiPanel.style.top = '';
                 aiPanel.style.height = '';
+                aiPanel.style.transform = '';
                 aiPanel.classList.remove('kb-open');
                 return;
             }
 
             const vv = window.visualViewport;
-            if (!vv) return;   // very old browsers: the CSS 100dvh fallback is used
+            if (!vv) return;
 
-            // Make the panel exactly as big as the visible area (above the keyboard)
-            aiPanel.style.top = vv.offsetTop + 'px';
-            aiPanel.style.height = vv.height + 'px';
+            // Cover exactly the visible area above the keyboard, and follow it if the browser shifts it
+            aiPanel.style.top = '0px';
+            aiPanel.style.height = Math.floor(vv.height) + 'px';
+            aiPanel.style.transform = `translateY(${Math.round(vv.offsetTop)}px)`;
 
-            // Keyboard is open when the visible area is clearly shorter than the window
-            const keyboardOpen = (window.innerHeight - vv.height) > 120;
+            const keyboardOpen = document.activeElement === aiInput || (window.innerHeight - vv.height) > 120;
             aiPanel.classList.toggle('kb-open', keyboardOpen);
 
-            // Stop the page behind from sliding up
-            if (window.scrollY !== 0) window.scrollTo(0, 0);
-
-            // Keep the latest message visible
             aiMessages.scrollTop = aiMessages.scrollHeight;
         }
 
@@ -2570,8 +2571,7 @@
 
         // some phones report the new size a moment after the keyboard starts opening
         aiInput.addEventListener('focus', () => {
-            setTimeout(aiFitToViewport, 100);
-            setTimeout(aiFitToViewport, 350);
+            [100, 350, 700].forEach(ms => setTimeout(aiFitToViewport, ms));
         });
         aiInput.addEventListener('blur', () => setTimeout(aiFitToViewport, 150));
 
@@ -3699,6 +3699,7 @@
             }
 
             currentUserId = profile.id;
+            localStorage.removeItem('kimangu_ai_chats_v1');
             applyRoleMenu(profile.account_type);
 
             const fullName = profile.full_name || 'Member';
