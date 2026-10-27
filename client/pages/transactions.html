@@ -1117,8 +1117,7 @@
         // ================= EXPORT PDF =================
         const NAVY = [15, 43, 76];
         const GOLD = [196, 150, 50];
-        const LOGO_URL = 'https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png';
-
+        const LOGO_CANDIDATES = ['images/sda_logo.jfif', '../images/sda_logo.jfif'];
         let treasurerName = '';
         let logoDataUrl = null;
 
@@ -1137,27 +1136,44 @@
             }
         }
 
-        // Try to load the church logo for the PDF header (falls back to a drawn emblem)
-        function loadLogo() {
+        function loadImageFrom(url) {
             return new Promise((resolve) => {
                 const img = new Image();
-                img.crossOrigin = 'anonymous';
                 const timer = setTimeout(() => resolve(null), 5000);
                 img.onload = () => {
                     clearTimeout(timer);
                     try {
+                        // Draw the logo inside a white circle so it looks clean on the navy header
+                        const S = 400;
                         const c = document.createElement('canvas');
-                        c.width = img.naturalWidth;
-                        c.height = img.naturalHeight;
-                        c.getContext('2d').drawImage(img, 0, 0);
+                        c.width = S; c.height = S;
+                        const ctx = c.getContext('2d');
+                        ctx.beginPath();
+                        ctx.arc(S / 2, S / 2, S / 2, 0, Math.PI * 2);
+                        ctx.closePath();
+                        ctx.clip();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, S, S);
+                        const box = S * 0.8;
+                        const scale = Math.min(box / img.naturalWidth, box / img.naturalHeight);
+                        const w = img.naturalWidth * scale;
+                        const h = img.naturalHeight * scale;
+                        ctx.drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
                         resolve(c.toDataURL('image/png'));
                     } catch (e) { resolve(null); }
                 };
                 img.onerror = () => { clearTimeout(timer); resolve(null); };
-                img.src = LOGO_URL;
+                img.src = url;
             });
         }
 
+        async function loadLogo() {
+            for (const url of LOGO_CANDIDATES) {
+                const data = await loadImageFrom(url);
+                if (data) return data;
+            }
+            return null;
+        }
         document.addEventListener('DOMContentLoaded', () => {
             loadTreasurerName();
             loadLogo().then(d => { logoDataUrl = d; });
@@ -1246,13 +1262,13 @@
             doc.setFillColor(...NAVY);
             drawPath(doc, 0, 0, [[210, 0], [210, 35], [150, 22, 70, 45, 0, 31]], 'F');
 
-            // Logo in a white circle
-            doc.setFillColor(255, 255, 255);
-            doc.circle(23, 15, 9.5, 'F');
+            // Logo (already a white circle) or a simple fallback emblem
             if (logoDataUrl) {
-                try { doc.addImage(logoDataUrl, 'PNG', 15.5, 7.5, 15, 15); } catch (e) { logoDataUrl = null; }
+                try { doc.addImage(logoDataUrl, 'PNG', 13.5, 5.5, 19, 19); } catch (e) { logoDataUrl = null; }
             }
             if (!logoDataUrl) {
+                doc.setFillColor(255, 255, 255);
+                doc.circle(23, 15, 9.5, 'F');
                 doc.setDrawColor(...NAVY);
                 doc.setLineWidth(1);
                 doc.line(23, 9, 23, 21);
@@ -1331,22 +1347,17 @@
         }
 
         function drawReportFooter(doc, name) {
-            // Signature block
+
+            // Signature block: just the treasurer's name, no "Name:" label or line
             doc.setTextColor(...NAVY);
             doc.setFont('times', 'normal');
             doc.setFontSize(10);
             doc.text('Yours faithfully,', 14, 246);
 
             doc.setFont('times', 'bold');
-            doc.setFontSize(10);
-            doc.text('Name:', 14, 257);
-            doc.setDrawColor(120, 130, 150);
-            doc.setLineWidth(0.25);
-            doc.line(27, 257.6, 78, 257.6);
-            doc.text(name || '', 28, 256.4);
-            doc.text('Treasurer', 14, 262);
-            doc.text('Kimangu SDA Church', 14, 267);
-
+            doc.text(name || '', 14, 256);
+            doc.text('Treasurer', 14, 261);
+            doc.text('Kimangu SDA Church', 14, 266);
             // Navy wave + gold swoosh at the bottom
             doc.setFillColor(...GOLD);
             drawPath(doc, 0, 280, [[60, 266, 150, 288, 210, 274], [210, 277], [150, 291, 60, 269, 0, 283]], 'F');
@@ -1426,18 +1437,28 @@
 
                 const fromLabel = formatShortDate(fromDate);
                 const toLabel = formatShortDate(new Date(toVal + 'T00:00:00'));
-                const ROWS_PER_PAGE = 15;
-                const pages = Math.ceil(rows.length / ROWS_PER_PAGE);
+                const FIRST_PAGE_ROWS = 15;   // first page has the header, title and period
+                const NEXT_PAGE_ROWS = 23;    // later pages are all grid, so they hold more rows
+                const pages = rows.length <= FIRST_PAGE_ROWS
+                    ? 1
+                    : 1 + Math.ceil((rows.length - FIRST_PAGE_ROWS) / NEXT_PAGE_ROWS);
 
                 for (let p = 0; p < pages; p++) {
                     if (p > 0) doc.addPage();
 
-                    drawReportHeader(doc);
-                    drawReportTitle(doc, fromLabel, toLabel);
+                    const isFirst = p === 0;
+                    const perPage = isFirst ? FIRST_PAGE_ROWS : NEXT_PAGE_ROWS;
+                    const startIdx = isFirst ? 0 : FIRST_PAGE_ROWS + (p - 1) * NEXT_PAGE_ROWS;
+
+                    // Only the first page gets the top section
+                    if (isFirst) {
+                        drawReportHeader(doc);
+                        drawReportTitle(doc, fromLabel, toLabel);
+                    }
 
                     const body = [];
-                    for (let k = 0; k < ROWS_PER_PAGE; k++) {
-                        const idx = p * ROWS_PER_PAGE + k;
+                    for (let k = 0; k < perPage; k++) {
+                        const idx = startIdx + k;
                         const tx = rows[idx];
                         const num = String(idx + 1).padStart(2, '0');
                         if (!tx) { body.push([num, '', '', '', '']); continue; }
@@ -1454,7 +1475,7 @@
                     }
 
                     doc.autoTable({
-                        startY: 85,
+                        startY: isFirst ? 85 : 14,
                         margin: { left: 14, right: 14 },
                         tableWidth: 182,
                         theme: 'grid',
