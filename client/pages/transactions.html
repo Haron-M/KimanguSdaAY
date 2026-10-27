@@ -476,6 +476,215 @@
                 margin-top: 2px;
             }
         }
+
+        /* ===== EXPORT POPUP ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 25, 47, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: none;
+            align-items: flex-start;
+            /* JS positions the card in the visible area */
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            position: relative;
+            background: #fff;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 440px;
+            padding: 1.6rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            animation: modalPop 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalPop {
+            from {
+                transform: scale(0.94);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.1rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-gray);
+            cursor: pointer;
+            padding: 0.3rem;
+        }
+
+        .modal-close:hover {
+            color: var(--primary-dark);
+        }
+
+        .ex-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            margin: 0 0 0.5rem;
+        }
+
+        .ex-options {
+            display: grid;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .ex-option {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .ex-option input {
+            display: none;
+        }
+
+        .ex-option .ex-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            flex-shrink: 0;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .ex-option b {
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .ex-option small {
+            color: var(--text-gray);
+            font-size: 0.78rem;
+        }
+
+        .ex-option.selected {
+            border-color: var(--accent-gold);
+            background: #fffbeb;
+        }
+
+        .ex-option.selected .ex-dot {
+            border-color: var(--accent-gold);
+            background: var(--accent-gold);
+            box-shadow: inset 0 0 0 3px #fffbeb;
+        }
+
+        .ex-dates {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .ex-dates input {
+            width: 100%;
+            padding: 0.7rem 0.8rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 16px;
+            /* stops iPhone zoom */
+            color: var(--primary-dark);
+        }
+
+        .ex-dates input:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.08);
+        }
+
+        .ex-error {
+            display: none;
+            margin-bottom: 1rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 10px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            font-size: 0.82rem;
+        }
+
+        .ex-error.show {
+            display: block;
+        }
+
+        .ex-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .ex-btn {
+            flex: 1;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .ex-btn.cancel {
+            background: var(--off-white);
+            color: var(--primary-dark);
+            border: 1.5px solid var(--border-color);
+        }
+
+        .ex-btn.go {
+            background: var(--primary-dark);
+            color: #fff;
+        }
+
+        .ex-btn.go:hover {
+            background: #14243f;
+        }
+
+        .ex-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -513,7 +722,7 @@
                 <div class="top-header-row">
                     <h2 class="top-header-title">Transaction Logs</h2>
                     <div class="header-actions">
-                        <button class="btn-export" onclick="exportTransactionsPDF()">
+                        <button class="btn-export" onclick="openExportModal()">
                             <i class="fa-solid fa-file-pdf"></i> Export PDF
                         </button>
                         <div class="tx-count-badge" id="txCountBadge">0 Logs</div>
@@ -569,7 +778,52 @@
             </div>
 
         </div>
+        <!-- EXPORT PDF POPUP -->
+        <div class="modal-overlay" id="exportModal">
+            <div class="modal-card" id="exportCard">
+                <div class="modal-header">
+                    <h3>Export Transaction Report</h3>
+                    <button class="modal-close" type="button" onclick="closeExportModal()" aria-label="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
 
+                <span class="ex-label">What do you want to export?</span>
+                <div class="ex-options" id="exTypeOptions">
+                    <label class="ex-option selected">
+                        <input type="radio" name="exType" value="deposits" checked>
+                        <span class="ex-dot"></span>
+                        <span><b>Member deposits</b><small>Only payments made to members</small></span>
+                    </label>
+                    <label class="ex-option">
+                        <input type="radio" name="exType" value="all">
+                        <span class="ex-dot"></span>
+                        <span><b>All transactions</b><small>Deposits and expenditures</small></span>
+                    </label>
+                </div>
+
+                <span class="ex-label">Time period</span>
+                <div class="ex-dates">
+                    <div>
+                        <span class="ex-label" style="text-transform:none;letter-spacing:0">From</span>
+                        <input type="date" id="exFrom">
+                    </div>
+                    <div>
+                        <span class="ex-label" style="text-transform:none;letter-spacing:0">To</span>
+                        <input type="date" id="exTo">
+                    </div>
+                </div>
+
+                <div class="ex-error" id="exError"></div>
+
+                <div class="ex-actions">
+                    <button type="button" class="ex-btn cancel" onclick="closeExportModal()">Cancel</button>
+                    <button type="button" class="ex-btn go" id="exGoBtn" onclick="exportTransactionsPDF()">
+                        <i class="fa-solid fa-file-pdf"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
     <script>
         // Supabase Configuration
@@ -860,112 +1114,404 @@
                 }
             }
         }
+        // ================= EXPORT PDF =================
+        const NAVY = [15, 43, 76];
+        const GOLD = [196, 150, 50];
+        const LOGO_URL = 'https://kisiicentralsdachurch.org/wp-content/uploads/2025/06/adventist-symbol-tm-circle-cave.png';
 
-        // Dynamic Script Loader for jsPDF
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                if (document.querySelector(`script[src="${src}"]`)) {
-                    resolve();
-                    return;
-                }
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-                document.head.appendChild(script);
+        let treasurerName = '';
+        let logoDataUrl = null;
+
+        // Fetch the logged-in account's full name (shown at the bottom of the PDF)
+        async function loadTreasurerName() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) return;
+                const user = session.user;
+                const { data } = await supabaseClient
+                    .from('profiles').select('full_name').eq('id', user.id).maybeSingle();
+                treasurerName = (data && data.full_name) ||
+                    (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || '';
+            } catch (err) {
+                console.error('Could not load treasurer name:', err);
+            }
+        }
+
+        // Try to load the church logo for the PDF header (falls back to a drawn emblem)
+        function loadLogo() {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                const timer = setTimeout(() => resolve(null), 5000);
+                img.onload = () => {
+                    clearTimeout(timer);
+                    try {
+                        const c = document.createElement('canvas');
+                        c.width = img.naturalWidth;
+                        c.height = img.naturalHeight;
+                        c.getContext('2d').drawImage(img, 0, 0);
+                        resolve(c.toDataURL('image/png'));
+                    } catch (e) { resolve(null); }
+                };
+                img.onerror = () => { clearTimeout(timer); resolve(null); };
+                img.src = LOGO_URL;
             });
         }
 
-        function exportTransactionsPDF() {
-            console.log("Exporting PDF triggered. Transactions count:", cachedTransactions ? cachedTransactions.length : 0);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTreasurerName();
+            loadLogo().then(d => { logoDataUrl = d; });
+        });
 
-            // 1. Check if transactions exist
+        // ----- Popup -----
+        function toInputDate(d) {
+            const p = (n) => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+        }
+
+        function positionExportCard() {
+            // This page sits inside the shell's tall iframe, so centre the card on what the visitor can see
+            const card = document.getElementById('exportCard');
+            card.style.top = '0px';
+            try {
+                const fe = window.frameElement;
+                if (fe && window.parent) {
+                    const r = fe.getBoundingClientRect();
+                    const visTop = Math.max(0, -r.top);
+                    const visBottom = Math.min(fe.offsetHeight, window.parent.innerHeight - r.top);
+                    const mid = (visTop + visBottom) / 2;
+                    card.style.top = Math.max(8, mid - card.offsetHeight / 2) + 'px';
+                    return;
+                }
+            } catch (e) { /* not in an iframe, or blocked */ }
+            card.style.top = Math.max(8, (window.innerHeight - card.offsetHeight) / 2) + 'px';
+        }
+
+        function openExportModal() {
             if (!cachedTransactions || !cachedTransactions.length) {
                 alert('No transactions available to export.');
                 return;
             }
+            const earliest = new Date(Math.min(...cachedTransactions.map(t => new Date(t.created_at).getTime())));
+            document.getElementById('exFrom').value = toInputDate(earliest);
+            document.getElementById('exTo').value = toInputDate(new Date());
+            document.getElementById('exError').classList.remove('show');
+            document.getElementById('exportModal').classList.add('active');
+            positionExportCard();
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalEl = document.getElementById('exportModal');
+            modalEl.addEventListener('click', (e) => { if (e.target === modalEl) closeExportModal(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeExportModal(); });
+            document.querySelectorAll('#exTypeOptions .ex-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    document.querySelectorAll('#exTypeOptions .ex-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                });
+            });
+        });
+
+        function showExportError(msg) {
+            const el = document.getElementById('exError');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        // ----- PDF drawing helpers -----
+        function drawPath(doc, sx, sy, segs, style) {
+            // segs: [x, y] for a line, or [x1, y1, x2, y2, x, y] for a curve (all absolute, in mm)
+            const rel = [];
+            let cx = sx, cy = sy;
+            segs.forEach(s => {
+                if (s.length === 2) {
+                    rel.push([s[0] - cx, s[1] - cy]);
+                    cx = s[0]; cy = s[1];
+                } else {
+                    rel.push([s[0] - cx, s[1] - cy, s[2] - cx, s[3] - cy, s[4] - cx, s[5] - cy]);
+                    cx = s[4]; cy = s[5];
+                }
+            });
+            doc.lines(rel, sx, sy, [1, 1], style, true);
+        }
+
+        function drawReportHeader(doc) {
+            // Navy wave + gold swoosh
+            doc.setFillColor(...GOLD);
+            drawPath(doc, 0, 31, [[70, 45, 150, 22, 210, 35], [150, 27, 70, 50, 0, 36]], 'F');
+            doc.setFillColor(...NAVY);
+            drawPath(doc, 0, 0, [[210, 0], [210, 35], [150, 22, 70, 45, 0, 31]], 'F');
+
+            // Logo in a white circle
+            doc.setFillColor(255, 255, 255);
+            doc.circle(23, 15, 9.5, 'F');
+            if (logoDataUrl) {
+                try { doc.addImage(logoDataUrl, 'PNG', 15.5, 7.5, 15, 15); } catch (e) { logoDataUrl = null; }
+            }
+            if (!logoDataUrl) {
+                doc.setDrawColor(...NAVY);
+                doc.setLineWidth(1);
+                doc.line(23, 9, 23, 21);
+                doc.line(19, 13, 27, 13);
+            }
+
+            // Church name
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('times', 'bold');
+            doc.setFontSize(17);
+            doc.text('Kimangu SDA Church', 36, 14);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setCharSpace(1.1);
+            doc.text('SEVENTH-DAY ADVENTIST', 36, 19.5);
+            doc.setFontSize(6);
+            doc.setTextColor(...GOLD);
+            doc.setCharSpace(1.6);
+            doc.text('WORSHIP  ·  GROW  ·  SERVE', 36, 24);
+            doc.setCharSpace(0);
+
+            // Tagline (right)
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('times', 'italic');
+            doc.setFontSize(8.5);
+            doc.text('Together in Christ', 196, 11, { align: 'right' });
+            doc.text('for a Greater Tomorrow', 196, 15.5, { align: 'right' });
+            doc.setDrawColor(...GOLD);
+            doc.setLineWidth(0.5);
+            doc.line(166, 19, 196, 19);
+        }
+
+        function drawReportTitle(doc, fromLabel, toLabel) {
+            // Coin in hand icon
+            doc.setDrawColor(...NAVY);
+            doc.setLineWidth(0.6);
+            doc.circle(105, 43, 4.2, 'S');
+            doc.setTextColor(...NAVY);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.text('$', 105, 45.6, { align: 'center' });
+            doc.setFillColor(...NAVY);
+            doc.roundedRect(95, 49, 20, 3.2, 1.6, 1.6, 'F');
+
+            // Title
+            doc.setFont('times', 'bold');
+            doc.setFontSize(19);
+            doc.text("TREASURER'S TRANSACTION REPORT", 105, 60, { align: 'center' });
+
+            doc.setFont('times', 'bold');
+            doc.setFontSize(10.5);
+            doc.setTextColor(...GOLD);
+            doc.setCharSpace(1.2);
+            doc.text('KIMANGU SDA CHURCH', 105, 66, { align: 'center' });
+            doc.setCharSpace(0);
+
+            doc.setFont('times', 'italic');
+            doc.setFontSize(10);
+            doc.setTextColor(60, 70, 90);
+            doc.text('A summary of financial transactions for the period:', 105, 73, { align: 'center' });
+
+            // From ____ To ____
+            doc.setFont('times', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...NAVY);
+            doc.text('From', 52, 80);
+            doc.text('To', 106, 80);
+            doc.setDrawColor(120, 130, 150);
+            doc.setLineWidth(0.25);
+            doc.line(62, 80.8, 98, 80.8);
+            doc.line(112, 80.8, 148, 80.8);
+            doc.setFont('times', 'bold');
+            doc.text(fromLabel, 80, 79.6, { align: 'center' });
+            doc.text(toLabel, 130, 79.6, { align: 'center' });
+        }
+
+        function drawReportFooter(doc, name) {
+            // Signature block
+            doc.setTextColor(...NAVY);
+            doc.setFont('times', 'normal');
+            doc.setFontSize(10);
+            doc.text('Yours faithfully,', 14, 246);
+
+            doc.setFont('times', 'bold');
+            doc.setFontSize(10);
+            doc.text('Name:', 14, 257);
+            doc.setDrawColor(120, 130, 150);
+            doc.setLineWidth(0.25);
+            doc.line(27, 257.6, 78, 257.6);
+            doc.text(name || '', 28, 256.4);
+            doc.text('Treasurer', 14, 262);
+            doc.text('Kimangu SDA Church', 14, 267);
+
+            // Navy wave + gold swoosh at the bottom
+            doc.setFillColor(...GOLD);
+            drawPath(doc, 0, 280, [[60, 266, 150, 288, 210, 274], [210, 277], [150, 291, 60, 269, 0, 283]], 'F');
+            doc.setFillColor(...NAVY);
+            drawPath(doc, 0, 283, [[60, 269, 150, 291, 210, 277], [210, 297], [0, 297]], 'F');
+
+            // Open book icon
+            doc.setDrawColor(...GOLD);
+            doc.setLineWidth(0.6);
+            doc.rect(70, 284, 5.5, 7.5, 'S');
+            doc.rect(76.5, 284, 5.5, 7.5, 'S');
+
+            // Verse
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('times', 'italic');
+            doc.setFontSize(6.8);
+            const verse = doc.splitTextToSize(
+                '"Each one must give as he has decided in his heart, not reluctantly or under compulsion, for God loves a cheerful giver."',
+                78
+            );
+            doc.text(verse, 118, 285);
+            doc.text('2 Corinthians 9:7 (NKJV)', 118, 285 + verse.length * 3 + 1);
+        }
+
+        function formatShortDate(d) {
+            const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${String(d.getDate()).padStart(2, '0')} ${m[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        function formatCompletedOn(dateInput) {
+            const d = new Date(dateInput);
+            if (isNaN(d.getTime())) return '';
+            let h = d.getHours();
+            const min = String(d.getMinutes()).padStart(2, '0');
+            const ap = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${formatShortDate(d)}, ${h}:${min} ${ap}`;
+        }
+
+        // ----- Main export -----
+        async function exportTransactionsPDF() {
+            const typeEl = document.querySelector('input[name="exType"]:checked');
+            const mode = typeEl ? typeEl.value : 'deposits';
+            const fromVal = document.getElementById('exFrom').value;
+            const toVal = document.getElementById('exTo').value;
+
+            if (!fromVal || !toVal) { showExportError('Please choose both a start date and an end date.'); return; }
+
+            const fromDate = new Date(fromVal + 'T00:00:00');
+            const toDate = new Date(toVal + 'T23:59:59.999');
+            if (fromDate > toDate) { showExportError('The start date must be before the end date.'); return; }
+
+            // Filter: type + period, oldest first
+            const rows = cachedTransactions
+                .filter(tx => {
+                    const t = new Date(tx.created_at);
+                    if (t < fromDate || t > toDate) return false;
+                    if (mode === 'deposits') return !isExpenseTx(tx) && tx.user_id;
+                    return true;
+                })
+                .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+            if (!rows.length) { showExportError('No transactions found for the selected type and period.'); return; }
+
+            const btn = document.getElementById('exGoBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing...';
 
             try {
-                // 2. Access jsPDF instance safely
                 const { jsPDF } = window.jspdf || {};
-                if (!jsPDF) {
-                    alert('PDF library is not loaded. Please refresh the page or check your internet connection.');
-                    return;
-                }
+                if (!jsPDF) throw new Error('PDF library is not loaded. Please refresh the page.');
 
-                const doc = new jsPDF();
+                const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+                if (typeof doc.autoTable !== 'function') throw new Error('AutoTable plugin is missing. Please refresh the page.');
 
-                // 3. Format Date
-                const today = new Date();
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                const formattedDate = `${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
-                const reportTitle = `Transaction of members as at ${formattedDate}`;
+                if (!treasurerName) await loadTreasurerName();
 
-                // Header Styling
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(15);
-                doc.setTextColor(10, 25, 47);
-                doc.text(reportTitle, 14, 18);
+                const fromLabel = formatShortDate(fromDate);
+                const toLabel = formatShortDate(new Date(toVal + 'T00:00:00'));
+                const ROWS_PER_PAGE = 15;
+                const pages = Math.ceil(rows.length / ROWS_PER_PAGE);
 
-                // 4. Map Table Body Data
-                const head = [['Name', 'Amount', 'Transaction ID']];
-                const body = cachedTransactions.map(tx => {
-                    const isExp = isExpenseTx(tx);
-                    const rawAmt = Math.abs(Number(tx.amount) || 0).toLocaleString();
-                    const signedAmount = isExp ? `-KSh ${rawAmt}` : `+KSh ${rawAmt}`;
-                    const memberName = tx.profiles && tx.profiles.full_name
-                        ? tx.profiles.full_name
-                        : (isExp ? (tx.description || tx.category || 'Expense') : 'Member');
-                    const txId = generateTransactionId(tx);
+                for (let p = 0; p < pages; p++) {
+                    if (p > 0) doc.addPage();
 
-                    return [memberName, signedAmount, txId];
-                });
+                    drawReportHeader(doc);
+                    drawReportTitle(doc, fromLabel, toLabel);
 
-                // 5. Check AutoTable Plugin
-                if (typeof doc.autoTable !== 'function') {
-                    alert('AutoTable plugin is missing. Please refresh the page.');
-                    return;
-                }
+                    const body = [];
+                    for (let k = 0; k < ROWS_PER_PAGE; k++) {
+                        const idx = p * ROWS_PER_PAGE + k;
+                        const tx = rows[idx];
+                        const num = String(idx + 1).padStart(2, '0');
+                        if (!tx) { body.push([num, '', '', '', '']); continue; }
 
-                // Generate Table
-                doc.autoTable({
-                    startY: 25,
-                    head: head,
-                    body: body,
-                    theme: 'striped',
-                    headStyles: {
-                        fillColor: [10, 25, 47],
-                        textColor: [255, 255, 255],
-                        fontStyle: 'bold',
-                        fontSize: 10
-                    },
-                    styles: {
-                        fontSize: 9,
-                        cellPadding: 4,
-                        textColor: [51, 65, 85]
-                    },
-                    columnStyles: {
-                        0: { cellWidth: 80 },
-                        1: { cellWidth: 50, fontStyle: 'bold' },
-                        2: { cellWidth: 50 }
-                    },
-                    didParseCell: function (data) {
-                        if (data.section === 'body' && data.column.index === 1) {
-                            if (data.cell.raw.startsWith('-')) {
-                                data.cell.styles.textColor = [220, 38, 38]; // Red for expenses
-                            } else {
-                                data.cell.styles.textColor = [22, 163, 74]; // Green for deposits
+                        const expense = isExpenseTx(tx);
+                        const amt = Math.abs(Number(tx.amount) || 0).toLocaleString();
+                        const name = expense
+                            ? (tx.description || tx.category || tx.notes || 'Expense')
+                            : (tx.type === 'initial' && !tx.user_id)
+                                ? 'Initial Balance'
+                                : (tx.profiles && tx.profiles.full_name ? tx.profiles.full_name : 'Member');
+
+                        body.push([num, name, expense ? `-${amt}` : amt, generateTransactionId(tx), formatCompletedOn(tx.created_at)]);
+                    }
+
+                    doc.autoTable({
+                        startY: 85,
+                        margin: { left: 14, right: 14 },
+                        tableWidth: 182,
+                        theme: 'grid',
+                        head: [['No.', 'Name', 'Amount\n(KES)', 'Transaction ID', 'Transaction\nCompleted On']],
+                        body: body,
+                        styles: {
+                            font: 'helvetica',
+                            fontSize: 8.5,
+                            textColor: NAVY,
+                            lineColor: [190, 200, 215],
+                            lineWidth: 0.2,
+                            cellPadding: 1.8,
+                            valign: 'middle',
+                            minCellHeight: 9
+                        },
+                        headStyles: {
+                            fillColor: NAVY,
+                            textColor: [255, 255, 255],
+                            fontStyle: 'bold',
+                            halign: 'center',
+                            fontSize: 8.5,
+                            minCellHeight: 11
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 16, halign: 'center' },
+                            1: { cellWidth: 60 },
+                            2: { cellWidth: 32, halign: 'center', fontStyle: 'bold' },
+                            3: { cellWidth: 36, halign: 'center' },
+                            4: { cellWidth: 38, halign: 'center', fontSize: 7.5 }
+                        },
+                        didParseCell: function (data) {
+                            if (data.section === 'body' && data.column.index === 2 && data.cell.raw) {
+                                data.cell.styles.textColor = String(data.cell.raw).startsWith('-')
+                                    ? [220, 38, 38] : [22, 163, 74];
                             }
                         }
+                    });
+
+                    drawReportFooter(doc, treasurerName);
+
+                    if (pages > 1) {
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(7);
+                        doc.setTextColor(100, 116, 139);
+                        doc.text(`Page ${p + 1} of ${pages}`, 196, 241, { align: 'right' });
                     }
-                });
+                }
 
-                // Save Download
-                doc.save(`Member_Transactions_${formattedDate.replace(/[\s,]+/g, '_')}.pdf`);
-
+                const stamp = `${fromVal}_to_${toVal}`;
+                doc.save(`Treasurer_Report_${mode === 'deposits' ? 'Deposits' : 'All'}_${stamp}.pdf`);
+                closeExportModal();
             } catch (err) {
                 console.error('PDF Generation Error:', err);
-                alert(`Failed to generate PDF: ${err.message}`);
+                showExportError('Failed to generate PDF: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Export';
             }
         }
     </script>
