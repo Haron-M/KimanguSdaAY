@@ -108,6 +108,33 @@
         }
 
         /* ==========================================
+           INTRO TEXT ABOVE THE CARDS
+        ========================================== */
+        .mission-intro {
+            max-width: 860px;
+            margin-bottom: 2.75rem;
+            padding: 0.4rem 0 0.4rem 1.4rem;
+            border-left: 5px solid var(--header-mission);
+        }
+
+        .mission-intro h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.6rem;
+        }
+
+        .mission-intro p {
+            font-size: 1rem;
+            color: #475569;
+            line-height: 1.8;
+        }
+
+        .mission-intro p+p {
+            margin-top: 0.75rem;
+        }
+
+        /* ==========================================
            COVER GALLERY (one cover + its downloads per uploaded quarter)
         ========================================== */
         .cover-gallery {
@@ -569,6 +596,21 @@
                 min-height: 0;
             }
 
+            .mission-intro {
+                margin-bottom: 2rem;
+                padding-left: 1rem;
+                border-left-width: 4px;
+            }
+
+            .mission-intro h2 {
+                font-size: 1.45rem;
+            }
+
+            .mission-intro p {
+                font-size: 0.95rem;
+                line-height: 1.7;
+            }
+
             .cover-gallery {
                 gap: 1.5rem 1rem;
                 margin-bottom: 2.25rem;
@@ -623,6 +665,18 @@
 
     <!-- MAIN SECTION (filled dynamically from Supabase) -->
     <section class="lessons-section">
+
+        <!-- What mission stories are -->
+        <div class="mission-intro">
+            <h2>What Are Mission Stories?</h2>
+            <p>Mission stories are true, inspiring reports from the worldwide Seventh-day Adventist Church, shared in
+                Sabbath School each week. Every quarter brings real testimonies of how God is changing lives in
+                communities around the world, through missionaries, church members and everyday believers who
+                answer His call.</p>
+            <p>Use them in your Sabbath School class, family worship or personal devotion to pray for those serving
+                on the mission field and to be encouraged to share the gospel where you are. Choose a quarter below to
+                read online, download the complete lesson, or browse the weekly stories.</p>
+        </div>
 
         <!-- One cover per uploaded quarter, with its download buttons beneath -->
         <div class="cover-gallery" id="coverGallery" hidden></div>
@@ -989,8 +1043,8 @@
                     list.push({ id: row.id, quarter: row.quarter, year: row.year, qNum });
                 }
 
-                // Oldest first, left to right (1st Quarter ... 4th Quarter)
-                list.sort((a, b) => (a.year - b.year) || (a.qNum - b.qNum));
+                // The query is already newest-upload-first, so the list keeps that order:
+                // the most recently uploaded quarter appears first, top-left
                 state.quarters = list;
 
                 if (!list.length) {
@@ -1001,8 +1055,8 @@
                 buildGallery();
                 await loadCards();
 
-                // Open the newest quarter that has weekly stories (if any)
-                for (let i = list.length - 1; i >= 0; i--) {
+                // Open the most recently uploaded quarter that has weekly stories (if any)
+                for (let i = 0; i < list.length; i++) {
                     const rec = state.cache[list[i].id];
                     if (rec && getLessons(rec).length) {
                         await loadQuarter(list[i].id);
