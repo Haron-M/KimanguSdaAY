@@ -479,6 +479,13 @@
             transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
+        .fb-fab {
+            padding: 0;
+            /* removes the default button padding that squeezed the text */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+
         .fb-fab:hover {
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 12px 28px rgba(245, 158, 11, 0.6);
@@ -495,6 +502,11 @@
             letter-spacing: 0.8px;
             line-height: 1;
             text-transform: uppercase;
+        }
+
+        .fb-label {
+            white-space: nowrap;
+            /* the label never wraps or breaks */
         }
 
         .fb-fab .fb-ico-close {
@@ -859,23 +871,71 @@
         }
 
         @media (max-width: 520px) {
+
+            /* Button becomes a pill: icon + text side by side */
             .fb-fab {
-                right: 16px;
-                bottom: 16px;
+                right: 14px;
+                bottom: 14px;
+                width: auto;
+                height: 50px;
+                padding: 0 18px;
+                flex-direction: row;
+                gap: 8px;
+                border-radius: 999px;
+                font-size: 1.15rem;
             }
 
+            .fb-label {
+                font-size: 0.78rem;
+                letter-spacing: 0.5px;
+            }
+
+            /* Hint bubble goes ABOVE the button, with its arrow pointing down */
             .fb-hint {
-                right: 104px;
-                bottom: 22px;
-                max-width: 190px;
+                right: 14px;
+                bottom: 76px;
+                max-width: min(240px, calc(100vw - 28px));
+                transform: translateY(10px);
             }
 
+            .fb-hint.show {
+                transform: translateY(0);
+            }
+
+            .fb-hint::after {
+                right: 30px;
+                top: auto;
+                bottom: -6px;
+                transform: rotate(45deg);
+            }
+
+            /* Chat panel sits just above the pill and fits the screen */
             .fb-panel {
-                right: 12px;
-                left: 12px;
-                bottom: 100px;
+                right: 10px;
+                left: 10px;
+                bottom: 76px;
                 width: auto;
                 max-width: none;
+                height: 460px;
+                max-height: calc(100vh - 100px);
+                max-height: calc(100dvh - 100px);
+                /* respects the mobile browser's address bar */
+            }
+
+            /* Slightly smaller header so more room is left for messages */
+            .fb-head {
+                padding: 12px 14px;
+                gap: 10px;
+            }
+
+            .fb-head-icon {
+                width: 42px;
+                height: 42px;
+            }
+
+            .fb-form input {
+                font-size: 16px;
+                /* stops iPhones from zooming the page when you tap the input */
             }
         }
 

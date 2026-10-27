@@ -77,14 +77,14 @@
         .bible-banner {
             position: relative;
             width: 100%;
-            height: 220px;
+            min-height: 220px;
             background-image: linear-gradient(rgba(15, 23, 42, 0.85),
                     rgba(15, 23, 42, 0.92)), url('https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=1800&q=80');
             background-size: cover;
             background-position: center;
             display: flex;
             align-items: center;
-            padding: 0 3%;
+            padding: 3.25rem 3% 2.5rem;
             overflow: hidden;
             border-bottom: 5px solid #0284c7;
         }
@@ -115,6 +115,17 @@
             line-height: 1.15;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        /* Brief intro under the banner title */
+        .bible-intro {
+            margin-top: 0.9rem;
+            max-width: 660px;
+            padding-left: 1rem;
+            border-left: 3px solid #7dd3fc;
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 1rem;
+            line-height: 1.7;
         }
 
         .bible-hint {
@@ -219,44 +230,176 @@
         }
 
         /* ==========================================
-           RIGHT SIDE GUIDE GRID (the only part that scrolls)
-        ========================================== */
-        .books-grid {
+   RIGHT SIDE: SCROLLABLE GUIDE PANEL
+   Header bar + scroll cue + bottom fade show at a glance
+   that the guides scroll inside this box.
+========================================== */
+        .books-panel {
+            --sb: #0284c7;
+            --sb-dark: #0369a1;
+            --panel-bg: #eaf3fb;
+
+            position: relative;
+            display: flex;
+            flex-direction: column;
             height: 100%;
+            min-height: 0;
+            overflow: hidden;
+            background: var(--panel-bg);
+            border: 2px solid var(--sb);
+            border-radius: 12px;
+            box-shadow: 0 8px 22px rgba(2, 132, 199, 0.18);
+        }
+
+        .books-panel-head {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            padding: 0.65rem 1rem;
+            background: var(--sb-dark);
+            color: #ffffff;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+            position: relative;
+            z-index: 6;
+        }
+
+        .panel-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.92rem;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        .scroll-hint {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 0.3rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .scroll-hint i {
+            animation: nudge 1.3s infinite ease-in-out;
+        }
+
+        .books-panel.overflowing .scroll-hint {
+            display: inline-flex;
+        }
+
+        @keyframes nudge {
+
+            0%,
+            100% {
+                transform: translateY(-2px);
+            }
+
+            50% {
+                transform: translateY(3px);
+            }
+        }
+
+        /* The grid is the only thing that scrolls */
+        .books-grid {
+            flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
             align-content: start;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 1.25rem 0.85rem;
-            padding: 1rem 1rem 1.5rem 1rem;
+            padding: 1rem 1rem 4.5rem 1rem;
+            /* extra room so the last row clears the cue */
 
-            /* Different background so it reads as a scrollable panel */
-            background: #eaf3fb;
-            /* soft sky-blue tint */
-            border: 1px solid #bfdbfe;
-            border-radius: 12px;
-            box-shadow: inset 0 6px 8px -6px rgba(2, 132, 199, 0.25),
-                inset 0 -6px 8px -6px rgba(2, 132, 199, 0.25);
-
-            /* Visible scrollbar (Firefox) */
-            scrollbar-width: thin;
-            scrollbar-color: #0284c7 #dbeafe;
+            scrollbar-width: auto;
+            scrollbar-color: #0284c7 #cfe3f5;
         }
 
-        /* Visible scrollbar (Chrome, Edge, Safari) */
         .books-grid::-webkit-scrollbar {
-            width: 10px;
+            width: 16px;
         }
 
         .books-grid::-webkit-scrollbar-track {
-            background: #dbeafe;
-            border-radius: 10px;
+            background: #cfe3f5;
+            border-left: 1px solid #bfdbfe;
         }
 
         .books-grid::-webkit-scrollbar-thumb {
             background: #0284c7;
             border-radius: 10px;
-            border: 2px solid #dbeafe;
+            border: 3px solid #cfe3f5;
+        }
+
+        .books-grid::-webkit-scrollbar-thumb:hover {
+            background: #0369a1;
+        }
+
+        /* Soft fade at the bottom edge */
+        .scroll-fade {
+            display: none;
+            position: absolute;
+            left: 0;
+            right: 16px;
+            bottom: 0;
+            height: 90px;
+            pointer-events: none;
+            z-index: 4;
+            background: linear-gradient(to bottom, rgba(234, 243, 251, 0), var(--panel-bg) 88%);
+        }
+
+        /* Floating "scroll for more" pill */
+        .scroll-cue {
+            display: none;
+            position: absolute;
+            left: calc(50% - 8px);
+            bottom: 14px;
+            transform: translateX(-50%);
+            z-index: 5;
+            align-items: center;
+            gap: 8px;
+            padding: 0.55rem 1.2rem;
+            border: none;
+            border-radius: 999px;
+            background: var(--sb);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(2, 132, 199, 0.45);
+            animation: bob 1.6s infinite ease-in-out;
+        }
+
+        .scroll-cue:hover {
+            background: var(--sb-dark);
+        }
+
+        @keyframes bob {
+
+            0%,
+            100% {
+                transform: translate(-50%, 0);
+            }
+
+            50% {
+                transform: translate(-50%, -6px);
+            }
+        }
+
+        .books-panel.can-scroll .scroll-cue {
+            display: inline-flex;
+        }
+
+        .books-panel.can-scroll .scroll-fade {
+            display: block;
         }
 
         .books-grid::-webkit-scrollbar-thumb:hover {
@@ -577,15 +720,40 @@
                 align-self: auto;
             }
 
+            .books-panel {
+                height: max(480px, calc(var(--app-vh, 1vh) * 75));
+            }
+
             .books-grid {
-                height: max(460px, calc(var(--app-vh, 1vh) * 75));
                 grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
                 gap: 1.25rem 0.75rem;
+            }
+
+            .books-grid::-webkit-scrollbar {
+                width: 12px;
+            }
+
+            .scroll-fade {
+                right: 12px;
+            }
+
+            .scroll-cue {
+                left: calc(50% - 6px);
             }
 
             .book-cover-wrapper,
             .skeleton-cover {
                 height: 180px;
+            }
+
+            .bible-banner {
+                padding: 3rem 3% 2rem;
+                min-height: 180px;
+            }
+
+            .bible-intro {
+                font-size: 0.92rem;
+                line-height: 1.6;
             }
 
             .bible-banner {
@@ -607,6 +775,9 @@
         <div class="bible-badge">SCRIPTURE STUDY</div>
         <div class="bible-banner-text">
             <h1 class="bible-title">Bible Study Guides & Series</h1>
+            <p class="bible-intro">Explore topical Bible study guides, doctrinal lessons and fundamental belief series.
+                Download a guide for personal devotion, a small group or Sabbath School, and let Scripture answer your
+                questions.</p>
             <p class="bible-hint"><i class="fa-solid fa-download"></i> Click the title of the guide to download</p>
         </div>
     </div>
@@ -634,7 +805,22 @@
             </div>
 
             <!-- RIGHT COLUMN: Guide Grid (scrolls on its own; filled dynamically from Supabase) -->
-            <div class="books-grid" id="booksGrid"></div>
+            <div class="books-panel" id="booksPanel">
+
+                <div class="books-panel-head">
+                    <span class="panel-title"><i class="fa-solid fa-book-bible"></i> Browse the Guides</span>
+                    <span class="scroll-hint"><i class="fa-solid fa-arrows-up-down"></i> Scroll inside this box to see
+                        all guides</span>
+                </div>
+
+                <!-- The only part that scrolls; filled dynamically from Supabase -->
+                <div class="books-grid" id="booksGrid"></div>
+
+                <div class="scroll-fade"></div>
+                <button type="button" class="scroll-cue" id="scrollCue">
+                    <i class="fa-solid fa-angles-down"></i> Scroll for more guides
+                </button>
+            </div>
 
         </div>
 
@@ -685,6 +871,22 @@
         function findGuide(card) {
             return state.guides.find((g) => String(g.id) === card.dataset.id);
         }
+        // Scroll cue: shows the visitor that the guides scroll inside the panel
+        function updateScrollCue() {
+            const grid = $('booksGrid');
+            const panel = $('booksPanel');
+            if (!grid || !panel) return;
+
+            const overflowing = grid.scrollHeight > grid.clientHeight + 8;
+            const atEnd = grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 28;
+
+            panel.classList.toggle('overflowing', overflowing);
+            panel.classList.toggle('can-scroll', overflowing && !atEnd);
+        }
+
+        function refreshScrollCue() {
+            requestAnimationFrame(updateScrollCue);
+        }
 
         function renderState(opts) {
             $('booksGrid').innerHTML = `
@@ -696,6 +898,7 @@
                     ${opts.retryFn ? '<button type="button" class="retry-btn"><i class="fa-solid fa-rotate-right"></i> Try again</button>' : ''}
                 </div>`;
             if (opts.retryFn) $('booksGrid').querySelector('.retry-btn').addEventListener('click', opts.retryFn);
+            refreshScrollCue();
         }
 
         function showLoading() {
@@ -705,6 +908,7 @@
             }
             $('booksGrid').innerHTML = cards;
             $('guideCount').textContent = 'Loading guides…';
+            refreshScrollCue();
         }
 
         // ---------- Saved covers (IndexedDB): covers built once are instant on every later visit ----------
@@ -912,8 +1116,11 @@
             // Covers
             const cards = $('booksGrid').querySelectorAll('.book-card');
             cards.forEach((card, i) => mountCover(card, guides[i]));
+            // Start at the top of the list
+            $('booksGrid').scrollTop = 0;
 
             applyFilter();
+
         }
 
         // ---------- Search ----------
@@ -934,6 +1141,7 @@
             if (!total) $('guideCount').textContent = '';
             else if (term) $('guideCount').textContent = `${shown} of ${total} guide${total === 1 ? '' : 's'}`;
             else $('guideCount').textContent = `${total} guide${total === 1 ? '' : 's'}`;
+            refreshScrollCue()
         }
 
         // ---------- Data loading ----------
@@ -1090,6 +1298,15 @@
         });
 
         $('guideSearch').addEventListener('input', applyFilter);
+        // Scroll cue: updates while scrolling / resizing, and the pill scrolls the guides down
+        $('booksGrid').addEventListener('scroll', updateScrollCue, { passive: true });
+        window.addEventListener('resize', refreshScrollCue);
+        if (window.ResizeObserver) new ResizeObserver(refreshScrollCue).observe($('booksGrid'));
+
+        $('scrollCue').addEventListener('click', () => {
+            const grid = $('booksGrid');
+            grid.scrollBy({ top: Math.round(grid.clientHeight * 0.8), behavior: 'smooth' });
+        });
 
         document.addEventListener('DOMContentLoaded', init);
 

@@ -31,6 +31,9 @@
             --border-color: #e2e8f0;
             --header-dark: #1e1b18;
             --egw-brown: #b45309;
+            --scroll-blue: #0284c7;
+            --scroll-blue-dark: #0369a1;
+            --panel-bg: #eaf3fb;
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
             /* ---- Height of the book area (left panel + scrolling books) ----
@@ -77,14 +80,14 @@
         .egw-banner {
             position: relative;
             width: 100%;
-            height: 220px;
+            min-height: 220px;
             background-image: linear-gradient(rgba(15, 23, 42, 0.85),
                     rgba(15, 23, 42, 0.92)), url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1800&q=80');
             background-size: cover;
             background-position: center;
             display: flex;
             align-items: center;
-            padding: 0 3%;
+            padding: 3.25rem 3% 2.5rem;
             overflow: hidden;
             border-bottom: 5px solid #1e293b;
         }
@@ -104,7 +107,7 @@
         }
 
         .egw-banner-text {
-            max-width: 700px;
+            max-width: 720px;
         }
 
         .egw-title {
@@ -117,8 +120,19 @@
             letter-spacing: 0.5px;
         }
 
+        /* Brief intro under the banner title */
+        .egw-intro {
+            margin-top: 0.9rem;
+            max-width: 660px;
+            padding-left: 1rem;
+            border-left: 3px solid var(--accent-gold);
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
         .egw-hint {
-            margin-top: 0.75rem;
+            margin-top: 0.9rem;
             color: #fbbf24;
             font-size: clamp(0.85rem, 1.6vw, 1rem);
             font-weight: 600;
@@ -219,48 +233,175 @@
         }
 
         /* ==========================================
-           RIGHT SIDE BOOK GRID (the only part that scrolls)
+           RIGHT SIDE: SCROLLABLE BOOK PANEL
+           Header bar + scroll cue + bottom fade tell the visitor
+           at a glance that the books scroll inside this box.
         ========================================== */
-        .books-grid {
+        .books-panel {
+            position: relative;
+            display: flex;
+            flex-direction: column;
             height: 100%;
+            min-height: 0;
+            overflow: hidden;
+            background: var(--panel-bg);
+            border: 2px solid var(--scroll-blue);
+            border-radius: 12px;
+            box-shadow: 0 8px 22px rgba(2, 132, 199, 0.18);
+        }
+
+        /* Strong header bar on top of the panel */
+        .books-panel-head {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            padding: 0.65rem 1rem;
+            background: var(--scroll-blue-dark);
+            color: #ffffff;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+            position: relative;
+            z-index: 6;
+        }
+
+        .panel-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.92rem;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        .scroll-hint {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 0.3rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .scroll-hint i {
+            animation: nudge 1.3s infinite ease-in-out;
+        }
+
+        .books-panel.overflowing .scroll-hint {
+            display: inline-flex;
+        }
+
+        @keyframes nudge {
+
+            0%,
+            100% {
+                transform: translateY(-2px);
+            }
+
+            50% {
+                transform: translateY(3px);
+            }
+        }
+
+        /* The grid is the only thing that scrolls */
+        .books-grid {
+            flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
             align-content: start;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 1.25rem 0.85rem;
-            padding: 1rem 1rem 1.5rem 1rem;
-
-            /* Different background so it reads as a scrollable panel */
-            background: #eaf3fb;
-            /* soft sky-blue tint */
-            border: 1px solid #bfdbfe;
-            border-radius: 12px;
-            box-shadow: inset 0 6px 8px -6px rgba(2, 132, 199, 0.25),
-                inset 0 -6px 8px -6px rgba(2, 132, 199, 0.25);
+            padding: 1rem 1rem 4.5rem 1rem;
+            /* extra room at the bottom so the last row clears the cue */
 
             /* Visible scrollbar (Firefox) */
-            scrollbar-width: thin;
-            scrollbar-color: #0284c7 #dbeafe;
+            scrollbar-width: auto;
+            scrollbar-color: var(--scroll-blue) #cfe3f5;
         }
 
-        /* Visible scrollbar (Chrome, Edge, Safari) */
+        /* Wide, obvious scrollbar (Chrome, Edge, Safari) */
         .books-grid::-webkit-scrollbar {
-            width: 10px;
+            width: 16px;
         }
 
         .books-grid::-webkit-scrollbar-track {
-            background: #dbeafe;
-            border-radius: 10px;
+            background: #cfe3f5;
+            border-left: 1px solid #bfdbfe;
         }
 
         .books-grid::-webkit-scrollbar-thumb {
-            background: #0284c7;
+            background: var(--scroll-blue);
             border-radius: 10px;
-            border: 2px solid #dbeafe;
+            border: 3px solid #cfe3f5;
         }
 
         .books-grid::-webkit-scrollbar-thumb:hover {
-            background: #0369a1;
+            background: var(--scroll-blue-dark);
+        }
+
+        /* Soft fade at the bottom edge: shows there is more below */
+        .scroll-fade {
+            display: none;
+            position: absolute;
+            left: 0;
+            right: 16px;
+            bottom: 0;
+            height: 90px;
+            pointer-events: none;
+            z-index: 4;
+            background: linear-gradient(to bottom, rgba(234, 243, 251, 0), var(--panel-bg) 88%);
+        }
+
+        /* Floating "scroll for more" pill */
+        .scroll-cue {
+            display: none;
+            position: absolute;
+            left: calc(50% - 8px);
+            bottom: 14px;
+            transform: translateX(-50%);
+            z-index: 5;
+            align-items: center;
+            gap: 8px;
+            padding: 0.55rem 1.2rem;
+            border: none;
+            border-radius: 999px;
+            background: var(--scroll-blue);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(2, 132, 199, 0.45);
+            animation: bob 1.6s infinite ease-in-out;
+        }
+
+        .scroll-cue:hover {
+            background: var(--scroll-blue-dark);
+        }
+
+        @keyframes bob {
+
+            0%,
+            100% {
+                transform: translate(-50%, 0);
+            }
+
+            50% {
+                transform: translate(-50%, -6px);
+            }
+        }
+
+        .books-panel.can-scroll .scroll-cue {
+            display: inline-flex;
+        }
+
+        .books-panel.can-scroll .scroll-fade {
+            display: block;
         }
 
         .book-card {
@@ -605,10 +746,25 @@
                 align-self: auto;
             }
 
+            .books-panel {
+                height: max(480px, calc(var(--app-vh, 1vh) * 75));
+            }
+
             .books-grid {
-                height: max(460px, calc(var(--app-vh, 1vh) * 75));
                 grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
                 gap: 1.25rem 0.75rem;
+            }
+
+            .books-grid::-webkit-scrollbar {
+                width: 12px;
+            }
+
+            .scroll-fade {
+                right: 12px;
+            }
+
+            .scroll-cue {
+                left: calc(50% - 6px);
             }
 
             .book-cover-wrapper,
@@ -617,12 +773,17 @@
             }
 
             .egw-banner {
-                padding: 0 3%;
-                height: 180px;
+                padding: 3rem 3% 2rem;
+                min-height: 180px;
             }
 
             .egw-title {
                 font-size: 1.5rem;
+            }
+
+            .egw-intro {
+                font-size: 0.92rem;
+                line-height: 1.6;
             }
         }
     </style>
@@ -635,6 +796,9 @@
         <div class="egw-badge">SPIRIT OF PROPHECY</div>
         <div class="egw-banner-text">
             <h1 class="egw-title">Ellen G. White Writings</h1>
+            <p class="egw-intro">Read and download the writings of Ellen G. White, known in the Adventist Church as
+                the Spirit of Prophecy. These books offer Christ-centred counsel, devotional reading and church
+                history to help you grow in faith every day.</p>
             <p class="egw-hint"><i class="fa-solid fa-download"></i> Click the title of the book to download</p>
         </div>
     </div>
@@ -661,8 +825,23 @@
                 <p class="book-count" id="bookCount">&nbsp;</p>
             </div>
 
-            <!-- RIGHT COLUMN: Book Grid (scrolls on its own; filled dynamically from Supabase) -->
-            <div class="books-grid" id="booksGrid"></div>
+            <!-- RIGHT COLUMN: scrollable book panel -->
+            <div class="books-panel" id="booksPanel">
+
+                <div class="books-panel-head">
+                    <span class="panel-title"><i class="fa-solid fa-book-open"></i> Browse the Books</span>
+                    <span class="scroll-hint"><i class="fa-solid fa-arrows-up-down"></i> Scroll inside this box to see
+                        all books</span>
+                </div>
+
+                <!-- The only part that scrolls; filled dynamically from Supabase -->
+                <div class="books-grid" id="booksGrid"></div>
+
+                <div class="scroll-fade"></div>
+                <button type="button" class="scroll-cue" id="scrollCue">
+                    <i class="fa-solid fa-angles-down"></i> Scroll for more books
+                </button>
+            </div>
 
         </div>
 
@@ -714,6 +893,23 @@
             return state.books.find((b) => String(b.id) === card.dataset.id);
         }
 
+        // ---------- Scroll cue: shows the visitor that the books scroll inside the panel ----------
+        function updateScrollCue() {
+            const grid = $('booksGrid');
+            const panel = $('booksPanel');
+            if (!grid || !panel) return;
+
+            const overflowing = grid.scrollHeight > grid.clientHeight + 8;
+            const atEnd = grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 28;
+
+            panel.classList.toggle('overflowing', overflowing);
+            panel.classList.toggle('can-scroll', overflowing && !atEnd);
+        }
+
+        function refreshScrollCue() {
+            requestAnimationFrame(updateScrollCue);
+        }
+
         function renderState(opts) {
             $('booksGrid').innerHTML = `
                 <div class="state-box">
@@ -724,6 +920,7 @@
                     ${opts.retryFn ? '<button type="button" class="retry-btn"><i class="fa-solid fa-rotate-right"></i> Try again</button>' : ''}
                 </div>`;
             if (opts.retryFn) $('booksGrid').querySelector('.retry-btn').addEventListener('click', opts.retryFn);
+            refreshScrollCue();
         }
 
         function showLoading() {
@@ -733,6 +930,7 @@
             }
             $('booksGrid').innerHTML = cards;
             $('bookCount').textContent = 'Loading books…';
+            refreshScrollCue();
         }
 
         // ---------- Saved covers (IndexedDB): covers built once are instant on every later visit ----------
@@ -941,6 +1139,9 @@
             const cards = $('booksGrid').querySelectorAll('.book-card');
             cards.forEach((card, i) => mountCover(card, books[i]));
 
+            // Start at the top of the list
+            $('booksGrid').scrollTop = 0;
+
             applyFilter();
         }
 
@@ -962,6 +1163,8 @@
             if (!total) $('bookCount').textContent = '';
             else if (term) $('bookCount').textContent = `${shown} of ${total} book${total === 1 ? '' : 's'}`;
             else $('bookCount').textContent = `${total} book${total === 1 ? '' : 's'}`;
+
+            refreshScrollCue();
         }
 
         // ---------- Data loading ----------
@@ -1118,6 +1321,16 @@
         });
 
         $('bookSearch').addEventListener('input', applyFilter);
+
+        // Scroll cue: updates while scrolling / resizing, and the pill scrolls the books down
+        $('booksGrid').addEventListener('scroll', updateScrollCue, { passive: true });
+        window.addEventListener('resize', refreshScrollCue);
+        if (window.ResizeObserver) new ResizeObserver(refreshScrollCue).observe($('booksGrid'));
+
+        $('scrollCue').addEventListener('click', () => {
+            const grid = $('booksGrid');
+            grid.scrollBy({ top: Math.round(grid.clientHeight * 0.8), behavior: 'smooth' });
+        });
 
         document.addEventListener('DOMContentLoaded', init);
 
