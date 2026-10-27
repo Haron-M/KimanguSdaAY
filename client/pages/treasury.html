@@ -823,6 +823,170 @@
             }
 
         }
+
+        /* ===== DEPOSIT CONFIRMATION POPUP ===== */
+        .confirm-card {
+            text-align: center;
+            max-width: 400px;
+            padding: 2rem 1.6rem 1.6rem;
+        }
+
+        .confirm-icon {
+            position: relative;
+            width: 84px;
+            height: 84px;
+            margin: 0 auto 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(245, 158, 11, 0.14);
+            color: var(--accent-gold);
+            font-size: 2rem;
+            transition: background 0.3s ease;
+        }
+
+        .confirm-icon .ci-main {
+            animation: ciPulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes ciPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.12);
+            }
+        }
+
+        /* Spinning ring (shown while saving) */
+        .confirm-icon .ci-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .confirm-icon.is-loading .ci-ring {
+            opacity: 1;
+            border-top-color: var(--accent-gold);
+            animation: ciSpin 0.8s linear infinite;
+        }
+
+        .confirm-icon.is-loading .ci-main {
+            animation: ciPulse 0.8s ease-in-out infinite;
+        }
+
+        @keyframes ciSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Tick (shown on success) */
+        .confirm-icon .ci-tick {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: scale(0.6);
+        }
+
+        .ci-tick-circle {
+            stroke: #16a34a;
+            stroke-width: 3;
+            stroke-dasharray: 151;
+            stroke-dashoffset: 151;
+        }
+
+        .ci-tick-path {
+            stroke: #16a34a;
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 40;
+            stroke-dashoffset: 40;
+        }
+
+        .confirm-icon.is-success {
+            background: rgba(34, 197, 94, 0.14);
+        }
+
+        .confirm-icon.is-success .ci-main,
+        .confirm-icon.is-success .ci-ring {
+            display: none;
+        }
+
+        .confirm-icon.is-success .ci-tick {
+            opacity: 1;
+            animation: ciTickPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .confirm-icon.is-success .ci-tick-circle {
+            animation: ciDraw 0.6s ease forwards;
+        }
+
+        .confirm-icon.is-success .ci-tick-path {
+            animation: ciDraw 0.4s 0.5s ease forwards;
+        }
+
+        @keyframes ciDraw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes ciTickPop {
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .confirm-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .confirm-card p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .confirm-card p strong {
+            color: var(--primary-dark);
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .confirm-actions .btn-tr {
+            flex: 1;
+            padding: 0.85rem;
+        }
+
+        .btn-tr.cancel {
+            background: var(--off-white);
+            color: var(--primary-dark);
+            border: 1.5px solid var(--border-color);
+        }
+
+        .btn-tr.cancel:hover {
+            background: #eef2f7;
+        }
+
+        .confirm-actions.hidden {
+            display: none;
+        }
     </style>
 </head>
 
@@ -981,6 +1145,31 @@
             </form>
         </div>
     </div>
+    <!-- DEPOSIT CONFIRMATION POPUP -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-card confirm-card">
+            <div class="confirm-icon" id="confirmIcon">
+                <div class="ci-ring"></div>
+                <i class="fa-solid fa-hand-holding-dollar ci-main"></i>
+                <svg class="ci-tick" viewBox="0 0 52 52" aria-hidden="true">
+                    <circle class="ci-tick-circle" cx="26" cy="26" r="24" fill="none" />
+                    <path class="ci-tick-path" fill="none" d="M14 27l8 8 16-17" />
+                </svg>
+            </div>
+
+            <h3 id="confirmTitle">Confirm Payment</h3>
+            <p id="confirmText"></p>
+
+            <div class="confirm-actions" id="confirmActions">
+                <button type="button" class="btn-tr cancel" id="confirmCancelBtn">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
+                <button type="button" class="btn-tr gold" id="confirmAcceptBtn">
+                    <i class="fa-solid fa-check"></i> Accept
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- TOAST CONTAINER -->
     <div id="toastContainer"></div>
@@ -1074,10 +1263,35 @@
             }
         });
 
-        // MEMBER DEPOSIT SUBMIT
-        document.getElementById('depositForm').addEventListener('submit', async (e) => {
+        // ===== MEMBER DEPOSIT: CONFIRM FIRST, THEN SAVE =====
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmIcon = document.getElementById('confirmIcon');
+        const confirmTitle = document.getElementById('confirmTitle');
+        const confirmText = document.getElementById('confirmText');
+        const confirmActions = document.getElementById('confirmActions');
+        const confirmAcceptBtn = document.getElementById('confirmAcceptBtn');
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+
+        let pendingDeposit = null;
+        let depositSaving = false;
+
+        function resetConfirmModal() {
+            confirmIcon.classList.remove('is-loading', 'is-success');
+            confirmActions.classList.remove('hidden');
+            confirmTitle.textContent = 'Confirm Payment';
+            confirmAcceptBtn.disabled = false;
+            confirmCancelBtn.disabled = false;
+        }
+
+        function closeConfirmModal() {
+            if (depositSaving) return;            // don't allow closing while saving
+            confirmModal.classList.remove('active');
+            pendingDeposit = null;
+        }
+
+        // Step 1: clicking "Deposit Funds" only opens the confirmation popup
+        document.getElementById('depositForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const btn = document.getElementById('depositBtn');
             const select = document.getElementById('depositUser');
             const userId = select.value;
             const amount = parseFloat(document.getElementById('depositAmount').value);
@@ -1086,8 +1300,31 @@
             if (!userId) { showToast('Please select a member.', true); return; }
             if (!amount || amount <= 0) { showToast('Please enter a valid amount.', true); return; }
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Depositing...';
+            pendingDeposit = { userId, amount, userName };
+
+            resetConfirmModal();
+            confirmText.innerHTML =
+                `Confirm payment of <strong>KSh ${amount.toLocaleString()}</strong> to <strong>${escapeHtml(userName)}</strong>`;
+            confirmModal.classList.add('active');
+        });
+
+        // Cancel: close without saving anything
+        confirmCancelBtn.addEventListener('click', closeConfirmModal);
+        confirmModal.addEventListener('click', (e) => {
+            if (e.target === confirmModal) closeConfirmModal();
+        });
+
+        // Step 2: Accept saves the deposit, animates the icon, then shows the tick
+        confirmAcceptBtn.addEventListener('click', async () => {
+            if (!pendingDeposit || depositSaving) return;
+            depositSaving = true;
+
+            const { userId, amount, userName } = pendingDeposit;
+
+            confirmAcceptBtn.disabled = true;
+            confirmCancelBtn.disabled = true;
+            confirmIcon.classList.add('is-loading');
+            confirmTitle.textContent = 'Processing...';
 
             try {
                 const { error } = await supabaseClient.from('transactions').insert({
@@ -1095,15 +1332,33 @@
                 });
                 if (error) throw new Error(error.message);
 
-                showToast(`Deposit of KSh ${amount.toLocaleString()} for ${userName} completed successfully.`);
+                // Success: icon turns into an animated tick
+                confirmIcon.classList.remove('is-loading');
+                confirmIcon.classList.add('is-success');
+                confirmTitle.textContent = 'Transaction Complete';
+                confirmText.innerHTML =
+                    `<strong>KSh ${amount.toLocaleString()}</strong> was deposited to <strong>${escapeHtml(userName)}</strong>.`;
+                confirmActions.classList.add('hidden');
+
                 document.getElementById('depositForm').reset();
                 await loadTreasuryData();
+
+                setTimeout(() => {
+                    depositSaving = false;
+                    closeConfirmModal();
+                    resetConfirmModal();
+                }, 2200);
             } catch (err) {
+                // Failure: go back to the confirmation view so they can retry or cancel
+                depositSaving = false;
+                resetConfirmModal();
                 showToast(err.message, true);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Deposit Funds';
             }
+        });
+
+        // Escape key closes the popup (unless it is saving)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && confirmModal.classList.contains('active')) closeConfirmModal();
         });
 
         // EXPENDITURE SUBMIT & DEDUCTION FROM DATABASE BALANCE
