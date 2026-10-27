@@ -1303,16 +1303,33 @@
         }
 
         function drawReportTitle(doc, fromLabel, toLabel) {
-            // Coin in hand icon
+            // Coin-in-hand icon with gold lines on both sides
+            const ix = 92, iy = 35, k = 0.065;           // icon box: left, top, mm per design unit
+            const px = (v) => ix + v * k;
+            const py = (v) => iy + v * k;
+
+            // Gold side lines
+            doc.setDrawColor(...GOLD);
+            doc.setLineWidth(0.5);
+            doc.line(52, 44, 88, 44);
+            doc.line(122, 44, 158, 44);
+
+            // Coin
             doc.setDrawColor(...NAVY);
-            doc.setLineWidth(0.6);
-            doc.circle(105, 43, 4.2, 'S');
+            doc.setFillColor(...NAVY);
+            doc.setLineWidth(14 * k);
+            doc.circle(px(200), py(70), 45 * k, 'S');
             doc.setTextColor(...NAVY);
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(9);
-            doc.text('$', 105, 45.6, { align: 'center' });
-            doc.setFillColor(...NAVY);
-            doc.roundedRect(95, 49, 20, 3.2, 1.6, 1.6, 'F');
+            doc.setFontSize(12);
+            doc.text('$', px(200), py(70) + 1.5, { align: 'center' });
+
+            // Hand: cuff, palm and three fingers
+            doc.roundedRect(px(20), py(135), 50 * k, 125 * k, 10 * k, 10 * k, 'F');
+            doc.roundedRect(px(85), py(150), 110 * k, 100 * k, 20 * k, 20 * k, 'F');
+            doc.roundedRect(px(150), py(150), 170 * k, 30 * k, 15 * k, 15 * k, 'F');
+            doc.roundedRect(px(150), py(186), 150 * k, 30 * k, 15 * k, 15 * k, 'F');
+            doc.roundedRect(px(150), py(222), 130 * k, 30 * k, 15 * k, 15 * k, 'F');
 
             // Title
             doc.setFont('times', 'bold');
