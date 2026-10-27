@@ -829,7 +829,6 @@
             });
         }
 
-        // Updates the row for this category + quarter + year, or creates it
         async function saveLessonRecord(category, quarter, year, fields) {
             const yearNum = parseInt(year, 10);
 
@@ -843,18 +842,22 @@
                 .limit(1);
             if (findErr) throw findErr;
 
-            let error;
             if (existing && existing.length) {
-                ({ error } = await supabaseAdmin
+                const { data: updated, error: updErr } = await supabaseAdmin
                     .from(COMPLETE_LESSON_TABLE)
                     .update(fields)
-                    .eq('id', existing[0].id));
+                    .eq('id', existing[0].id)
+                    .select('id');
+                if (updErr) throw updErr;
+                if (!updated || !updated.length) {
+                    throw new Error('The database blocked the update. Add an UPDATE policy on quarterly_lessons.');
+                }
             } else {
-                ({ error } = await supabaseAdmin
+                const { error } = await supabaseAdmin
                     .from(COMPLETE_LESSON_TABLE)
-                    .insert([{ category, quarter, year: yearNum, lessons: [], ...fields }]));
+                    .insert([{ category, quarter, year: yearNum, lessons: [], ...fields }]);
+                if (error) throw error;
             }
-            if (error) throw error;
         }
 
         async function uploadCompleteLesson() {

@@ -673,8 +673,7 @@
                 Sabbath School each week. Every quarter brings real testimonies of how God is changing lives in
                 communities around the world, through missionaries, church members and everyday believers who
                 answer His call.</p>
-            <p>Use them in your Sabbath School class, family worship or personal devotion to pray for those serving
-                on the mission field and to be encouraged to share the gospel where you are. Choose a quarter below to
+            <p>Choose a quarter below to
                 read online, download the complete lesson, or browse the weekly stories.</p>
         </div>
 
@@ -1043,8 +1042,9 @@
                     list.push({ id: row.id, quarter: row.quarter, year: row.year, qNum });
                 }
 
-                // The query is already newest-upload-first, so the list keeps that order:
-                // the most recently uploaded quarter appears first, top-left
+                // Newest quarter first (4th Quarter 2026, 3rd Quarter 2026, ... 1st Quarter 2025),
+                // no matter when each file was uploaded
+                list.sort((a, b) => (b.year - a.year) || (b.qNum - a.qNum));
                 state.quarters = list;
 
                 if (!list.length) {

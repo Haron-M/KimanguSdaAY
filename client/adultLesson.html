@@ -61,14 +61,16 @@
         .adult-banner {
             position: relative;
             width: 100%;
-            height: 260px;
+            min-height: 260px;
             background-image: linear-gradient(rgba(10, 25, 47, 0.82),
                     rgba(15, 43, 76, 0.88)), url('https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&w=1800&q=80');
             background-size: cover;
             background-position: center 40%;
             display: flex;
-            align-items: center;
-            padding: 0 8%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 3.5rem 8% 3rem;
             overflow: hidden;
             border-bottom: 6px solid #102a45;
         }
@@ -97,6 +99,17 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             max-width: 700px;
+        }
+
+        /* Brief intro under the banner title */
+        .adult-intro {
+            margin-top: 1rem;
+            max-width: 640px;
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 1.02rem;
+            line-height: 1.7;
+            padding-left: 1rem;
+            border-left: 3px solid var(--accent-gold);
         }
 
         /* ==========================================
@@ -279,16 +292,21 @@
             color: var(--text-gray);
         }
 
-        /* Complete lesson download button (left column) */
-        .complete-download-btn {
+        /* Read Online + Download PDF buttons just below the cover */
+        .cover-actions {
             display: none;
+            flex-direction: column;
+            gap: 0.55rem;
+            margin-top: 1rem;
+        }
+
+        .cover-btn {
+            display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-top: 1rem;
+            width: 100%;
             padding: 0.7rem 1rem;
-            background: var(--primary-dark);
-            color: var(--white);
             border-radius: 8px;
             font-size: 0.88rem;
             font-weight: 700;
@@ -296,9 +314,42 @@
             transition: var(--transition);
         }
 
-        .complete-download-btn:hover {
+        .cover-btn.primary {
+            background: var(--primary-dark);
+            border: 1.5px solid var(--primary-dark);
+            color: var(--white);
+        }
+
+        .cover-btn.primary:hover {
             background: var(--accent-gold);
+            border-color: var(--accent-gold);
             color: var(--primary-dark);
+        }
+
+        .cover-btn.outline {
+            background: #ffffff;
+            border: 1.5px solid var(--primary-dark);
+            color: var(--primary-dark);
+        }
+
+        .cover-btn.outline:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        /* Greyed out until a complete lesson PDF is uploaded */
+        .cover-btn.disabled {
+            background: #f1f5f9;
+            border-color: var(--border-color);
+            color: #94a3b8;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .cover-note {
+            text-align: center;
+            font-size: 0.78rem;
+            color: #94a3b8;
         }
 
         /* Right Side Lesson Table List (3 Columns Desktop Layout) */
@@ -312,6 +363,25 @@
             background: #ffffff;
         }
 
+        /* Column titles at the top of the grid: Date | Lesson Title | Download */
+        .lessons-head {
+            display: grid;
+            grid-template-columns: 220px 1fr 130px;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1.25rem;
+            background: var(--primary-dark);
+            color: var(--white);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .lessons-head .head-download {
+            text-align: right;
+        }
+
         .lesson-row {
             display: grid;
             grid-template-columns: 220px 1fr 130px;
@@ -322,7 +392,8 @@
             transition: background-color 0.2s ease;
         }
 
-        .lesson-row:nth-child(even) {
+        /* the title row is the first child, so stripe the odd rows */
+        .lesson-row:nth-child(odd) {
             background-color: #f8fafc;
         }
 
@@ -491,6 +562,56 @@
         }
 
         /* ==========================================
+           FULL-SCREEN READER
+        ========================================== */
+        .reader {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(10, 25, 47, 0.85);
+            padding: 2vh 3vw;
+        }
+
+        .reader.open {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .reader-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary-dark);
+            color: #fff;
+            padding: 0.7rem 1.1rem;
+            border-radius: 10px 10px 0 0;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .reader-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0 0.3rem;
+        }
+
+        .reader-close:hover {
+            color: var(--accent-gold);
+        }
+
+        .reader iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: #fff;
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* ==========================================
            RESPONSIVE LAYOUT & MOBILE OPTIMIZATIONS
         ========================================== */
         @media (max-width: 900px) {
@@ -505,15 +626,24 @@
             }
 
             /* --- MOBILE LESSON ROW ALIGNMENT FIX --- */
-            .lesson-row {
+            .lesson-row,
+            .lessons-head {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+            }
+
+            .lesson-row {
                 padding: 0.85rem 1rem;
             }
 
+            .lessons-head {
+                padding: 0.75rem 1rem;
+            }
+
             /* Hide title text on mobile for clean 1-line alignment */
-            .lesson-title-text {
+            .lesson-title-text,
+            .lessons-head .head-title {
                 display: none;
             }
 
@@ -526,12 +656,17 @@
             }
 
             .adult-banner {
-                padding: 0 5%;
-                height: 200px;
+                padding: 3rem 5% 2rem;
+                min-height: 200px;
             }
 
             .adult-title {
                 font-size: 1.6rem;
+            }
+
+            .adult-intro {
+                font-size: 0.92rem;
+                line-height: 1.6;
             }
 
             /* --- MOBILE: tidier section layout --- */
@@ -577,6 +712,10 @@
                 gap: 0.5rem;
             }
 
+            .lessons-head {
+                padding: 0.75rem;
+            }
+
             .lesson-date {
                 font-size: 0.85rem;
                 white-space: normal;
@@ -597,6 +736,8 @@
     <div class="adult-banner">
         <div class="adult-badge">ADULT STUDY GUIDE</div>
         <h1 class="adult-title">Adult Sabbath School Lessons</h1>
+        <p class="adult-intro">Weekly Bible study guides for the Adult Sabbath School. Study God’s Word with your
+            class, your family or on your own, and read each lesson online or download it as a PDF.</p>
     </div>
 
     <!-- MAIN LESSONS SECTION (filled dynamically from Supabase) -->
@@ -627,7 +768,7 @@
 
         <div class="quarter-container" id="quarterContainer">
 
-            <!-- LEFT COLUMN: Cover Image + Complete Lesson Download -->
+            <!-- LEFT COLUMN: Cover Image + Read Online / Download PDF -->
             <div class="lesson-cover-box is-loading" id="coverBox">
                 <img id="coverImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                     alt="Adult Sabbath School Cover">
@@ -636,9 +777,16 @@
                     <p id="coverCaption">&nbsp;</p>
                 </div>
 
-                <a href="#" id="completeDownloadBtn" class="complete-download-btn">
-                    <i class="fa-solid fa-download"></i> Download Complete Lesson
-                </a>
+                <div class="cover-actions" id="coverActions">
+                    <a href="#" id="readOnlineBtn" class="cover-btn primary" target="_blank" rel="noopener">
+                        <i class="fa-regular fa-eye"></i> Read Online
+                    </a>
+                    <a href="#" id="downloadPdfBtn" class="cover-btn outline">
+                        <i class="fa-solid fa-download"></i> Download PDF
+                    </a>
+                    <p class="cover-note" id="coverNote" style="display:none">The complete lesson has not been
+                        uploaded yet.</p>
+                </div>
             </div>
 
             <!-- RIGHT COLUMN: Lesson List (Date | Title [Desktop Only] | Download) -->
@@ -647,6 +795,17 @@
         </div>
 
     </section>
+
+    <!-- FULL-SCREEN PDF READER (used by "Read Online" on desktop) -->
+    <div class="reader" id="reader">
+        <div class="reader-bar">
+            <span id="readerTitle">Complete Lesson</span>
+            <button type="button" class="reader-close" id="readerClose" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <iframe id="readerFrame" title="Lesson reader"></iframe>
+    </div>
 
     <!-- JAVASCRIPT LOGIC: DYNAMIC LESSONS FROM SUPABASE -->
     <script>
@@ -715,7 +874,7 @@
             $('quarterContainer').classList.remove('no-cover');
             $('coverBox').style.display = '';
             $('coverBox').classList.add('is-loading');
-            $('completeDownloadBtn').style.display = 'none';
+            $('coverActions').style.display = 'none';
 
             let rows = '';
             for (let i = 0; i < 6; i++) {
@@ -780,20 +939,31 @@
             img.src = src || FALLBACK_COVER;
         }
 
-        // Shows / hides the "Download Complete Lesson" button under the cover
-        function setCompleteDownload(record, qNum) {
-            const btn = $('completeDownloadBtn');
+        // Shows / hides "Read Online" and "Download PDF" under the cover
+        function setCompleteActions(record, qNum) {
+            const box = $('coverActions');
 
             if (record.complete_lesson) {
+                const url = record.complete_lesson;
                 const niceName = `Adult_${record.year}_Q${qNum}_Complete_Lesson.pdf`;
-                const sep = record.complete_lesson.includes('?') ? '&' : '?';
+                const sep = url.includes('?') ? '&' : '?';
+
+                $('readOnlineBtn').href = url;
                 // "?download=" makes Supabase Storage send the file as a download with this name
-                btn.href = record.complete_lesson + sep + 'download=' + encodeURIComponent(niceName);
-                btn.style.display = 'flex';
+                $('downloadPdfBtn').href = url + sep + 'download=' + encodeURIComponent(niceName);
+                $('readOnlineBtn').classList.remove('disabled');
+                $('downloadPdfBtn').classList.remove('disabled');
+                $('coverNote').style.display = 'none';
             } else {
-                btn.style.display = 'none';
-                btn.removeAttribute('href');
+                // No complete PDF saved yet: keep the buttons visible but inactive
+                $('readOnlineBtn').removeAttribute('href');
+                $('downloadPdfBtn').removeAttribute('href');
+                $('readOnlineBtn').classList.add('disabled');
+                $('downloadPdfBtn').classList.add('disabled');
+                $('coverNote').style.display = 'block';
             }
+            // Shown together with the weekly lessons list, whether or not a complete PDF exists
+            box.style.display = 'flex';
         }
 
         function renderQuarter(record) {
@@ -809,7 +979,7 @@
             $('quarterContainer').classList.remove('no-cover');
             $('coverBox').style.display = '';
             setCover(record.cover_image);
-            setCompleteDownload(record, qNum);
+            setCompleteActions(record, qNum);
 
             // Lessons come back as a JSONB array; sort by lesson number to be safe
             let lessons = record.lessons;
@@ -834,7 +1004,14 @@
                 return d && d >= today;
             });
 
-            $('lessonsList').innerHTML = lessons.map((l, i) => {
+            const head = `
+                <div class="lessons-head">
+                    <div class="head-date">Date</div>
+                    <div class="head-title">Lesson Title</div>
+                    <div class="head-download">Download</div>
+                </div>`;
+
+            $('lessonsList').innerHTML = head + lessons.map((l, i) => {
                 const num = String(l.lesson || i + 1).padStart(2, '0');
                 const dateText = (l.date || '').trim();
                 const label = dateText ? `Lesson ${num} – ${dateText}` : `Lesson ${num}`;
@@ -1026,6 +1203,18 @@
             }, 30);
         }
 
+        // ---------- Full-screen reader ----------
+        function openReader(url, title) {
+            $('readerTitle').textContent = (title ? title + ' – ' : '') + 'Complete Lesson';
+            $('readerFrame').src = url + '#view=FitH';
+            $('reader').classList.add('open');
+        }
+
+        function closeReader() {
+            $('reader').classList.remove('open');
+            $('readerFrame').src = 'about:blank';
+        }
+
         // ---------- Events ----------
         $('lessonsList').addEventListener('click', (e) => {
             const btn = e.target.closest('.download-btn[data-index]');
@@ -1033,6 +1222,18 @@
             e.preventDefault();
             downloadLesson(parseInt(btn.dataset.index, 10), btn);
         });
+
+        // Read Online: full-screen reader on desktop, normal new-tab link on phones
+        $('readOnlineBtn').addEventListener('click', (e) => {
+            if (window.innerWidth <= 900) return;
+            const url = $('readOnlineBtn').getAttribute('href');
+            if (!url || url === '#') return;
+            e.preventDefault();
+            const rec = state.record || {};
+            openReader(url, rec.quarter ? `${rec.quarter} ${rec.year}` : '');
+        });
+
+        $('readerClose').addEventListener('click', closeReader);
 
         // Hidden <select> change (also fired by the custom dropdown below)
         $('quarterSelect').addEventListener('change', (e) => {
@@ -1057,7 +1258,7 @@
             $('quarterSelect').dispatchEvent(new Event('change'));   // runs loadQuarter
         });
 
-        // Click anywhere else, or press Escape, to close it
+        // Click anywhere else, or press Escape, to close the dropdown / reader
         document.addEventListener('click', () => {
             $('qDrop').classList.remove('open');
             $('qDropBtn').setAttribute('aria-expanded', 'false');
@@ -1066,6 +1267,7 @@
             if (e.key === 'Escape') {
                 $('qDrop').classList.remove('open');
                 $('qDropBtn').setAttribute('aria-expanded', 'false');
+                closeReader();
             }
         });
 
