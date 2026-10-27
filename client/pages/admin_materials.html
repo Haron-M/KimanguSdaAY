@@ -805,13 +805,66 @@
         function setProgress(percent) {
             setRing('ringComplete', percent);
         }
+        // Uploads a file to Supabase Storage and reports progress (0-100)
+        function uploadToStorage(path, file, onProgress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${COMPLETE_LESSON_BUCKET}/${path}`);
+                xhr.setRequestHeader('apikey', SUPABASE_KEY);
+                xhr.setRequestHeader('x-upsert', 'false');
 
-        function uploadCompleteLesson() {
+                xhr.upload.onprogress = (evt) => {
+                    if (evt.lengthComputable) {
+                        onProgress(Math.min(95, Math.floor((evt.loaded / evt.total) * 95)));
+                    }
+                };
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) return resolve();
+                    let msg = 'Upload failed';
+                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) { }
+                    reject(new Error(msg));
+                };
+                xhr.onerror = () => reject(new Error('Network error. Check your connection.'));
+                xhr.send(file);
+            });
+        }
+
+        // Updates the row for this category + quarter + year, or creates it
+        async function saveLessonRecord(category, quarter, year, fields) {
+            const yearNum = parseInt(year, 10);
+
+            const { data: existing, error: findErr } = await supabaseAdmin
+                .from(COMPLETE_LESSON_TABLE)
+                .select('id')
+                .eq('category', category)
+                .eq('quarter', quarter)
+                .eq('year', yearNum)
+                .order('id', { ascending: false })
+                .limit(1);
+            if (findErr) throw findErr;
+
+            let error;
+            if (existing && existing.length) {
+                ({ error } = await supabaseAdmin
+                    .from(COMPLETE_LESSON_TABLE)
+                    .update(fields)
+                    .eq('id', existing[0].id));
+            } else {
+                ({ error } = await supabaseAdmin
+                    .from(COMPLETE_LESSON_TABLE)
+                    .insert([{ category, quarter, year: yearNum, lessons: [], ...fields }]));
+            }
+            if (error) throw error;
+        }
+
+        async function uploadCompleteLesson() {
             const fileInput = document.getElementById('completeLessonFile');
+            const coverInput = document.getElementById('qCoverImg');
             const file = fileInput.files[0];
+            const coverFile = coverInput.files[0];
 
-            if (!file) {
-                showToast('Please choose the complete lesson document first.', true);
+            if (!file && !coverFile) {
+                showToast('Please choose a cover image and/or the complete lesson PDF first.', true);
                 return;
             }
 
@@ -823,113 +876,60 @@
             const wrap = document.getElementById('progressWrap');
             const label = document.getElementById('progressLabel');
 
-            // Build a safe, unique storage path
-            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-            const quarterSlug = quarter.replace(/\s+/g, '_');
-            const path = `${category}/${year}_${quarterSlug}/${Date.now()}_${safeName}`;
-
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
             label.textContent = 'Uploading...';
             setProgress(0);
             wrap.classList.add('show');
 
-            // XMLHttpRequest gives us real upload progress events
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${COMPLETE_LESSON_BUCKET}/${path}`);
-            xhr.setRequestHeader('apikey', SUPABASE_KEY);
-            xhr.setRequestHeader('x-upsert', 'false');
+            let success = false;
+            try {
+                const fields = {};
 
-            xhr.upload.onprogress = (evt) => {
-                if (evt.lengthComputable) {
-                    // hold at 99% until the server confirms the file is stored
-                    const pct = Math.min(99, Math.floor((evt.loaded / evt.total) * 100));
-                    setProgress(pct);
+                // Cover image -> saved in the cover_image column
+                if (coverFile) {
+                    fields.cover_image = await fileToBase64(coverFile);
+                    setProgress(file ? 5 : 50);
                 }
-            };
 
-            const resetButton = () => {
+                // Complete lesson PDF -> Storage, link saved in complete_lesson
+                if (file) {
+                    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                    const quarterSlug = quarter.replace(/\s+/g, '_');
+                    const path = `${category}/${year}_${quarterSlug}/${Date.now()}_${safeName}`;
+
+                    await uploadToStorage(path, file, setProgress);
+
+                    const { data: urlData } = supabaseAdmin.storage
+                        .from(COMPLETE_LESSON_BUCKET)
+                        .getPublicUrl(path);
+                    fields.complete_lesson = urlData.publicUrl;
+                }
+
+                await saveLessonRecord(category, quarter, year, fields);
+
+                setProgress(100);
+                label.textContent = 'Upload complete';
+                success = true;
+
+                const what = file && coverFile ? 'Cover and complete lesson' : (file ? 'Complete lesson' : 'Cover image');
+                showToast(`${what} uploaded successfully!`);
+
+                fileInput.value = '';
+                coverInput.value = '';
+                document.getElementById('completeLessonName').textContent = '';
+                document.getElementById('qCoverName').textContent = '';
+            } catch (err) {
+                console.error('Upload error:', err);
+                showToast(err.message || 'Upload failed', true);
+            } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload';
-            };
-
-            xhr.onload = async () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    // File is fully stored: counter reaches 100%
-                    setProgress(100);
-                    label.textContent = 'Upload complete';
-
-                    try {
-                        const { data: urlData } = supabaseAdmin.storage
-                            .from(COMPLETE_LESSON_BUCKET)
-                            .getPublicUrl(path);
-
-                        // Save a record so the document can be listed on the site
-                        const yearNum = parseInt(year, 10);
-
-                        // Is there already a row for this category + quarter + year?
-                        const { data: existing, error: findErr } = await supabaseAdmin
-                            .from(COMPLETE_LESSON_TABLE)
-                            .select('id')
-                            .eq('category', category)
-                            .eq('quarter', quarter)
-                            .eq('year', yearNum)
-                            .order('id', { ascending: false })
-                            .limit(1);
-                        if (findErr) throw findErr;
-
-                        let error;
-                        if (existing && existing.length) {
-                            ({ error } = await supabaseAdmin
-                                .from(COMPLETE_LESSON_TABLE)
-                                .update({ complete_lesson: urlData.publicUrl })
-                                .eq('id', existing[0].id));
-                        } else {
-                            ({ error } = await supabaseAdmin
-                                .from(COMPLETE_LESSON_TABLE)
-                                .insert([{
-                                    category: category,
-                                    quarter: quarter,
-                                    year: yearNum,
-                                    lessons: [],
-                                    complete_lesson: urlData.publicUrl
-                                }]));
-                        }
-                        if (error) throw error;
-                    } catch (err) {
-                        console.error('Database record error:', err);
-                        showToast('File uploaded, but saving its record failed: ' + (err.message || 'unknown error'), true);
-                        resetButton();
-                        return;
-                    }
-
-                    showToast('Complete lesson uploaded successfully!');
-                    fileInput.value = '';
-                    document.getElementById('completeLessonName').textContent = '';
-
-                    // hide the progress bar shortly after the toast disappears
-                    setTimeout(() => {
-                        wrap.classList.remove('show');
-                        setProgress(0);
-                    }, 2000);
-                    resetButton();
-                } else {
-                    let msg = 'Upload failed';
-                    try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) { }
-                    console.error('Upload error:', xhr.status, xhr.responseText);
+                setTimeout(() => {
                     wrap.classList.remove('show');
-                    showToast(msg, true);
-                    resetButton();
-                }
-            };
-
-            xhr.onerror = () => {
-                wrap.classList.remove('show');
-                showToast('Network error. Check your connection.', true);
-                resetButton();
-            };
-
-            xhr.send(file);
+                    setProgress(0);
+                }, success ? 2000 : 0);
+            }
         }
 
         // Render Exactly 13 Rows for Lessons Grid
@@ -1056,10 +1056,10 @@
                     category: category,
                     quarter: quarter,
                     year: parseInt(year, 10),
-                    cover_image: coverBase64,
                     lessons: lessonsArr
                 };
-
+                // Only send the cover when a new one was chosen, so an existing cover is never erased
+                if (coverBase64) payload.cover_image = coverBase64;
                 // Update the row if one exists already (e.g. created by the complete lesson upload)
                 const { data: existing, error: findErr } = await supabaseAdmin
                     .from('quarterly_lessons')
