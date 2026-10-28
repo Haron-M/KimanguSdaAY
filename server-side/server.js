@@ -17,7 +17,22 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 
-app.use(express.static(path.join(__dirname, '../client')));
+// ===================== CLEAN URLS (no .html in the address bar) =====================
+const CLIENT_DIR = path.join(__dirname, '../client');
+
+// Someone opening /auth.html, /dashboard.html or /index.html in the browser goes to /auth, /dashboard or /.
+// Pages that the shell loads inside its iframe are left alone, so the shell keeps working as before.
+app.use((req, res, next) => {
+    if (req.method !== 'GET' || !req.path.endsWith('.html')) return next();
+    if (req.headers['sec-fetch-dest'] !== 'document') return next();
+
+    const clean = req.path.slice(0, -5);
+    const query = req.originalUrl.slice(req.path.length);   // keeps ?view=signup
+    res.redirect((clean === '/index' ? '/' : clean) + query);
+});
+
+// /auth now finds auth.html, /dashboard finds dashboard.html, and so on
+app.use(express.static(CLIENT_DIR, { extensions: ['html'] }));
 
 const CLIENT_OPTIONS = {
     auth: {
