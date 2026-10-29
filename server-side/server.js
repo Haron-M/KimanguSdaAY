@@ -32,7 +32,12 @@ app.use((req, res, next) => {
 });
 
 // /auth now finds auth.html, /dashboard finds dashboard.html, and so on
-app.use(express.static(CLIENT_DIR, { extensions: ['html'] }));
+app.use(express.static(CLIENT_DIR, {
+    extensions: ['html'],
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
+    }
+}));
 
 const CLIENT_OPTIONS = {
     auth: {
