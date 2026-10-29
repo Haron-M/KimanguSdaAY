@@ -1228,6 +1228,74 @@
             .dropdown-menu li a.is-current {
                 color: var(--accent-gold) !important;
             }
+
+            .fb-fab {
+                right: 14px;
+                bottom: 14px;
+                width: auto;
+                height: 50px;
+                padding: 0 18px;
+                flex-direction: row;
+                gap: 8px;
+                border-radius: 999px;
+                font-size: 1.15rem;
+            }
+
+            .fb-label {
+                font-size: 0.78rem;
+                letter-spacing: 0.5px;
+            }
+
+            /* Hint bubble goes ABOVE the button, with its arrow pointing down */
+            .fb-hint {
+                right: 14px;
+                bottom: 76px;
+                max-width: min(240px, calc(100vw - 28px));
+                transform: translateY(10px);
+            }
+
+            .fb-hint.show {
+                transform: translateY(0);
+            }
+
+            .fb-hint::after {
+                right: 30px;
+                top: auto;
+                bottom: -6px;
+                transform: rotate(45deg);
+            }
+
+            /* Chat panel sits just above the pill and fits the screen */
+            .fb-panel {
+                right: 10px;
+                left: 10px;
+                bottom: 76px;
+                width: auto;
+                max-width: none;
+                height: 460px;
+                max-height: calc(100vh - 100px);
+                max-height: calc(100dvh - 100px);
+                /* respects the mobile browser's address bar */
+            }
+
+            /* Slightly smaller header so more room is left for messages */
+            .fb-head {
+                padding: 12px 14px;
+                gap: 10px;
+            }
+
+            .fb-head-icon {
+                width: 42px;
+                height: 42px;
+            }
+
+            .fb-form input {
+                font-size: 16px;
+                /* stops iPhones from zooming the page when you tap the input */
+            }
+
+
+
         }
     </style>
 </head>
