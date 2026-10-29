@@ -829,9 +829,15 @@
     <!-- JAVASCRIPT LOGIC: DYNAMIC STUDY GUIDES FROM SUPABASE -->
     <script>
         // ---------- Config ----------
-        const SUPABASE_URL = 'https://hywlfxlvwqnqbsmrmcbl.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd';
-        const CATEGORY = 'bible_study';   // matches "Bible Study Guide" in admin_material.html (Books & Guides tab)
+        const OLD_DB = {
+            url: 'https://hywlfxlvwqnqbsmrmcbl.supabase.co',
+            key: 'sb_publishable_1rkSNVU_Dl2j4l2jHgD7aA_3LGqEPbd'
+        };
+        const NEW_DB = {
+            url: 'https://octagxrtlggcwpbprwqs.supabase.co',
+            key: 'sb_publishable_3UKgABaPqP2YQlDOJgF8Cw_PTliz8Uh'
+        };
+        const CATEGORY = 'bible_study';  // matches "Bible Study Guide" in admin_material.html (Books & Guides tab)
 
         const COVER_WIDTH = 260;      // px width of generated covers (small = faster)
         const COVER_JOBS = 3;         // covers built at the same time
@@ -843,7 +849,7 @@
         }
 
         // ---------- State ----------
-        let supabaseClient = null;
+        let clients = null;   // { old, new }, created in init()
         const state = {
             guides: [],           // light records: id, title, cover_image, pdf_filename, created_at
             token: 0,             // guards against out-of-order responses
@@ -867,9 +873,8 @@
         function safeFileName(text) {
             return String(text || 'guide').trim().replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '') || 'guide';
         }
-
         function findGuide(card) {
-            return state.guides.find((g) => String(g.id) === card.dataset.id);
+            return state.guides.find((g) => g.uid === card.dataset.id);
         }
         // Scroll cue: shows the visitor that the guides scroll inside the panel
         function updateScrollCue() {
@@ -953,9 +958,8 @@
 
         // A new upload (different file or date) gets a new key, so old covers are never reused by mistake
         function coverKey(guide) {
-            return [guide.id, guide.pdf_filename || '', guide.created_at || ''].join('|');
+            return [guide.uid, guide.pdf_filename || '', guide.created_at || ''].join('|');
         }
-
         // ---------- Auto cover from the PDF's first page ----------
         const coverCache = new Map();   // guide id -> JPEG data URL (this session)
         const coverQueue = [];
@@ -1005,12 +1009,12 @@
             const wrapper = card.querySelector('.book-cover-wrapper');
             wrapper.classList.add('generating');
             try {
-                let cover = coverCache.get(String(guide.id));
+                let cover = coverCache.get(guide.uid);
                 if (!cover) {
-                    const source = await getGuideFile(guide.id);
+                    const source = await getGuideFile(guide);          // was getGuideFile(guide.id)
                     cover = await renderFirstPage(source);
-                    coverCache.set(String(guide.id), cover);
-                    coverDB.put(coverKey(guide), cover);   // remember it for next time
+                    coverCache.set(guide.uid, cover);                  // was String(guide.id)
+                    coverDB.put(coverKey(guide), cover);
                 }
                 applyCover(card, guide, cover);
             } catch (err) {
@@ -1064,7 +1068,7 @@
                 const cached = await coverDB.get(coverKey(guide));
                 if (!card.isConnected) return;
                 if (cached) {
-                    coverCache.set(String(guide.id), cached);
+                    coverCache.set(guide.uid, cached);                     // was String(guide.id)
                     applyCover(card, guide, cached);
                 } else {
                     getCoverObserver().observe(card);
@@ -1086,7 +1090,7 @@
                 const hasPdf = !!g.pdf_filename;
 
                 return `
-                    <div class="book-card" data-id="${esc(g.id)}" data-title="${esc(String(g.title || '').toLowerCase())}">
+                    <div class="book-card" data-id="${esc(g.uid)}" data-title="${esc(String(g.title || '').toLowerCase())}">
                         <div class="book-cover-wrapper">
                             <img alt="${esc(g.title)}">
                             <div class="cover-fallback"><i class="fa-solid fa-book-bible"></i><span>${esc(g.title)}</span></div>
@@ -1144,37 +1148,52 @@
             refreshScrollCue()
         }
 
-        // ---------- Data loading ----------
         async function init() {
             const myToken = ++state.token;
             showLoading();
 
             try {
                 if (!window.supabase) throw new Error('The Supabase library could not be loaded.');
-                if (!supabaseClient) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                if (!clients) {
+                    clients = {
+                        old: window.supabase.createClient(OLD_DB.url, OLD_DB.key),
+                        new: window.supabase.createClient(NEW_DB.url, NEW_DB.key)
+                    };
                 }
 
-                // pdf_data is NOT requested here; the PDF is fetched only when a cover is built or a guide is downloaded
-                const { data, error } = await supabaseClient
+                // pdf_data is NOT requested here; it is fetched only for covers and downloads
+                const load = (name) => clients[name]
                     .from('study_books')
                     .select('id, title, cover_image, pdf_filename, created_at')
                     .eq('category', CATEGORY)
-                    .order('created_at', { ascending: false });
-                if (error) throw error;
+                    .order('created_at', { ascending: false })
+                    .then(({ data, error }) => {
+                        if (error) throw error;
+                        return (data || []).map((r) => ({ ...r, _db: name, uid: `${name}:${r.id}` }));
+                    });
+
+                // Read both databases at once; one failing should not hide the other
+                const results = await Promise.allSettled([load('new'), load('old')]);
                 if (myToken !== state.token) return;
 
-                // If the same title was uploaded more than once, keep only the newest upload
+                if (results.every((r) => r.status === 'rejected')) throw results[0].reason;
+                results.forEach((r) => { if (r.status === 'rejected') console.warn('One database failed:', r.reason); });
+
+                const rows = results
+                    .filter((r) => r.status === 'fulfilled')
+                    .flatMap((r) => r.value)
+                    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));   // newest first
+
+                // If the same title exists more than once (in either database), keep the newest
                 const seen = new Set();
                 const list = [];
-                for (const row of data || []) {
+                for (const row of rows) {
                     const key = String(row.title || '').trim().toLowerCase();
                     if (seen.has(key)) continue;
                     seen.add(key);
                     list.push(row);
                 }
 
-                // A–Z, ignoring a leading "The", "An" or "A"
                 list.sort((a, b) => sortKey(a.title).localeCompare(sortKey(b.title)));
                 state.guides = list;
 
@@ -1217,14 +1236,14 @@
             return new Blob([bytes], { type: mime });
         }
 
-        async function getGuideFile(id) {
-            const key = String(id);
+        async function getGuideFile(guide) {
+            const key = guide.uid;
             if (state.fileCache.has(key)) return state.fileCache.get(key);
 
-            const { data, error } = await supabaseClient
+            const { data, error } = await clients[guide._db]
                 .from('study_books')
                 .select('pdf_data')
-                .eq('id', id)
+                .eq('id', guide.id)
                 .single();
             if (error) throw error;
             if (!data || !data.pdf_data) throw new Error('No PDF has been uploaded for this title.');
@@ -1254,7 +1273,7 @@
 
             trigger.classList.add('is-busy');
             try {
-                const source = await getGuideFile(guide.id);
+                const source = await getGuideFile(guide);   // was getGuideFile(guide.id)
                 let blob;
                 if (source.indexOf('data:') === 0) {
                     blob = dataUrlToBlob(source);
