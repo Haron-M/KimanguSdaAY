@@ -457,7 +457,10 @@
 ========================================== */
         .launch-overlay {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             z-index: 5000;
             display: flex;
             align-items: center;
@@ -1421,14 +1424,13 @@
     <script>
         // ---------- Launch countdown ----------
         (function () {
-            // CHANGE THESE IF NEEDED
-            const LAUNCH_AT = new Date('2026-11-01T10:10:00+03:00');   // 1 Nov 2026, 00:00 Kenya time
-            const PREVIEW_KEY = 'kimangu2026';   // open  index.html?preview=kimangu2026  to see the full site early
+            const LAUNCH_AT = new Date('2026-11-01T00:00:00+03:00');   // 1 Nov 2026, 00:00 Kenya time
+            const PREVIEW_KEY = 'kimangu2026';
 
             const overlay = document.getElementById('launchOverlay');
             if (!overlay) return;
 
-            // Admin preview: lets you look at the real site before launch (stays on for this browser tab)
+            // Admin preview: index.html?preview=kimangu2026 shows the real site early (this tab only)
             let preview = false;
             try {
                 if (new URLSearchParams(location.search).get('preview') === PREVIEW_KEY) {
@@ -1437,6 +1439,8 @@
                 preview = sessionStorage.getItem('kay_preview') === '1';
             } catch (e) { }
 
+            if (preview) { overlay.remove(); return; }
+
             const blocked = document.querySelectorAll('header, main, footer, #fbFab, #fbPanel, #fbHint');
             const el = {
                 d: document.getElementById('lcDays'),
@@ -1444,70 +1448,76 @@
                 m: document.getElementById('lcMins'),
                 s: document.getElementById('lcSecs')
             };
+            const pad = (n) => String(n).padStart(2, '0');
 
             document.getElementById('lcDate').textContent = LAUNCH_AT.toLocaleDateString('en-GB', {
                 weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Nairobi'
             });
 
-            let offset = 0;        // server time minus this device's time (so a wrong phone clock can't skip the wait)
-            let synced = false;    // true once we have tried to read the server time
+            let offset = 0;            // real time minus this phone's clock
+            let clockKnown = false;    // true once we know the real time
             let done = false;
-            let timer = null;
+            const startedAt = Date.now();
 
-            function unlock(fast) {
+            // Lock the site: nothing behind the overlay can be clicked or tabbed to
+            window.__launchLocked = true;
+            blocked.forEach((n) => n.setAttribute('inert', ''));
+
+            function unlock() {
                 if (done) return;
                 done = true;
-                clearInterval(timer);
+                clearInterval(tickTimer);
+                clearInterval(syncTimer);
                 blocked.forEach((n) => n.removeAttribute('inert'));
                 window.__launchLocked = false;
+                const fast = Date.now() - startedAt < 4000;
                 if (fast) overlay.classList.add('is-fast');
                 overlay.classList.add('is-leaving');
                 setTimeout(() => overlay.remove(), fast ? 400 : 1000);
                 document.dispatchEvent(new Event('site-launched'));
             }
 
-            const pad = (n) => String(n).padStart(2, '0');
-
             function tick() {
                 const left = LAUNCH_AT.getTime() - (Date.now() + offset);
 
-                if (left <= 0) {
-                    if (synced) unlock(Date.now() - startedAt < 4000);   // launched earlier: fade out quickly
-                    el.d.textContent = el.h.textContent = el.m.textContent = el.s.textContent = '00';
-                    return;
-                }
+                // Only open the site when the REAL time says so (never on the phone's clock alone)
+                if (left <= 0 && clockKnown) { unlock(); return; }
 
-                const total = Math.floor(left / 1000);
+                const total = Math.max(0, Math.floor(left / 1000));
                 el.d.textContent = pad(Math.floor(total / 86400));
                 el.h.textContent = pad(Math.floor((total % 86400) / 3600));
                 el.m.textContent = pad(Math.floor((total % 3600) / 60));
                 el.s.textContent = pad(total % 60);
             }
 
-            const startedAt = Date.now();
+            // Ask the server for the real time. Falls back to the page's Date header, then to the phone's clock.
+            async function syncClock() {
+                let serverNow = null;
+                try {
+                    const res = await fetch('/api/time', { cache: 'no-store' });
+                    const data = await res.json();
+                    if (typeof data.now === 'number') serverNow = data.now;
+                } catch (e) { }
 
-            if (preview) {
-                overlay.remove();
-                return;
+                if (serverNow === null) {
+                    try {
+                        const res = await fetch(location.pathname, { method: 'HEAD', cache: 'no-store' });
+                        const header = res.headers.get('Date');
+                        if (header) serverNow = new Date(header).getTime();
+                    } catch (e) { }
+                }
+
+                if (serverNow !== null && !isNaN(serverNow)) {
+                    offset = serverNow - Date.now();
+                }
+                clockKnown = true;     // if both requests failed, the phone's clock is used
+                tick();
             }
 
-            // Lock the site: nothing behind the overlay can be clicked or tabbed to
-            window.__launchLocked = true;
-            blocked.forEach((n) => n.setAttribute('inert', ''));
-
-            // Read the server's clock from the response headers (falls back to the device clock)
-            (async function syncClock() {
-                try {
-                    const res = await fetch(location.href.split('#')[0], { method: 'HEAD', cache: 'no-store' });
-                    const t = new Date(res.headers.get('Date')).getTime();
-                    if (!isNaN(t)) offset = t - Date.now();
-                } catch (e) { /* keep the device clock */ }
-                synced = true;
-                tick();
-            })();
-
             tick();
-            timer = setInterval(tick, 1000);
+            syncClock();
+            const tickTimer = setInterval(tick, 1000);
+            const syncTimer = setInterval(syncClock, 60000);   // re-checks every minute
         })();
     </script>
 

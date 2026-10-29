@@ -18,6 +18,11 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // ===================== CLEAN URLS (no .html in the address bar) =====================
+// Real time for the launch countdown (never cached)
+app.get('/api/time', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ now: Date.now() });
+});
 const CLIENT_DIR = path.join(__dirname, '../client');
 
 // Someone opening /auth.html, /dashboard.html or /index.html in the browser goes to /auth, /dashboard or /.
