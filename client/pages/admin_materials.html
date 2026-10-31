@@ -991,8 +991,7 @@
             });
         }
 
-        // Send JSON to Supabase REST with real upload progress (fraction 0-1)
-        function sendWithProgress(method, url, body, onProgress) {
+        function sendWithProgress(method, url, body, onProgress, apiKey = SUPABASE_KEY) {
             return new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 xhr.open(method, url);
@@ -1151,7 +1150,6 @@
                 const baseUrl = isBible ? BIBLE_SUPABASE_URL : SUPABASE_URL;
                 const apiKey = isBible ? BIBLE_SUPABASE_KEY : SUPABASE_KEY;
 
-                // Stage 2 (30-99%): sending to the database
                 await sendWithProgress('POST', `${baseUrl}/rest/v1/study_books`, payload, (frac) => {
                     setRing('ringBook', Math.min(99, 30 + Math.floor(frac * 69)));
                 }, apiKey);
